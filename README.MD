@@ -1,2 +1,2 @@
-# FabricElements Message Helpers
-SMS/MMS helpers.
+# FabricElements Shared Helpers
+Shared helpers.
