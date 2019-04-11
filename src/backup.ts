@@ -11,26 +11,23 @@ const bigquery = new BigQuery();
 /**
  * Conformed backup function for link-app
  *
- * @param collection
- * @param dataset
- * @param del - if true, deletes document instead of changing backup to true on document
- * @param items
- * @param table
- * @param updateKey
+ * @param data
+ * if true, deletes document instead of changing backup to true on document
  */
-export default async (
+export default async (data: {
   collection: string,
   dataset: string,
-  del: boolean,
+  del?: boolean,
   items: any,
   table: string,
-  updateKey: string | null = "id") => {
-  const total = items.length;
+  updateKey?: string | null,
+}) => {
+  const total = data.items.length;
   // Backup service data to BigQuery
   await bigquery
-    .dataset(dataset)
-    .table(table)
-    .insert(items, {
+    .dataset(data.dataset)
+    .table(data.table)
+    .insert(data.items, {
       // @ts-ignore
       ignoreUnknownValues: true,
       skipInvalidRows: true,
@@ -39,20 +36,21 @@ export default async (
   const db = admin.firestore();
   let batch = db.batch();
   for (let i = 0; i < total; i++) {
-    const item = items[i];
+    const item = data.items[i];
     if (!item.id) {
       continue;
     }
-    const docRef: any = db.collection(collection).doc(item[updateKey]);
+    const updateKey = data.updateKey || "id";
+    const docRef: any = db.collection(data.collection).doc(item[updateKey]);
     // If delete is true, commit the operation
-    if (del) {
+    if (data.del) {
       batch.delete(docRef);
     } else {
       batch.update(docRef, {
         backup: true,
       });
     }
-    if (i === (items.length - 1) || i > 0 && i % 400 === 0) {
+    if (i === (data.items.length - 1) || i > 0 && i % 400 === 0) {
       console.info("Backup..", i + 1);
       await batch.commit();
       batch = db.batch();
