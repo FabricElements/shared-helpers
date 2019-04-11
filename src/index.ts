@@ -10,6 +10,7 @@ import backup from "./backup";
 import * as firestore from "./firestore";
 import * as global from "./global";
 import pubSubEvent from "./pubsub-event";
+import validateUrl from "./validateUrl";
 
 export {
   apiRequest,
@@ -17,4 +18,5 @@ export {
   firestore,
   global,
   pubSubEvent,
+  validateUrl,
 };
