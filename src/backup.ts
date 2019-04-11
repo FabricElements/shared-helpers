@@ -14,7 +14,7 @@ const bigquery = new BigQuery();
  * @param data
  * if true, deletes document instead of changing backup to true on document
  */
-export const backup = async (data: {
+export default async (data: {
   collection: string,
   dataset: string,
   del?: boolean,
@@ -57,4 +57,5 @@ export const backup = async (data: {
       await timeout(1000); // Waiting 1 second for next request...
     }
   }
+  return null;
 };
