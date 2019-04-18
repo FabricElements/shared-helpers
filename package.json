@@ -5,13 +5,14 @@
   "types": "src/index.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
   },
   "dependencies": {
     "@google-cloud/bigquery": "^3.0.0",
+    "abort-controller": "^3.0.0",
     "firebase-admin": "^7.2.0",
     "firebase-functions": "^2.2.1",
     "libphonenumber-js": "^1.7.15",
