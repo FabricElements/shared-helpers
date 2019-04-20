@@ -35,7 +35,7 @@ export const getDocument = async (collectionId: string, documentId: string) => {
     if (collectionId === "service") {
       throw new Error("Missing service id");
     }
-    throw new Error("Not found Collection");
+    throw new Error(`Not found ${collectionId}/${documentId}`);
   }
   let data: any = snap.data();
   data.id = documentId;

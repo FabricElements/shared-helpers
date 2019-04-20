@@ -5,7 +5,7 @@
   "types": "src/index.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
