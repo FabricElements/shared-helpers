@@ -39,7 +39,8 @@ export default async (data: {
   } catch (error) {
     let errorMessage = error.message || null;
     if (error.hasOwnProperty("response") && error.response.hasOwnProperty("insertErrors")) {
-      errorMessage = JSON.stringify([error.response.insertErrors]);
+      const finalError = error.response.insertErrors.flat();
+      errorMessage = JSON.stringify(finalError);
     }
     throw new Error(errorMessage);
   }
