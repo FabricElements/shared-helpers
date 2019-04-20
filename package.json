@@ -5,7 +5,7 @@
   "types": "src/index.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
@@ -16,6 +16,7 @@
     "firebase-admin": "^7.3.0",
     "firebase-functions": "^2.3.0",
     "libphonenumber-js": "^1.7.15",
+    "lodash": "^4.17.11",
     "moment-timezone": "^0.5.25",
     "node-fetch": "^2.3.0"
   },

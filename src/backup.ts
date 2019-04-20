@@ -4,6 +4,7 @@
  */
 import {BigQuery} from "@google-cloud/bigquery";
 import * as admin from "firebase-admin";
+import * as _ from "lodash";
 import {timeout} from "./global";
 
 const bigquery = new BigQuery();
@@ -39,7 +40,7 @@ export default async (data: {
   } catch (error) {
     let errorMessage = error.message || null;
     if (error.hasOwnProperty("response") && error.response.hasOwnProperty("insertErrors")) {
-      const finalError = error.response.insertErrors.flat();
+      const finalError = _.flatten(error.response.insertErrors);
       errorMessage = JSON.stringify(finalError);
     }
     throw new Error(errorMessage);
