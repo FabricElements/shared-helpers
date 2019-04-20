@@ -39,7 +39,7 @@ export default async (data: {
   } catch (error) {
     let errorMessage = error.message || null;
     if (error.hasOwnProperty("response") && error.response.hasOwnProperty("insertErrors")) {
-      errorMessage = [error.response.insertErrors];
+      errorMessage = [error.response.insertErrors].toString();
     }
     throw new Error(errorMessage);
   }
