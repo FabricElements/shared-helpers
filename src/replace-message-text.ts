@@ -11,10 +11,11 @@ import {toCamelCase} from "./strings";
 /**
  * Replace message text
  *
+ * @param {string} text
  * @param {any} data
  * @returns {string}
  */
-export default (text: any, data: any) => {
+export default (text: string, data: any = {}) => {
   let final = !!text ? text.replace(/ +(?= )/g, "") : "";
   const matches = final.match(/{(?:.*?)}/g);
   const length = matches ? matches.length : 0;
