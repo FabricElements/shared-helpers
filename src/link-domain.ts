@@ -11,7 +11,7 @@ export const domains = [
  * @param {object} options
  * @returns {string}
  */
-export const random = (options?: {
+export const randomDomain = (options?: {
   domains?: string[],
   id?: string | null,
 }) => {
@@ -19,8 +19,8 @@ export const random = (options?: {
   const domainsArray = !!data.domains
   && Array.isArray(data.domains)
   && data.domains.length > 0 ? data.domains : domains;
-  const randomDomain = Math.floor((Math.random() * domainsArray.length));
-  const domain = domainsArray[randomDomain];
+  const random = Math.floor((Math.random() * domainsArray.length));
+  const domain = domainsArray[random];
   if (!data.id) {
     return domain;
   }
