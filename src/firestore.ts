@@ -4,8 +4,6 @@
  */
 import * as admin from "firebase-admin";
 
-const db = admin.firestore();
-
 /**
  * Exist Document
  * @param collectionId
@@ -15,6 +13,7 @@ export const existDocument = async (collectionId: string, documentId: string) =>
   if (!documentId) {
     throw new Error("Missing id");
   }
+  const db = admin.firestore();
   const ref = db.collection(collectionId).doc(documentId);
   const snap = await ref.get();
   return snap.exists;
@@ -29,6 +28,7 @@ export const getDocument = async (collectionId: string, documentId: string) => {
   if (!documentId) {
     throw new Error("Missing id");
   }
+  const db = admin.firestore();
   const ref = db.collection(collectionId).doc(documentId);
   const snap = await ref.get();
   if (!snap.exists) {
@@ -63,6 +63,7 @@ export const getList = async (options: {
   if (!options.collectionId) {
     throw new Error("collectionId is undefined");
   }
+  const db = admin.firestore();
   let ref: any = db.collection(options.collectionId);
   if (options.orderBy) {
     ref = ref.orderBy(options.orderBy.key, options.orderBy.direction);
