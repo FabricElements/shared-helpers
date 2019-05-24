@@ -5,7 +5,7 @@
   "types": "src/index.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
@@ -16,15 +16,15 @@
     "libphonenumber-js": "^1.7.18",
     "lodash": "^4.17.11",
     "moment-timezone": "^0.5.25",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "firebase-admin": "^8.0.0",
+    "firebase-functions": "^2.3.1"
   },
   "devDependencies": {
     "tslint": "^5.16.0",
     "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.4.5",
-    "vrsource-tslint-rules": "^6.0.0",
-    "firebase-admin": "^8.0.0",
-    "firebase-functions": "^2.3.1"
+    "vrsource-tslint-rules": "^6.0.0"
   },
   "private": true,
   "scripts": {
