@@ -5,9 +5,8 @@
 import * as functions from "firebase-functions";
 import fetch from "node-fetch";
 
-const config = functions.config();
-
 export default async (apiName: string, path: string, body: any = {}) => {
+  const config = functions.config();
   const apiBase = config[apiName];
   if (!(apiName || apiBase)) {
     throw new Error("Invalid api call");
