@@ -11,29 +11,29 @@ const bigquery = new BigQuery();
  * @param filter
  */
 const query = (filter: {
+  column?: string,
   dataset: string,
   table: string,
-  column?: string,
+  timestamp: string,
 }) => {
   if (!filter.dataset) {
     throw new Error("Dataset or Table not defined");
-    return;
   }
   return `DELETE
 FROM
   \`${filter.dataset}.${filter.table}\`
 WHERE
   STRUCT(id,
-    updated
+    ${filter.timestamp}
     ${filter.column ? `,${filter.column}` : ""} ) NOT IN (
   SELECT
     AS STRUCT id,
-    updated
+    ${filter.timestamp}
     ${filter.column ? `,${filter.column}` : ""}
   FROM (
     SELECT
       DISTINCT id,
-      MAX(updated) AS updated
+      MAX(${filter.timestamp}) AS ${filter.timestamp}
       ${filter.column ? `,${filter.column}` : ""}
     FROM
       \`${filter.dataset}.${filter.table}\`
@@ -46,9 +46,10 @@ WHERE
  * @param filter
  */
 export default async (filter: {
+  column?: string,
   dataset: string,
   table: string,
-  column?: string,
+  timestamp: string,
 }) => {
   const sqlQuery = query(filter);
   try {
@@ -57,7 +58,6 @@ export default async (filter: {
     });
     const [list] = await job.getQueryResults();
     console.info(`Result delete duplicates ${list}`);
-    return list;
   } catch (error) {
     console.warn(`Fail delete duplicates. Dataset: ${filter.dataset}, table: ${filter.table}`, error);
     return [];
