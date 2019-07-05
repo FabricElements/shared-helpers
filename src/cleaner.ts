@@ -11,17 +11,17 @@ const bigquery = new BigQuery();
  * @param filter
  */
 const query = (filter: {
-  collection: string,
+  dataset: string,
   table: string,
-  column: string,
+  column?: string,
 }) => {
-  if (!filter.collection) {
-    console.error("Can't get Collection");
+  if (!filter.dataset) {
+    throw new Error("Dataset or Table not defined");
     return;
   }
   return `DELETE
 FROM
-  \`${filter.table}.collection."${filter.collection}"\`
+  \`${filter.dataset}.${filter.table}\`
 WHERE
   STRUCT(id,
     updated
@@ -36,7 +36,7 @@ WHERE
       MAX(updated) AS updated
       ${filter.column ? `,${filter.column}` : ""}
     FROM
-      \`${filter.table}.collection."${filter.collection}"\`
+      \`${filter.dataset}.${filter.table}\`
     GROUP BY
       id ${filter.column ? `,${filter.column}` : ""} ));`;
 };
@@ -46,9 +46,9 @@ WHERE
  * @param filter
  */
 export default async (filter: {
-  collection: string,
+  dataset: string,
   table: string,
-  column: string,
+  column?: string,
 }) => {
   const sqlQuery = query(filter);
   try {
@@ -59,7 +59,7 @@ export default async (filter: {
     console.info(`Result delete duplicates ${list}`);
     return list;
   } catch (error) {
-    console.warn(`Fail delete duplicates on "${filter.collection}"`, error);
+    console.warn(`Fail delete duplicates. Dataset: ${filter.dataset}, table: ${filter.table}`, error);
     return [];
   }
 };
