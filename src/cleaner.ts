@@ -24,15 +24,17 @@ FROM
   \`${filter.table}.collection."${filter.collection}"\`
 WHERE
   STRUCT(id,
-    updated  ${filter.column ? `,${filter.column}` : ""} ) NOT IN (
+    updated
+    ${filter.column ? `,${filter.column}` : ""} ) NOT IN (
   SELECT
     AS STRUCT id,
-    updated ${filter.column ? `,${filter.column}` : ""}
+    updated
+    ${filter.column ? `,${filter.column}` : ""}
   FROM (
     SELECT
       DISTINCT id,
-      ${filter.column ? `,${filter.column}` : ""}
       MAX(updated) AS updated
+      ${filter.column ? `,${filter.column}` : ""}
     FROM
       \`${filter.table}.collection."${filter.collection}"\`
     GROUP BY
