@@ -29,10 +29,10 @@ export {
   global,
   hashId,
   linkDomain,
-  replaceMessageText,
   pubSubEvent,
-  validateUrl,
+  replaceMessageText,
+  specialCharToRegular,
   status,
   strings,
-  specialCharToRegular
+  validateUrl,
 };

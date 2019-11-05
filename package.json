@@ -5,25 +5,26 @@
   "types": "src/index.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.28",
+  "version": "0.0.29",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
   },
   "dependencies": {
-    "@google-cloud/bigquery": "^4.1.2",
+    "@google-cloud/bigquery": "^4.3.0",
     "abort-controller": "^3.0.0",
-    "firebase-admin": "^8.1.0",
-    "firebase-functions": "^3.0.1",
-    "libphonenumber-js": "^1.7.19",
-    "lodash": "^4.17.11",
-    "moment-timezone": "^0.5.25",
-    "node-fetch": "^2.6.0"
+    "firebase-admin": "^8.7.0",
+    "firebase-functions": "^3.3.0",
+    "libphonenumber-js": "^1.7.26",
+    "lodash": "^4.17.15",
+    "moment-timezone": "^0.5.27",
+    "node-fetch": "^2.6.0",
+    "npm-check-updates": "^3.2.0"
   },
   "devDependencies": {
-    "tslint": "^5.17.0",
+    "tslint": "^5.20.1",
     "tslint-eslint-rules": "^5.4.0",
-    "typescript": "^3.5.2",
+    "typescript": "^3.7.2",
     "vrsource-tslint-rules": "^6.0.0"
   },
   "private": true,
