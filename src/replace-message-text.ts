@@ -31,7 +31,7 @@ export default (options: {
       case "r": // Replaces random hash Id
         replaceValue = hashId();
         break;
-      case "l": // Replaces link references with a random domain
+      case "link": // Replaces link references with a random domain
         replaceValue = randomDomain({domains: options.domains});
         break;
       default:
