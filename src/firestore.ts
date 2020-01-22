@@ -48,17 +48,17 @@ export const getDocument = async (collectionId: string, documentId: string) => {
  */
 export const getList = async (options: {
   collectionId: string,
-  where?: Array<{
+  fullResponse?: boolean,
+  limit?: number,
+  orderBy?: {
+    direction: FirebaseFirestore.OrderByDirection,
+    key: string,
+  },
+  where?: {
     field: string | FirebaseFirestore.FieldPath,
     filter: FirebaseFirestore.WhereFilterOp,
     value: any,
-  }>,
-  orderBy?: {
-    key: string,
-    direction: FirebaseFirestore.OrderByDirection,
-  },
-  limit?: number,
-  fullResponse?: boolean,
+  }[],
 }) => {
   if (!options.collectionId) {
     throw new Error("collectionId is undefined");

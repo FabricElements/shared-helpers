@@ -7,13 +7,13 @@ import {formatNumber, getNumberType, isValidNumber, parseNumber} from "libphonen
 /**
  * Check if number is valid and format
  *
- * @param {string} number
+ * @param {string} phoneNumber
  * @param {boolean} isMobile
  * @returns {string}
  */
-export default async (number: string | number, isMobile: boolean = false) => {
+export default async (phoneNumber: string | number, isMobile: boolean = false) => {
   try {
-    let originalNumber = number.toString();
+    let originalNumber = phoneNumber.toString();
     originalNumber = originalNumber.replace(/[^+0-9]/g, "");
     const hasFormat = originalNumber.match(/^\+[1-9]{1,3}\d{5,14}$/g);
     if (!hasFormat) {

@@ -1,8 +1,7 @@
 {
   "extends": [
     "tslint:latest",
-    "tslint-eslint-rules",
-    "vrsource-tslint-rules"
+    "tslint-eslint-rules"
   ],
   "rules": {
     "file-header": [
@@ -61,8 +60,6 @@
     "no-string-throw": true,
     // Disallow control flow statements, such as return, continue, break, and throw in finally blocks.
     "no-unsafe-finally": true,
-    // Do not allow variables to be used before they are declared.
-    "no-use-before-declare": true,
     // Expressions must always return a value. Avoids common errors like const myValue = functionReturningVoid();
     "no-void-expression": [
       true,
@@ -127,7 +124,24 @@
     "prefer-conditional-expression": false, // check again
     "prefer-for-of": false,
     "no-unused-variable": false,
-    "object-literal-sort-keys": false
+    "object-literal-sort-keys": false,
+    "member-ordering": [
+      true,
+      {
+        "order": [
+          "public-static-field",
+          "public-instance-field",
+          "public-constructor",
+          "private-static-field",
+          "private-instance-field",
+          "private-constructor",
+          "public-instance-method",
+          "protected-instance-method",
+          "private-instance-method"
+        ],
+        "alphabetize": true
+      }
+    ]
   },
   "defaultSeverity": "error"
 }

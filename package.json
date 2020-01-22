@@ -1,11 +1,11 @@
 {
   "name": "@fabricelements/shared-helpers",
   "description": "shared helpers.",
-  "main": "lib/index.js",
-  "types": "src/index.ts",
+  "main": "./lib/index.js",
+  "types": "./src/index.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"

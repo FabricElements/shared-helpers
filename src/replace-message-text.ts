@@ -15,9 +15,9 @@ import {toCamelCase} from "./strings";
  * @returns {string}
  */
 export default (options: {
-  text: string,
   data?: {},
   domains?: string[],
+  text: string,
 }) => {
   let final = !!options.text ? options.text.replace(/ +(?= )/g, "") : "";
   const matches = final.match(/{(?:.*?)}/g);

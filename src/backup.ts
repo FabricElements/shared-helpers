@@ -25,7 +25,7 @@ export default async (data: {
 }) => {
   const total = data.items.length;
   if (total === 0) {
-    console.info(`Nothing to backup in collection "${data.collection}"`);
+    // console.info(`Nothing to backup in collection "${data.collection}"`);
     return null;
   }
   let backup = 0;
