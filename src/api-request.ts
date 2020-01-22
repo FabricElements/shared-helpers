@@ -5,6 +5,12 @@
 import * as functions from "firebase-functions";
 import fetch from "node-fetch";
 
+/**
+ * Call firebase project base API
+ * @param apiName
+ * @param path
+ * @param body
+ */
 export default async (apiName: string, path: string, body: any = {}) => {
   const config = functions.config();
   const apiBase = config[apiName];
