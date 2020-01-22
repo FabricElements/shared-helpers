@@ -26,7 +26,6 @@
   },
   "devDependencies": {
   },
-  "private": true,
   "scripts": {
     "lint": "tslint --project ./tsconfig.json",
     "lint-fix": "tslint -c tslint.json --project .  --project -t codeFrame --fix",
