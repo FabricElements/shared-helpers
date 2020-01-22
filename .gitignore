@@ -36,6 +36,8 @@ build
 build/*/*
 build/Release
 dist/*
+lib
+lib/*/*
 
 # Dependency directories
 node_modules
