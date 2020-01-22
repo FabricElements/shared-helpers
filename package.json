@@ -18,13 +18,13 @@
     "libphonenumber-js": "^1.7.31",
     "lodash": "^4.17.15",
     "moment-timezone": "^0.5.27",
-    "node-fetch": "^2.6.0"
-  },
-  "devDependencies": {
+    "node-fetch": "^2.6.0",
     "tslint": "^6.0.0",
     "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.7.5",
     "vrsource-tslint-rules": "^6.0.0"
+  },
+  "devDependencies": {
   },
   "private": true,
   "scripts": {
