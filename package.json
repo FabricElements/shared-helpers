@@ -11,19 +11,19 @@
     "url": "git@github.com:FabricElements/shared-helpers.git"
   },
   "dependencies": {
-    "@google-cloud/bigquery": "^4.5.0",
+    "@google-cloud/bigquery": "^4.6.1",
     "abort-controller": "^3.0.0",
-    "firebase-admin": "^8.8.0",
+    "firebase-admin": "^8.9.1",
     "firebase-functions": "^3.3.0",
-    "libphonenumber-js": "^1.7.29",
+    "libphonenumber-js": "^1.7.31",
     "lodash": "^4.17.15",
     "moment-timezone": "^0.5.27",
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
-    "tslint": "^5.20.1",
+    "tslint": "^6.0.0",
     "tslint-eslint-rules": "^5.4.0",
-    "typescript": "^3.7.3",
+    "typescript": "^3.7.5",
     "vrsource-tslint-rules": "^6.0.0"
   },
   "private": true,
