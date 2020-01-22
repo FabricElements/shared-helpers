@@ -12,7 +12,7 @@
     "inlineSourceMap": false,
     "forceConsistentCasingInFileNames": true,
     "strictNullChecks": false,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "alwaysStrict": false,
     "allowJs": true,
     "charset": "utf8",
@@ -22,6 +22,7 @@
     "pretty": true,
     "removeComments": false,
     "sourceMap": true,
+    "declaration": true,
     "typeRoots": [
       "node_modules/@types"
     ]

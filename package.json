@@ -2,7 +2,7 @@
   "name": "@fabricelements/shared-helpers",
   "description": "shared helpers.",
   "main": "./lib/index.js",
-  "types": "./src/index.ts",
+  "types": "./lib/index.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
   "version": "0.0.31",
