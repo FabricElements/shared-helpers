@@ -2,6 +2,26 @@
 Use `@fabricelements/shared-helpers` on Firebase projects.
 
 ------
+## Installation
+From GitHub
+```shell
+$ npm i github:FabricElements/shared-helpers --save
+```
+Or from NPM (Coming soon)
+```shell
+$ npm i @fabricelements/shared-helpers --save
+```
+## Examples
+### Basic usage
+Import only what you need
+```js
+import {firestore, pubSubEvent} from "@fabricelements/shared-helpers";
+```
+Or import everything
+```js
+import * as sharedHelpers from "@fabricelements/shared-helpers";
+```
+## Available functions
 
 ### [apiRequest](src/api-request.ts)
 Call firebase project base API
@@ -38,3 +58,11 @@ Replace special character to regular gsm character
 
 ### [status](src/status.ts)
 Update Status Collection with Errors
+
+## Contributing
+
+Please check [CONTRIBUTING](CONTRIBUTING.md).
+
+## License
+
+Released under the [BSD 3-Clause License](LICENSE.md).
