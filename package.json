@@ -24,8 +24,7 @@
     "typescript": "^3.7.5",
     "vrsource-tslint-rules": "^6.0.0"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "scripts": {
     "lint": "tslint --project ./tsconfig.json",
     "lint-fix": "tslint -c tslint.json --project .  --project -t codeFrame --fix",
