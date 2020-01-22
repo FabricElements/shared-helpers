@@ -3,13 +3,13 @@ Use `@fabricelements/shared-helpers` on Firebase projects.
 
 ------
 ## Installation
-From GitHub
-```shell
-$ npm i github:FabricElements/shared-helpers --save
-```
-Or from NPM (Coming soon)
+From NPM
 ```shell
 $ npm i @fabricelements/shared-helpers --save
+```
+or from GitHub
+```shell
+$ npm i github:FabricElements/shared-helpers --save
 ```
 ## Examples
 ### Basic usage
