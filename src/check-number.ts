@@ -19,8 +19,9 @@ export default async (phoneNumber: string | number, isMobile: boolean = false) =
     if (!hasFormat) {
       throw new Error("Number is not in E.164 format");
     }
-    const baseNumber = parseNumber(originalNumber);
-    const isValid = isValidNumber(baseNumber);
+    const baseNumber: any = parseNumber(originalNumber);
+    const numberParsed: boolean = Object.keys(baseNumber).length > 0;
+    const isValid = numberParsed ? isValidNumber(baseNumber) : false;
     if (!isValid) {
       throw new Error("Invalid number");
     }
