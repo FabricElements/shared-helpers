@@ -16,7 +16,6 @@ import * as linkDomain from "./link-domain";
 import pubSubEvent from "./pubsub-event";
 import replaceMessageText from "./replace-message-text";
 import specialCharToRegular from "./special-char-to-regular";
-// import * as status from "./status";
 import * as strings from "./strings";
 import validateUrl from "./validate-url";
 
@@ -32,7 +31,6 @@ export {
   pubSubEvent,
   replaceMessageText,
   specialCharToRegular,
-  // status,
   strings,
   validateUrl,
 };
