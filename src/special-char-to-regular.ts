@@ -334,7 +334,8 @@ export default (text: string | null): string => { // Definition of function and 
   for (let i of finalText) {
     let character: number = i.charCodeAt(0); // Define Char Code for letter.
     if (charactersChange2.hasOwnProperty(character)) {
-      finalText = finalText.replace(i, charactersChange2[character].replace); // Replace all characters according condition.
+      // Replace all characters according condition.
+      finalText = finalText.replace(i, charactersChange2[character].replace);
     }
   }
   return finalText; // Return the message with changes.
