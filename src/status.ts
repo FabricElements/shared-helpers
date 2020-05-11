@@ -4,9 +4,6 @@
  */
 import * as admin from "firebase-admin";
 
-const db = admin.firestore();
-const timestamp = admin.firestore.FieldValue.serverTimestamp();
-
 /**
  * Update Status Collection with Errors
  * @param data
@@ -16,6 +13,8 @@ export const update = async (data: any) => {
     console.log("Missing input data");
     return;
   }
+  const db = admin.firestore();
+  const timestamp = admin.firestore.FieldValue.serverTimestamp();
   const ref = db.collection("status").doc(data.id);
   const status = {
     backup: false,
