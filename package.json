@@ -5,7 +5,7 @@
   "types": "./lib/index.d.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.37",
+  "version": "0.0.40",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
@@ -19,7 +19,7 @@
     "lodash": "^4.17.15",
     "moment-timezone": "^0.5.28",
     "node-fetch": "^2.6.0",
-    "tslint": "^6.1.2",
+    "tslint": "^5.0.0",
     "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.8.3",
     "vrsource-tslint-rules": "^6.0.0"
@@ -30,7 +30,6 @@
     "lint-fix": "tslint -c tslint.json --project .  --project -t codeFrame --fix",
     "clear": "rm -rf ./lib",
     "build": "npm run clear && npm run lint && tsc -p ./tsconfig.json",
-    "tsc": "tsc",
-    "postinstall": "npm run build"
+    "tsc": "tsc"
   }
 }
