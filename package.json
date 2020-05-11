@@ -5,7 +5,7 @@
   "types": "./lib/index.d.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
@@ -13,13 +13,13 @@
   "dependencies": {
     "@google-cloud/bigquery": "^4.7.0",
     "abort-controller": "^3.0.0",
-    "firebase-admin": "^8.11.0",
+    "firebase-admin": "^8.12.1",
     "firebase-functions": "^3.6.1",
-    "libphonenumber-js": "^1.7.50",
+    "libphonenumber-js": "^1.7.51",
     "lodash": "^4.17.15",
     "moment-timezone": "^0.5.28",
     "node-fetch": "^2.6.0",
-    "tslint": "^6.1.1",
+    "tslint": "^6.1.2",
     "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.8.3",
     "vrsource-tslint-rules": "^6.0.0"
