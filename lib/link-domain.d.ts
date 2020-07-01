@@ -11,5 +11,5 @@ export declare const domains: string[];
  */
 export declare const randomDomain: (options?: {
     domains?: string[];
-    id?: string;
+    id?: string | null;
 }) => string;

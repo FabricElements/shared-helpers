@@ -4,7 +4,7 @@ declare const _default: (data: {
     del?: boolean;
     items: any;
     table: string;
-    updateKey?: string;
+    updateKey?: string | null;
 }) => Promise<any>;
 /**
  * Custom backup from Firestore to BigQuery

@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-declare const _default: (text: string) => string;
+declare const _default: (text: string | null) => string;
 /**
  * Replace special character to regular gsm character.
  *

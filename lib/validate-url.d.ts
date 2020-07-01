@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-declare const _default: (url: string) => string;
+declare const _default: (url: string | null) => string;
 /**
  * Check if URl is valid and format
  *

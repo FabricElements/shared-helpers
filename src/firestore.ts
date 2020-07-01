@@ -54,11 +54,11 @@ export const getList = async (options: {
     direction: FirebaseFirestore.OrderByDirection,
     key: string,
   },
-  where?: Array<{
+  where?: {
     field: string | FirebaseFirestore.FieldPath,
     filter: FirebaseFirestore.WhereFilterOp,
     value: any,
-  }>,
+  }[],
 }) => {
   if (!options.collectionId) {
     throw new Error("collectionId is undefined");
