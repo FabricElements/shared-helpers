@@ -8,13 +8,9 @@ import {RedisClient} from "redis";
 import {Cache} from "./cache";
 import Config = config.Config;
 
-export class FirestoreHelper {
-  cache: Cache;
-  client: RedisClient;
-
-  constructor(firebaseConfig: Config = {}, client: RedisClient) {
-    this.cache = new Cache(firebaseConfig, client);
-    this.client = client;
+export class FirestoreHelper extends Cache {
+  constructor(firebaseConfig: Config, client: RedisClient) {
+    super(firebaseConfig, client);
   }
 
   /**
@@ -45,14 +41,14 @@ export class FirestoreHelper {
     collection: string,
     document: string,
   }): Promise<any> => {
-    const cachePath = `${this.cache.prefix}/${options.collection}/${options.document}`;
+    const cachePath = `${this.prefix}/${options.collection}/${options.document}`;
     const cacheData = {
       cache: false,
       cacheCalls: 0,
       cachePath,
     };
     let data: any = {};
-    if (!(options.cache || this.cache.client.connected)) {
+    if (!(options.cache || this.client.connected)) {
       const baseData = await this._getDocumentSnap({
         collection: options.collection,
         document: options.document,
@@ -60,7 +56,7 @@ export class FirestoreHelper {
       data = {...baseData, ...cacheData};
     } else {
       try {
-        const requestData: string = await this.cache.get(cachePath);
+        const requestData: string = await this.getCache(cachePath);
         if (!requestData) {
           throw new Error("Key not found");
         }
@@ -72,14 +68,14 @@ export class FirestoreHelper {
           cacheCalls,
           cache: true,
         };
-        await this.cache.set(cachePath, JSON.stringify(data));
+        await this.setCache(cachePath, JSON.stringify(data));
       } catch (error) {
         const baseData = await this._getDocumentSnap({
           collection: options.collection,
           document: options.document,
         });
         data = {...baseData, ...cacheData, cache: true};
-        await this.cache.set(cachePath, JSON.stringify(data));
+        await this.setCache(cachePath, JSON.stringify(data));
       }
     }
     return data;
