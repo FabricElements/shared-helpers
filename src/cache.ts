@@ -23,7 +23,10 @@ export class Cache {
     }
     this.config = firebaseConfig;
     this.client = client;
-    this.prefix = firebaseConfig?.redis?.prefix ?? "";
+    this.prefix = firebaseConfig?.redis?.prefix ?? null;
+    if (!this.prefix) {
+      throw new Error("redis prefix is required");
+    }
     this.getCache = promisify(client.get).bind(client);
     this.setCache = promisify(client.set).bind(client);
   }
