@@ -13,9 +13,9 @@ export declare class Cache {
     config: Config;
     hexists: any;
     hget: any;
-    hGetAllCache: any;
+    hgetall: any;
     hincrby: any;
-    hSetCache: any;
+    hset: any;
     prefix: string;
     constructor(firebaseConfig: Config, client: RedisClient);
 }

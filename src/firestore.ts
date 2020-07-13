@@ -61,7 +61,7 @@ export class FirestoreHelper extends Cache {
           throw new Error("Key not found");
         }
         await this.hincrby(cachePath, "cacheCalls", 1);
-        const requestData: string = await this.hget(cachePath, "cacheCalls");
+        const requestData: string = await this.hgetall(cachePath);
         data = JSON.parse(requestData);
         const cacheCalls = Number(data.cacheCalls);
         const cacheLimit = cacheCalls > options.cacheLimit;
@@ -74,7 +74,7 @@ export class FirestoreHelper extends Cache {
         //   cacheCalls,
         //   cache: true,
         // };
-        // await this.hSetCache(cachePath, JSON.stringify(data));
+        // await this.hset(cachePath, JSON.stringify(data));
       } catch (error) {
         if (error.message !== "Key not found") {
           console.warn(error.message);
@@ -86,7 +86,7 @@ export class FirestoreHelper extends Cache {
           document: options.document,
         });
         data = {...baseData, ...cacheData, cache: true};
-        await this.hSetCache(cachePath, JSON.stringify(data));
+        await this.hset(cachePath, JSON.stringify(data));
       }
     }
     return data;

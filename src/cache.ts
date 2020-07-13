@@ -15,9 +15,9 @@ export class Cache {
   config: Config;
   public hexists;
   public hget;
-  public hGetAllCache;
+  public hgetall;
   public hincrby;
-  public hSetCache;
+  public hset;
   public prefix: string;
 
   constructor(firebaseConfig: Config = {}, client: RedisClient) {
@@ -30,11 +30,11 @@ export class Cache {
     if (!this.prefix) {
       throw new Error("redis prefix is required");
     }
-    // this.hGetAllCache = promisify(client.get).bind(client);
-    // this.hSetCache = promisify(client.set).bind(client);
-    this.hGetAllCache = promisify(client.hgetall).bind(client);
+    // this.get = promisify(client.get).bind(client);
+    // this.set = promisify(client.set).bind(client);
+    this.hgetall = promisify(client.hgetall).bind(client);
     this.hget = promisify(client.hget).bind(client);
-    this.hSetCache = promisify(client.hset).bind(client);
+    this.hset = promisify(client.hset).bind(client);
     this.hincrby = promisify(client.hincrby).bind(client);
     this.hexists = promisify(client.hexists).bind(client);
   }
