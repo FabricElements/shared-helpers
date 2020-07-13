@@ -5,7 +5,7 @@
   "types": "./lib/index.d.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.42",
+  "version": "0.0.44",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
@@ -23,7 +23,8 @@
     "tslint": "^6.1.2",
     "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.9.6",
-    "vrsource-tslint-rules": "^6.0.0"
+    "vrsource-tslint-rules": "^6.0.0",
+    "@types/redis": "^2.8.25"
   },
   "devDependencies": {},
   "scripts": {

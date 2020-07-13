@@ -84,7 +84,7 @@ export const getDocument = async (options: {
     cacheCalls: 0,
   };
   let data = {};
-  if (!(options.cache || client.connect)) {
+  if (!(options.cache || client.connected)) {
     const baseData = await _getDocumentSnap({
       collection: options.collection,
       document: options.document,
