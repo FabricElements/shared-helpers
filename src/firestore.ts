@@ -38,6 +38,7 @@ export class FirestoreHelper extends Cache {
   public getDocument = async (options: {
     cache?: boolean,
     cacheClear?: boolean,
+    cacheLimit?: number,
     collection: string,
     document: string,
   }): Promise<any> => {
@@ -62,6 +63,10 @@ export class FirestoreHelper extends Cache {
         }
         const request = JSON.parse(requestData);
         const cacheCalls = request.cacheCalls ? Number(request.cacheCalls) + 1 : 1;
+        const cacheLimit = options.cacheLimit >= cacheCalls;
+        if (cacheLimit) {
+          throw new Error("Cache limit reached");
+        }
         data = {
           ...request,
           ...cacheData,
@@ -89,6 +94,7 @@ export class FirestoreHelper extends Cache {
   public getList = async (options: {
     cache?: boolean,
     cacheClear?: boolean,
+    cacheLimit?: number,
     collection: string,
     limit?: number,
     orderBy?: {
@@ -113,6 +119,7 @@ export class FirestoreHelper extends Cache {
       const docData = await this.getDocument({
         cache: options.cache,
         cacheClear: options.cacheClear,
+        cacheLimit: options.cacheLimit,
         collection: options.collection,
         document: id,
       });
