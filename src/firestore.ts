@@ -56,26 +56,23 @@ export class FirestoreHelper extends Cache {
       data = {...baseData, ...cacheData};
     } else {
       try {
-        const exists: boolean = await this.hexists(cachePath);
+        const exists: boolean = await this.exists(cachePath);
         if (!exists) {
           throw new Error("Key not found");
         }
-        await this.hincrby(cachePath, "cacheCalls", 1);
-        const requestData = await this.hgetall(cachePath);
-        console.log(typeof requestData, requestData);
-        data = typeof requestData === "object" ? requestData : JSON.parse(requestData);
-        const cacheCalls = Number(data.cacheCalls);
+        const request = JSON.parse(await this.get(cachePath));
+        const cacheCalls = Number(request.cacheCalls);
         const cacheLimit = cacheCalls > options.cacheLimit;
         if (cacheLimit) {
           throw new Error("Cache limit reached");
         }
-        // data = {
-        //   ...request,
-        //   ...cacheData,
-        //   cacheCalls,
-        //   cache: true,
-        // };
-        // await this.hset(cachePath, JSON.stringify(data));
+        data = {
+          ...request,
+          ...cacheData,
+          cacheCalls,
+          cache: true,
+        };
+        await this.set(cachePath, JSON.stringify(data));
       } catch (error) {
         if (error.message !== "Key not found") {
           console.warn(error.message);
@@ -87,8 +84,7 @@ export class FirestoreHelper extends Cache {
           document: options.document,
         });
         data = {...baseData, ...cacheData, cache: true};
-        await this.hset(cachePath, data);
-        // await this.hset(cachePath, JSON.stringify(data));
+        await this.set(cachePath, JSON.stringify(data));
       }
     }
     return data;

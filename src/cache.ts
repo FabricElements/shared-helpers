@@ -13,12 +13,15 @@ import Config = config.Config;
 export class Cache {
   client: RedisClient;
   config: Config;
+  public exists;
+  public get;
   public hexists;
   public hget;
   public hgetall;
   public hincrby;
   public hset;
   public prefix: string;
+  public set;
 
   constructor(firebaseConfig: Config = {}, client: RedisClient) {
     if (!client) {
@@ -30,11 +33,12 @@ export class Cache {
     if (!this.prefix) {
       throw new Error("redis prefix is required");
     }
-    // this.get = promisify(client.get).bind(client);
-    // this.set = promisify(client.set).bind(client);
+    this.get = promisify(client.get).bind(client);
+    this.set = promisify(client.set).bind(client);
     this.hgetall = promisify(client.hgetall).bind(client);
     this.hget = promisify(client.hget).bind(client);
     this.hset = promisify(client.hset).bind(client);
+    this.exists = promisify(client.exists).bind(client);
     this.hincrby = promisify(client.hincrby).bind(client);
     this.hexists = promisify(client.hexists).bind(client);
   }
