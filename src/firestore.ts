@@ -87,7 +87,7 @@ export class FirestoreHelper extends Cache {
           document: options.document,
         });
         data = {...baseData, ...cacheData, cache: true};
-        await this.hset(cachePath, ...data);
+        await this.hset(cachePath, data);
         // await this.hset(cachePath, JSON.stringify(data));
       }
     }
