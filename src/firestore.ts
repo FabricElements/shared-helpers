@@ -41,7 +41,7 @@ export class FirestoreHelper extends Cache {
     collection: string,
     document: string,
   }): Promise<any> => {
-    const cachePath = `${this.prefix}/${options.collection}/${options.document}`;
+    const cachePath = `${this.prefix}:${options.collection}:${options.document}`;
     const cacheData = {
       cache: false,
       cacheCalls: 0,
@@ -56,30 +56,37 @@ export class FirestoreHelper extends Cache {
       data = {...baseData, ...cacheData};
     } else {
       try {
-        const requestData: string = await this.getCache(cachePath);
-        if (!requestData) {
+        const exists: boolean = await this.hexists(cachePath);
+        if (!exists) {
           throw new Error("Key not found");
         }
-        const request = JSON.parse(requestData);
-        const cacheCalls = request.cacheCalls ? Number(request.cacheCalls) + 1 : 1;
-        const cacheLimit = cacheCalls >= options.cacheLimit;
+        await this.hincrby(cachePath, "cacheCalls", 1);
+        const requestData: string = await this.hget(cachePath, "cacheCalls");
+        data = JSON.parse(requestData);
+        const cacheCalls = Number(data.cacheCalls);
+        const cacheLimit = cacheCalls > options.cacheLimit;
         if (cacheLimit) {
           throw new Error("Cache limit reached");
         }
-        data = {
-          ...request,
-          ...cacheData,
-          cacheCalls,
-          cache: true,
-        };
-        await this.setCache(cachePath, JSON.stringify(data));
+        // data = {
+        //   ...request,
+        //   ...cacheData,
+        //   cacheCalls,
+        //   cache: true,
+        // };
+        // await this.hSetCache(cachePath, JSON.stringify(data));
       } catch (error) {
+        if (error.message !== "Key not found") {
+          console.warn(error.message);
+        } else {
+          console.log("Created after:", error.message);
+        }
         const baseData = await this._getDocumentSnap({
           collection: options.collection,
           document: options.document,
         });
         data = {...baseData, ...cacheData, cache: true};
-        await this.setCache(cachePath, JSON.stringify(data));
+        await this.hSetCache(cachePath, JSON.stringify(data));
       }
     }
     return data;

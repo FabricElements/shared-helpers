@@ -11,8 +11,11 @@ import Config = config.Config;
 export declare class Cache {
     client: RedisClient;
     config: Config;
-    getCache: any;
+    hexists: any;
+    hget: any;
+    hGetAllCache: any;
+    hincrby: any;
+    hSetCache: any;
     prefix: string;
-    setCache: any;
     constructor(firebaseConfig: Config, client: RedisClient);
 }
