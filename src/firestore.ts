@@ -37,7 +37,6 @@ export class FirestoreHelper extends Cache {
    */
   public getDocument = async (options: {
     cache?: boolean,
-    cacheClear?: boolean,
     cacheLimit?: number,
     collection: string,
     document: string,
@@ -93,7 +92,6 @@ export class FirestoreHelper extends Cache {
    */
   public getList = async (options: {
     cache?: boolean,
-    cacheClear?: boolean,
     cacheLimit?: number,
     collection: string,
     limit?: number,
@@ -118,7 +116,6 @@ export class FirestoreHelper extends Cache {
       const id = ids[i];
       const docData = await this.getDocument({
         cache: options.cache,
-        cacheClear: options.cacheClear,
         cacheLimit: options.cacheLimit,
         collection: options.collection,
         document: id,

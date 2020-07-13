@@ -21,7 +21,6 @@ export declare class FirestoreHelper extends Cache {
      */
     getDocument: (options: {
         cache?: boolean;
-        cacheClear?: boolean;
         cacheLimit?: number;
         collection: string;
         document: string;
@@ -33,7 +32,6 @@ export declare class FirestoreHelper extends Cache {
      */
     getList: (options: {
         cache?: boolean;
-        cacheClear?: boolean;
         cacheLimit?: number;
         collection: string;
         limit?: number;
