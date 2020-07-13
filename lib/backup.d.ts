@@ -7,7 +7,7 @@ declare const _default: (data: {
     updateKey?: string | null;
 }) => Promise<any>;
 /**
- * Custom backup from Firestore to BigQuery
+ * Custom backup from FirestoreHelper to BigQuery
  *
  * @param data
  * if true, deletes document instead of changing backup to true on document

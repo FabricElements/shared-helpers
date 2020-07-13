@@ -35,7 +35,7 @@ Check if number is valid and format
 ### [cleaner](src/cleaner.ts)
 Big Query Clean Database
 
-### [firestore](src/firestore.ts)
+### [firestore](src/firestoreHelper.ts)
 Google Cloud Firestore helpers
 
 ### [global](src/global.ts)

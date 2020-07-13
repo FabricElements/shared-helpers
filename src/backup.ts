@@ -10,7 +10,7 @@ import {timeout} from "./global";
 const bigquery = new BigQuery();
 
 /**
- * Custom backup from Firestore to BigQuery
+ * Custom backup from FirestoreHelper to BigQuery
  *
  * @param data
  * if true, deletes document instead of changing backup to true on document

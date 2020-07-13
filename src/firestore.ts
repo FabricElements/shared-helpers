@@ -8,7 +8,7 @@ import {RedisClient} from "redis";
 import {Cache} from "./cache";
 import Config = config.Config;
 
-export class Firestore {
+export class FirestoreHelper {
   cache: Cache;
   client: RedisClient;
 

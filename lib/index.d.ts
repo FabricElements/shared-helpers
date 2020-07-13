@@ -7,9 +7,10 @@
  */
 import apiRequest from "./api-request";
 import backup from "./backup";
+import { Cache } from "./cache";
 import checkNumber from "./check-number";
 import cleaner from "./cleaner";
-import * as firestore from "./firestore";
+import { FirestoreHelper } from "./firestore";
 import * as global from "./global";
 import hashId from "./hash-id";
 import * as linkDomain from "./link-domain";
@@ -19,4 +20,4 @@ import specialCharToRegular from "./special-char-to-regular";
 import * as status from "./status";
 import * as strings from "./strings";
 import validateUrl from "./validate-url";
-export { apiRequest, backup, checkNumber, cleaner, firestore, global, hashId, linkDomain, pubSubEvent, replaceMessageText, specialCharToRegular, strings, status, validateUrl, };
+export { apiRequest, backup, checkNumber, cleaner, Cache, FirestoreHelper, global, hashId, linkDomain, pubSubEvent, replaceMessageText, specialCharToRegular, strings, status, validateUrl, };
