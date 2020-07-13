@@ -12,6 +12,6 @@ export declare class Cache {
     client: RedisClient;
     config: Config;
     prefix: string;
-    constructor(firebaseConfig?: Config, client?: RedisClient);
+    constructor(firebaseConfig: Config, client: RedisClient);
     async(action: any): any;
 }
