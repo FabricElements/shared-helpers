@@ -25,7 +25,7 @@ export class Cache {
   config: Config;
   public prefix: string;
 
-  constructor(firebaseConfig: Config, client: RedisClient = redisClient) {
+  constructor(firebaseConfig: Config = {}, client: RedisClient = redisClient) {
     this.config = firebaseConfig;
     this.client = client;
     this.prefix = firebaseConfig?.redis?.prefix ?? "";

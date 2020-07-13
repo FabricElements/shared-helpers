@@ -14,7 +14,7 @@ export class FirestoreHelper {
   cache: Cache;
   client: RedisClient;
 
-  constructor(firebaseConfig: Config, client: RedisClient = redisClient) {
+  constructor(firebaseConfig: Config = {}, client: RedisClient = redisClient) {
     this.cache = new Cache(firebaseConfig, client);
     this.client = client;
   }
