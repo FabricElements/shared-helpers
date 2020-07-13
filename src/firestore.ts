@@ -36,10 +36,10 @@ const _getDocument = async (options: {
  * @param options
  * @private
  */
-const _getDocumentSnap = async (options: {
+const _getDocumentSnap: any = async (options: {
   collection: string,
   document: string,
-}) => {
+}): Promise<any> => {
   const snap = await _getDocument({
     collection: options.collection,
     document: options.document,
@@ -56,11 +56,12 @@ const _getDocumentSnap = async (options: {
  * Validate if document exists
  *
  * @param options
+ * @returns <Promise<boolean>>
  */
-export const existDocument = async (options: {
+export const existDocument: (options: { collection: string; document: string }) => Promise<boolean> = async (options: {
   collection: string,
   document: string,
-}) => {
+}): Promise<boolean> => {
   const snap = await _getDocument({
     collection: options.collection,
     document: options.document,
@@ -71,19 +72,21 @@ export const existDocument = async (options: {
 /**
  * Get Document
  * @param options
+ * @return {Promise<any>}
  */
 export const getDocument = async (options: {
   cache?: boolean,
   cacheClear?: boolean,
   collection: string,
   document: string,
-}) => {
+}): Promise<any> => {
   const cachePath = `${prefix}/${options.collection}/${options.document}`;
   const cacheData = {
     cache: false,
     cacheCalls: 0,
+    cachePath,
   };
-  let data = {};
+  let data: any = {};
   if (!(options.cache || client.connected)) {
     const baseData = await _getDocumentSnap({
       collection: options.collection,
@@ -120,12 +123,10 @@ export const getDocument = async (options: {
 /**
  * Get services list
  * @param {any} options
+ * @return {Promise<string>[]}
  */
-export const getList = async (options: {
-  cache?: boolean,
-  cacheClear?: boolean,
+export const getListIds = async (options: {
   collection: string,
-  fullResponse?: boolean,
   limit?: number,
   orderBy?: {
     direction: FirebaseFirestore.OrderByDirection,
@@ -136,7 +137,7 @@ export const getList = async (options: {
     filter: FirebaseFirestore.WhereFilterOp,
     value: any,
   }[],
-}) => {
+}): Promise<string[]> => {
   if (!options.collection) {
     throw new Error("collection is undefined");
   }
@@ -160,14 +161,45 @@ export const getList = async (options: {
     return [];
   }
   const docs = snapshot.docs;
-  if (!options.fullResponse) {
-    return docs.map((doc) => doc.id);
-  }
-  // Return full data only when needed
-  return docs.map(async (doc) => getDocument({
-    cache: options.cache,
-    cacheClear: options.cacheClear,
+  return docs.map((doc) => doc.id);
+};
+
+/**
+ * Get services list
+ * @param {any} options
+ * @return {Promise<any>[]}
+ */
+export const getList = async (options: {
+  cache?: boolean,
+  cacheClear?: boolean,
+  collection: string,
+  limit?: number,
+  orderBy?: {
+    direction: FirebaseFirestore.OrderByDirection,
+    key: string,
+  },
+  where?: {
+    field: string | FirebaseFirestore.FieldPath,
+    filter: FirebaseFirestore.WhereFilterOp,
+    value: any,
+  }[],
+}): Promise<any[]> => {
+  const ids: string[] = await getListIds({
     collection: options.collection,
-    document: doc.id,
-  }));
+    limit: options.limit,
+    orderBy: options.orderBy,
+    where: options.where,
+  });
+  let data: any[] = [];
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i];
+    const docData = await getDocument({
+      cache: options.cache,
+      cacheClear: options.cacheClear,
+      collection: options.collection,
+      document: id,
+    });
+    data.push(docData);
+  }
+  return data;
 };

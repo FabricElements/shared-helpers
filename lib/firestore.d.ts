@@ -2,6 +2,7 @@
  * Validate if document exists
  *
  * @param options
+ * @returns <Promise<boolean>>
  */
 export declare const existDocument: (options: {
     collection: string;
@@ -10,22 +11,21 @@ export declare const existDocument: (options: {
 /**
  * Get Document
  * @param options
+ * @return {Promise<any>}
  */
 export declare const getDocument: (options: {
     cache?: boolean;
     cacheClear?: boolean;
     collection: string;
     document: string;
-}) => Promise<{}>;
+}) => Promise<any>;
 /**
  * Get services list
  * @param {any} options
+ * @return {Promise<string>[]}
  */
-export declare const getList: (options: {
-    cache?: boolean;
-    cacheClear?: boolean;
+export declare const getListIds: (options: {
     collection: string;
-    fullResponse?: boolean;
     limit?: number;
     orderBy?: {
         direction: FirebaseFirestore.OrderByDirection;
@@ -36,4 +36,24 @@ export declare const getList: (options: {
         filter: FirebaseFirestore.WhereFilterOp;
         value: any;
     }[];
-}) => Promise<any>;
+}) => Promise<string[]>;
+/**
+ * Get services list
+ * @param {any} options
+ * @return {Promise<any>[]}
+ */
+export declare const getList: (options: {
+    cache?: boolean;
+    cacheClear?: boolean;
+    collection: string;
+    limit?: number;
+    orderBy?: {
+        direction: FirebaseFirestore.OrderByDirection;
+        key: string;
+    };
+    where?: {
+        field: string | FirebaseFirestore.FieldPath;
+        filter: FirebaseFirestore.WhereFilterOp;
+        value: any;
+    }[];
+}) => Promise<any[]>;
