@@ -3,42 +3,117 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
+import {client, rget, rset} from "./cache";
+
+const config = functions.config();
+const prefix = config.redis.prefix;
 
 /**
- * Exist Document
- * @param collectionId
- * @param documentId
+ * Get document instance from firestore
+ *
+ * @param options
+ * @private
  */
-export const existDocument = async (collectionId: string, documentId: string) => {
-  if (!documentId) {
-    throw new Error("Missing id");
+const _getDocument = async (options: {
+  collection: string,
+  document: string,
+}) => {
+  if (!options.collection) {
+    throw new Error("Missing collection");
+  }
+  if (!options.document) {
+    throw new Error("Missing document id");
   }
   const db = admin.firestore();
-  const ref = db.collection(collectionId).doc(documentId);
-  const snap = await ref.get();
+  const ref = db.collection(options.collection).doc(options.document);
+  return ref.get();
+};
+
+/**
+ * Get document snapshot from firestore
+ *
+ * @param options
+ * @private
+ */
+const _getDocumentSnap = async (options: {
+  collection: string,
+  document: string,
+}) => {
+  const snap = await _getDocument({
+    collection: options.collection,
+    document: options.document,
+  });
+  if (!snap.exists) {
+    throw new Error(`Not found ${options.collection}/${options.document}`);
+  }
+  let data: any = snap.data();
+  data.id = options.document;
+  return data;
+};
+
+/**
+ * Validate if document exists
+ *
+ * @param options
+ */
+export const existDocument = async (options: {
+  collection: string,
+  document: string,
+}) => {
+  const snap = await _getDocument({
+    collection: options.collection,
+    document: options.document,
+  });
   return snap.exists;
 };
 
 /**
  * Get Document
- * @param collectionId
- * @param documentId
+ * @param options
  */
-export const getDocument = async (collectionId: string, documentId: string) => {
-  if (!documentId) {
-    throw new Error("Missing id");
-  }
-  const db = admin.firestore();
-  const ref = db.collection(collectionId).doc(documentId);
-  const snap = await ref.get();
-  if (!snap.exists) {
-    if (collectionId === "service") {
-      throw new Error("Missing service id");
+export const getDocument = async (options: {
+  cache?: boolean,
+  cacheClear?: boolean,
+  collection: string,
+  document: string,
+}) => {
+  const cachePath = `${prefix}/${options.collection}/${options.document}`;
+  const cacheData = {
+    cache: false,
+    cacheCalls: 0,
+  };
+  let data = {};
+  if (!(options.cache || client.connect)) {
+    const baseData = await _getDocumentSnap({
+      collection: options.collection,
+      document: options.document,
+    });
+    data = {...baseData, ...cacheData};
+  } else {
+    try {
+      const requestData: string = await rget(cachePath);
+      if (!requestData) {
+        throw new Error("Key not found");
+      }
+      const request = JSON.parse(requestData);
+      const cacheCalls = request.cacheCalls ? Number(request.cacheCalls) + 1 : 1;
+      data = {
+        ...request,
+        ...cacheData,
+        cacheCalls,
+        cache: true,
+      };
+      await rset(cachePath, JSON.stringify(data));
+    } catch (error) {
+      const baseData = await _getDocumentSnap({
+        collection: options.collection,
+        document: options.document,
+      });
+      data = {...baseData, ...cacheData, cache: true};
+      await rset(cachePath, JSON.stringify(data));
     }
-    throw new Error(`Not found ${collectionId}/${documentId}`);
   }
-  let data: any = snap.data();
-  data.id = documentId;
   return data;
 };
 
@@ -47,7 +122,9 @@ export const getDocument = async (collectionId: string, documentId: string) => {
  * @param {any} options
  */
 export const getList = async (options: {
-  collectionId: string,
+  cache?: boolean,
+  cacheClear?: boolean,
+  collection: string,
   fullResponse?: boolean,
   limit?: number,
   orderBy?: {
@@ -60,11 +137,11 @@ export const getList = async (options: {
     value: any,
   }[],
 }) => {
-  if (!options.collectionId) {
-    throw new Error("collectionId is undefined");
+  if (!options.collection) {
+    throw new Error("collection is undefined");
   }
   const db = admin.firestore();
-  let ref: any = db.collection(options.collectionId);
+  let ref: any = db.collection(options.collection);
   if (options.orderBy) {
     ref = ref.orderBy(options.orderBy.key, options.orderBy.direction);
   }
@@ -87,9 +164,10 @@ export const getList = async (options: {
     return docs.map((doc) => doc.id);
   }
   // Return full data only when needed
-  return docs.map((doc) => {
-    let docData: any = doc.data();
-    docData.id = doc.id;
-    return docData;
-  });
+  return docs.map(async (doc) => getDocument({
+    cache: options.cache,
+    cacheClear: options.cacheClear,
+    collection: options.collection,
+    document: doc.id,
+  }));
 };

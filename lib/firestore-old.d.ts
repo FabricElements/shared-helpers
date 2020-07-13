@@ -1,30 +1,21 @@
 /**
- * Validate if document exists
- *
- * @param options
+ * Exist Document
+ * @param collectionId
+ * @param documentId
  */
-export declare const existDocument: (options: {
-    collection: string;
-    document: string;
-}) => Promise<boolean>;
+export declare const existDocument: (collectionId: string, documentId: string) => Promise<boolean>;
 /**
  * Get Document
- * @param options
+ * @param collectionId
+ * @param documentId
  */
-export declare const getDocument: (options: {
-    cache?: boolean;
-    cacheClear?: boolean;
-    collection: string;
-    document: string;
-}) => Promise<{}>;
+export declare const getDocument: (collectionId: string, documentId: string) => Promise<any>;
 /**
  * Get services list
  * @param {any} options
  */
 export declare const getList: (options: {
-    cache?: boolean;
-    cacheClear?: boolean;
-    collection: string;
+    collectionId: string;
     fullResponse?: boolean;
     limit?: number;
     orderBy?: {
