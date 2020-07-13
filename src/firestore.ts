@@ -60,7 +60,7 @@ export class FirestoreHelper {
       data = {...baseData, ...cacheData};
     } else {
       try {
-        const requestData: string = await this.cache.async(this.client.get)(cachePath);
+        const requestData: string = await this.cache.get(cachePath);
         if (!requestData) {
           throw new Error("Key not found");
         }
@@ -72,14 +72,14 @@ export class FirestoreHelper {
           cacheCalls,
           cache: true,
         };
-        await this.cache.async(this.client.set)(cachePath, JSON.stringify(data));
+        await this.cache.set(cachePath, JSON.stringify(data));
       } catch (error) {
         const baseData = await this._getDocumentSnap({
           collection: options.collection,
           document: options.document,
         });
         data = {...baseData, ...cacheData, cache: true};
-        await this.cache.async(this.client.set)(cachePath, JSON.stringify(data));
+        await this.cache.set(cachePath, JSON.stringify(data));
       }
     }
     return data;

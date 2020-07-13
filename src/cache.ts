@@ -7,29 +7,20 @@ import {RedisClient} from "redis";
 import {promisify} from "util";
 import Config = config.Config;
 
-interface InterfaceConfig {
-  redis: {
-    host: string,
-    port: string | number,
-    prefix: string,
-  }
-}
-
 /**
  * Cache
  */
 export class Cache {
   client: RedisClient;
   config: Config;
+  public get = promisify(this.client.get).bind(this.client);
+  public incr = promisify(this.client.incr).bind(this.client);
   public prefix: string;
+  public set = promisify(this.client.set).bind(this.client);
 
   constructor(firebaseConfig: Config = {}, client: RedisClient) {
     this.config = firebaseConfig;
     this.client = client;
     this.prefix = firebaseConfig?.redis?.prefix ?? "";
-  }
-
-  public async(action: any) {
-    return promisify(action).bind(this.client);
   }
 }
