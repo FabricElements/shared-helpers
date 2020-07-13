@@ -63,7 +63,7 @@ export class FirestoreHelper extends Cache {
         }
         const request = JSON.parse(requestData);
         const cacheCalls = request.cacheCalls ? Number(request.cacheCalls) + 1 : 1;
-        const cacheLimit = options.cacheLimit >= cacheCalls;
+        const cacheLimit = cacheCalls >= options.cacheLimit;
         if (cacheLimit) {
           throw new Error("Cache limit reached");
         }
