@@ -2,15 +2,34 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as functions from "firebase-functions";
-import * as redis from "redis";
+import {config} from "firebase-functions";
+import {RedisClient} from "redis";
 import {promisify} from "util";
+import Config = config.Config;
 
-const config = functions.config();
-export const host = config.redis.host;
-export const port = Number(config.redis.port);
-export const client = redis.createClient(port, host);
+interface InterfaceConfig {
+  redis: {
+    host: string,
+    port: string | number,
+    prefix: string,
+  }
+}
 
-export const rincr = promisify(client.incr).bind(client);
-export const rget = promisify(client.get).bind(client);
-export const rset = promisify(client.set).bind(client);
+/**
+ * Cache
+ */
+export class Cache {
+  client: RedisClient;
+  config: Config;
+  public prefix: string;
+
+  constructor(firebaseConfig: Config, client: RedisClient) {
+    this.config = firebaseConfig;
+    this.client = client;
+    this.prefix = this.config?.redis?.prefix ?? "";
+  }
+
+  public async(action: any) {
+    return promisify(action).bind(this.client);
+  }
+}
