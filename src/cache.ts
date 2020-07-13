@@ -18,7 +18,7 @@ export class Cache {
   public setCache;
 
   constructor(firebaseConfig: Config = {}, client: RedisClient) {
-    if (!this.client) {
+    if (!client) {
       throw new Error("Can't get the client from cache");
     }
     this.config = firebaseConfig;
