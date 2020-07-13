@@ -61,7 +61,7 @@ export class FirestoreHelper extends Cache {
           throw new Error("Key not found");
         }
         const request = JSON.parse(await this.get(cachePath));
-        const cacheCalls = Number(request.cacheCalls);
+        const cacheCalls = request.cacheCalls ? Number(request.cacheCalls) + 1 : 1;
         const cacheLimit = cacheCalls > options.cacheLimit;
         if (cacheLimit) {
           throw new Error("Cache limit reached");
