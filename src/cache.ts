@@ -3,9 +3,11 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {config} from "firebase-functions";
-import {RedisClient} from "redis";
+import {createClient, RedisClient} from "redis";
 import {promisify} from "util";
 import Config = config.Config;
+
+const redisClient = createClient();
 
 interface InterfaceConfig {
   redis: {
@@ -23,10 +25,10 @@ export class Cache {
   config: Config;
   public prefix: string;
 
-  constructor(firebaseConfig: Config, client: RedisClient) {
+  constructor(firebaseConfig: Config, client: RedisClient = redisClient) {
     this.config = firebaseConfig;
     this.client = client;
-    this.prefix = this.config?.redis?.prefix ?? "";
+    this.prefix = firebaseConfig?.redis?.prefix ?? "";
   }
 
   public async(action: any) {

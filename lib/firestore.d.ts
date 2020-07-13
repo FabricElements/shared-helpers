@@ -5,7 +5,7 @@ import Config = config.Config;
 export declare class FirestoreHelper {
     cache: Cache;
     client: RedisClient;
-    constructor(firebaseConfig: Config, client: RedisClient);
+    constructor(firebaseConfig: Config, client?: RedisClient);
     /**
      * Validate if document exists
      *

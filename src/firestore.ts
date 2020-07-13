@@ -4,16 +4,18 @@
  */
 import * as admin from "firebase-admin";
 import {config} from "firebase-functions";
-import {RedisClient} from "redis";
+import {createClient, RedisClient} from "redis";
 import {Cache} from "./cache";
 import Config = config.Config;
+
+const redisClient = createClient();
 
 export class FirestoreHelper {
   cache: Cache;
   client: RedisClient;
 
-  constructor(firebaseConfig: Config, client: RedisClient) {
-    this.cache = new Cache(config, client);
+  constructor(firebaseConfig: Config, client: RedisClient = redisClient) {
+    this.cache = new Cache(firebaseConfig, client);
     this.client = client;
   }
 
