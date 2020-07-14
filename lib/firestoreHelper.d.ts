@@ -2,7 +2,9 @@ import { config } from "firebase-functions";
 import { RedisClient } from "redis";
 import { Cache } from "./cache";
 import Config = config.Config;
-export declare class FirestoreHelper extends Cache {
+export declare class FirestoreHelper {
+    cache: Cache;
+    client: RedisClient;
     constructor(firebaseConfig: Config, client: RedisClient);
     /**
      * Validate if document exists
@@ -21,7 +23,7 @@ export declare class FirestoreHelper extends Cache {
      */
     getDocument: (options: {
         cache?: boolean;
-        cacheLimit?: number;
+        cacheClear?: boolean;
         collection: string;
         document: string;
     }) => Promise<any>;
@@ -32,7 +34,7 @@ export declare class FirestoreHelper extends Cache {
      */
     getList: (options: {
         cache?: boolean;
-        cacheLimit?: number;
+        cacheClear?: boolean;
         collection: string;
         limit?: number;
         orderBy?: {

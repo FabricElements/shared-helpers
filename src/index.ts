@@ -7,12 +7,14 @@
  */
 import apiRequest from "./api-request";
 import backup from "./backup";
+import {Cache} from "./cache";
 import checkNumber from "./check-number";
 import cleaner from "./cleaner";
-import * as firestore from "./firestore";
+import {FirestoreHelper} from "./firestore";
 import * as global from "./global";
 import hashId from "./hash-id";
 import * as linkDomain from "./link-domain";
+import messageQueueSpeed from "./message-queue-speed";
 import pubSubEvent from "./pubsub-event";
 import replaceMessageText from "./replace-message-text";
 import specialCharToRegular from "./special-char-to-regular";
@@ -25,10 +27,12 @@ export {
   backup,
   checkNumber,
   cleaner,
-  firestore,
+  Cache,
+  FirestoreHelper,
   global,
   hashId,
   linkDomain,
+  messageQueueSpeed,
   pubSubEvent,
   replaceMessageText,
   specialCharToRegular,
