@@ -5,7 +5,7 @@
   "types": "./lib/index.d.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.63",
+  "version": "0.0.64",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
@@ -14,8 +14,8 @@
     "@google-cloud/bigquery": "^5.0.1",
     "@types/redis": "^2.8.25",
     "abort-controller": "^3.0.0",
-    "firebase-admin": "^8.13.0",
-    "firebase-functions": "^3.7.0",
+    "firebase-admin": "^9.0.0",
+    "firebase-functions": "^3.8.0",
     "libphonenumber-js": "^1.7.54",
     "lodash": "^4.17.19",
     "moment-timezone": "^0.5.31",
