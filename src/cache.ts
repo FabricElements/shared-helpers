@@ -13,8 +13,10 @@ import Config = config.Config;
 export class Cache {
   client: RedisClient;
   config: Config;
+  public del;
   public exists;
   public get;
+  public hdel;
   public hexists;
   public hget;
   public hgetall;
@@ -41,6 +43,8 @@ export class Cache {
     this.exists = promisify(client.exists).bind(client);
     this.hincrby = promisify(client.hincrby).bind(client);
     this.hexists = promisify(client.hexists).bind(client);
+    this.del = promisify(client.del).bind(client);
+    this.hdel = promisify(client.hdel).bind(client);
   }
 
   // public get = (options) => promisify(this.client.get).bind(this.client)(options);

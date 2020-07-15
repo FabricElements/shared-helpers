@@ -11,8 +11,10 @@ import Config = config.Config;
 export declare class Cache {
     client: RedisClient;
     config: Config;
+    del: any;
     exists: any;
     get: any;
+    hdel: any;
     hexists: any;
     hget: any;
     hgetall: any;
