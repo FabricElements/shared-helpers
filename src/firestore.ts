@@ -56,11 +56,11 @@ export class FirestoreHelper extends Cache {
       data = {...baseData, ...cacheData};
     } else {
       try {
-        const exists: boolean = await this.exists(cachePath);
-        if (!exists) {
+        const requestData = await this.get(cachePath);
+        if (!requestData) {
           throw new Error("Key not found");
         }
-        const request = JSON.parse(await this.get(cachePath));
+        const request = JSON.parse(requestData);
         const cacheCalls = request.cacheCalls ? Number(request.cacheCalls) + 1 : 1;
         const cacheLimit = cacheCalls > options.cacheLimit;
         if (cacheLimit) {
@@ -75,7 +75,7 @@ export class FirestoreHelper extends Cache {
         await this.set(cachePath, JSON.stringify(data));
       } catch (error) {
         if (error.message !== "Key not found") {
-          console.warn(error.message);
+          // console.warn(error.message);
         } else {
           console.log("Created after:", error.message);
         }
