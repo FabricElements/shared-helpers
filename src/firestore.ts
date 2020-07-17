@@ -8,6 +8,9 @@ import {RedisClient} from "redis";
 import {Cache} from "./cache";
 import Config = config.Config;
 
+const projectId: string = String(process?.env?.GCLOUD_PROJECT);
+const isBeta = projectId.search("beta") >= 0;
+
 export class FirestoreHelper extends Cache {
   constructor(firebaseConfig: Config, client: RedisClient) {
     super(firebaseConfig, client);
@@ -74,10 +77,15 @@ export class FirestoreHelper extends Cache {
         };
         await this.set(cachePath, JSON.stringify(data));
       } catch (error) {
-        if (error.message !== "Key not found") {
-          // console.warn(error.message);
-        } else {
-          console.log("Created after:", error.message);
+        if (isBeta) {
+          switch (error.message) {
+            case "Key not found":
+            case "Cache limit reached":
+              console.log(error.message);
+              break;
+            default:
+              console.log("Created after:", error.message);
+          }
         }
         const baseData = await this._getDocumentSnap({
           collection: options.collection,
