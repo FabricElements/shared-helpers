@@ -51,13 +51,8 @@ export class FirestoreHelper extends Cache {
       cachePath,
     };
     let data: any = {};
-    if (!(options.cache || this.client.connected)) {
-      const baseData = await this._getDocumentSnap({
-        collection: options.collection,
-        document: options.document,
-      });
-      data = {...baseData, ...cacheData};
-    } else {
+    const willCache = options.cache && this.client.connected;
+    if (willCache) {
       try {
         const requestData = await this.get(cachePath);
         if (!requestData) {
@@ -75,7 +70,6 @@ export class FirestoreHelper extends Cache {
           cacheCalls,
           cache: true,
         };
-        await this.set(cachePath, JSON.stringify(data));
       } catch (error) {
         if (isBeta) {
           switch (error.message) {
@@ -87,13 +81,17 @@ export class FirestoreHelper extends Cache {
               console.log("Created after:", error.message);
           }
         }
-        const baseData = await this._getDocumentSnap({
-          collection: options.collection,
-          document: options.document,
-        });
-        data = {...baseData, ...cacheData, cache: true};
-        await this.setex(cachePath, 600, JSON.stringify(data));
       }
+    }
+    if (Object.keys(data).length === 0) {
+      const baseData = await this._getDocumentSnap({
+        collection: options.collection,
+        document: options.document,
+      });
+      data = {...baseData, ...cacheData};
+    }
+    if (willCache) {
+      await this.setex(cachePath, 600, JSON.stringify(data));
     }
     return data;
   };
