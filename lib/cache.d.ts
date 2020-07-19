@@ -22,5 +22,6 @@ export declare class Cache {
     hset: any;
     prefix: string;
     set: any;
+    setex: any;
     constructor(firebaseConfig: Config, client: RedisClient);
 }

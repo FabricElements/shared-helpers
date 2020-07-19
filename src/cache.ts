@@ -24,6 +24,7 @@ export class Cache {
   public hset;
   public prefix: string;
   public set;
+  public setex;
 
   constructor(firebaseConfig: Config = {}, client: RedisClient) {
     if (!client) {
@@ -37,6 +38,7 @@ export class Cache {
     }
     this.get = promisify(client.get).bind(client);
     this.set = promisify(client.set).bind(client);
+    this.setex = promisify(client.setex).bind(client);
     this.hgetall = promisify(client.hgetall).bind(client);
     this.hget = promisify(client.hget).bind(client);
     this.hset = promisify(client.hset).bind(client);
