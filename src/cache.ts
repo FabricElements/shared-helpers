@@ -24,6 +24,7 @@ export class Cache {
   public hgetall;
   public hincrby;
   public hset;
+  public incr;
   public prefix: string;
   public set;
   public setex;
@@ -51,6 +52,7 @@ export class Cache {
     this.hexists = promisify(client.hexists).bind(client);
     this.set = promisify(client.set).bind(client);
     this.setex = promisify(client.setex).bind(client);
+    this.incr = promisify(client.incr).bind(client);
   }
 
   // public get = (options) => promisify(this.client.get).bind(this.client)(options);

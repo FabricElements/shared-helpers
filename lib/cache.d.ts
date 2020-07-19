@@ -22,6 +22,7 @@ export declare class Cache {
     hgetall: any;
     hincrby: any;
     hset: any;
+    incr: any;
     prefix: string;
     set: any;
     setex: any;
