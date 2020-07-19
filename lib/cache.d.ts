@@ -13,6 +13,8 @@ export declare class Cache {
     config: Config;
     del: any;
     exists: any;
+    flushall: any;
+    flushdb: any;
     get: any;
     hdel: any;
     hexists: any;
