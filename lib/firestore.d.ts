@@ -38,7 +38,7 @@ export declare class FirestoreHelper extends Cache {
         orderBy?: {
             direction: FirebaseFirestore.OrderByDirection;
             key: string;
-        };
+        }[];
         where?: {
             field: string | FirebaseFirestore.FieldPath;
             filter: FirebaseFirestore.WhereFilterOp;
@@ -56,7 +56,7 @@ export declare class FirestoreHelper extends Cache {
         orderBy?: {
             direction: FirebaseFirestore.OrderByDirection;
             key: string;
-        };
+        }[];
         where?: {
             field: string | FirebaseFirestore.FieldPath;
             filter: FirebaseFirestore.WhereFilterOp;

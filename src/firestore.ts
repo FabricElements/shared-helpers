@@ -111,7 +111,7 @@ export class FirestoreHelper extends Cache {
     orderBy?: {
       direction: FirebaseFirestore.OrderByDirection,
       key: string,
-    },
+    }[],
     where?: {
       field: string | FirebaseFirestore.FieldPath,
       filter: FirebaseFirestore.WhereFilterOp,
@@ -149,7 +149,7 @@ export class FirestoreHelper extends Cache {
     orderBy?: {
       direction: FirebaseFirestore.OrderByDirection,
       key: string,
-    },
+    }[],
     where?: {
       field: string | FirebaseFirestore.FieldPath,
       filter: FirebaseFirestore.WhereFilterOp,
@@ -161,8 +161,12 @@ export class FirestoreHelper extends Cache {
     }
     const db = admin.firestore();
     let ref: any = db.collection(options.collection);
-    if (options.orderBy) {
-      ref = ref.orderBy(options.orderBy.key, options.orderBy.direction);
+    const orderBy = options.orderBy;
+    if (orderBy && orderBy.length > 0) {
+      for (let i = 0; i < orderBy.length; i++) {
+        const item = orderBy[i];
+        ref = ref.orderBy(item.key, item.direction);
+      }
     }
     const where = options.where;
     if (where && where.length > 0) {
