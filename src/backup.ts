@@ -49,6 +49,7 @@ export default async (data: {
   // Update firestore documents
   const db = admin.firestore();
   let batch = db.batch();
+  let pending = 0;
   for (let i = 0; i < total; i++) {
     const item = data.items[i];
     if (!item.id) {
@@ -64,13 +65,19 @@ export default async (data: {
         backup: true,
       });
     }
-    if (i === (data.items.length - 1) || i > 0 && i % 400 === 0) {
+    pending++;
+    if (pending === 500) {
       // console.info("Backup..", i + 1);
       await batch.commit();
-      backup = i + 1;
+      backup += pending;
       batch = db.batch();
+      pending = 0;
       await timeout(1000); // Waiting 1 second for next request...
     }
+  }
+  if (pending > 0) {
+    backup += pending;
+    await batch.commit();
   }
   console.info(`${backup} items backup for collection "${data.collection}"`);
   return null;
