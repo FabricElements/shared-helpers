@@ -14,6 +14,7 @@ const bigquery = new BigQuery();
  *
  * @param data
  * if true, deletes document instead of changing backup to true on document
+ * 1500/minute --- Recommended memory 500mb
  */
 export default async (data: {
   collection: string,
@@ -72,7 +73,7 @@ export default async (data: {
       backup += pending;
       batch = db.batch();
       pending = 0;
-      await timeout(1000); // Waiting 1 second for next request...
+      await timeout(100); // Waiting for next request...
     }
   }
   if (pending > 0) {
