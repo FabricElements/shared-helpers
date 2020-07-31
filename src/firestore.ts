@@ -12,7 +12,7 @@ const projectId: string = String(process?.env?.GCLOUD_PROJECT);
 const isBeta = projectId.search("beta") >= 0;
 
 export class FirestoreHelper extends Cache {
-  constructor(firebaseConfig: Config, client?: RedisClient) {
+  constructor(firebaseConfig: Config = {}, client?: RedisClient) {
     super(firebaseConfig, client);
   }
 
