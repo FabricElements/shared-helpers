@@ -7,6 +7,8 @@ import {RedisClient} from "redis";
 import {promisify} from "util";
 import Config = config.Config;
 
+const projectId: string = String(process?.env?.GCLOUD_PROJECT);
+const isBeta = projectId.search("beta") >= 0;
 const baseCall = async (op1?: any, op2?: any, op3?: any) => {
   return;
 };
@@ -56,7 +58,9 @@ export class Cache {
       this.setex = promisify(client.setex).bind(client);
       this.incr = promisify(client.incr).bind(client);
     } else {
-      console.warn("Can't get the client from cache");
+      if (isBeta) {
+        console.warn("Can't get the client from cache");
+      }
       return;
     }
   }
