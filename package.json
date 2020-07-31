@@ -5,13 +5,13 @@
   "types": "./lib/index.d.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.72",
+  "version": "0.0.73",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
   },
   "dependencies": {
-    "@google-cloud/bigquery": "^5.0.1",
+    "@google-cloud/bigquery": "^5.1.0",
     "@types/redis": "^2.8.25",
     "abort-controller": "^3.0.0",
     "firebase-admin": "^9.0.0",

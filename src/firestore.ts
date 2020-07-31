@@ -12,7 +12,7 @@ const projectId: string = String(process?.env?.GCLOUD_PROJECT);
 const isBeta = projectId.search("beta") >= 0;
 
 export class FirestoreHelper extends Cache {
-  constructor(firebaseConfig: Config, client: RedisClient) {
+  constructor(firebaseConfig: Config, client?: RedisClient) {
     super(firebaseConfig, client);
   }
 
@@ -51,10 +51,10 @@ export class FirestoreHelper extends Cache {
       cachePath,
     };
     let data: any = {};
-    const willCache = options.cache && this.client.connected;
+    const willCache = options.cache && this.client?.connected;
     if (willCache) {
       try {
-        const requestData = await this.get(cachePath);
+        const requestData: any = await this.get(cachePath);
         if (!requestData) {
           throw new Error("Key not found");
         }
