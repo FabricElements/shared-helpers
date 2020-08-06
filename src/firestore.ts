@@ -51,7 +51,7 @@ export class FirestoreHelper extends Cache {
       cachePath,
     };
     let data: any = {};
-    const willCache = options.cache && this.client?.connected;
+    const willCache = !isBeta && options.cache && this.client?.connected;
     if (willCache) {
       try {
         const requestData: any = await this.get(cachePath);

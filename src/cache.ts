@@ -36,7 +36,7 @@ export class Cache {
   public setex = baseCall;
 
   constructor(firebaseConfig: Config = {}, client?: RedisClient) {
-    if (client && client?.connected) {
+    if (!isBeta && client && client?.connected) {
       this.config = firebaseConfig;
       this.client = client;
       this.prefix = firebaseConfig?.redis?.prefix ?? null;
