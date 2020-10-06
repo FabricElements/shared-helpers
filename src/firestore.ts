@@ -51,7 +51,7 @@ export class FirestoreHelper extends Cache {
       cachePath,
     };
     let data: any = {};
-    const willCache = !isBeta && options.cache && this.client?.connected;
+    const willCache = !isBeta && options.cache && this.client && this.client.connected;
     if (willCache) {
       try {
         const requestData: any = await this.get(cachePath);
@@ -97,7 +97,7 @@ export class FirestoreHelper extends Cache {
   };
 
   /**
-   * Get services list
+   * Get list
    * @param {any} options
    * @return {Promise<any>[]}
    */
@@ -137,7 +137,7 @@ export class FirestoreHelper extends Cache {
   };
 
   /**
-   * Get services list
+   * Get list
    * @param {any} options
    * @return {Promise<string>[]}
    */
@@ -182,6 +182,53 @@ export class FirestoreHelper extends Cache {
     }
     const docs = snapshot.docs;
     return docs.map((doc) => doc.id);
+  };
+
+  /**
+   * Get list size
+   * @param {any} options
+   * @return {Promise<string>[]}
+   */
+  public getListSize = async (options: {
+    collection: string,
+    limit?: number,
+    orderBy?: {
+      direction: FirebaseFirestore.OrderByDirection,
+      key: string,
+    }[],
+    where?: {
+      field: string | FirebaseFirestore.FieldPath,
+      filter: FirebaseFirestore.WhereFilterOp,
+      value: any,
+    }[],
+  }): Promise<number> => {
+    if (!options.collection) {
+      throw new Error("collection is undefined");
+    }
+    const db = admin.firestore();
+    let ref: any = db.collection(options.collection);
+    const orderBy = options.orderBy;
+    if (orderBy && orderBy.length > 0) {
+      for (let i = 0; i < orderBy.length; i++) {
+        const item = orderBy[i];
+        ref = ref.orderBy(item.key, item.direction);
+      }
+    }
+    const where = options.where;
+    if (where && where.length > 0) {
+      for (let i = 0; i < where.length; i++) {
+        const item = where[i];
+        ref = ref.where(item.field, item.filter, item.value);
+      }
+    }
+    if (options.limit) {
+      ref = ref.limit(options.limit);
+    }
+    const snapshot = await ref.get();
+    if (!snapshot || !snapshot.docs || snapshot.empty) {
+      return 0;
+    }
+    return snapshot.size;
   };
 
   /**

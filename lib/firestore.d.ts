@@ -26,7 +26,7 @@ export declare class FirestoreHelper extends Cache {
         document: string;
     }) => Promise<any>;
     /**
-     * Get services list
+     * Get list
      * @param {any} options
      * @return {Promise<any>[]}
      */
@@ -46,7 +46,7 @@ export declare class FirestoreHelper extends Cache {
         }[];
     }) => Promise<any[]>;
     /**
-     * Get services list
+     * Get list
      * @param {any} options
      * @return {Promise<string>[]}
      */
@@ -63,6 +63,24 @@ export declare class FirestoreHelper extends Cache {
             value: any;
         }[];
     }) => Promise<string[]>;
+    /**
+     * Get list size
+     * @param {any} options
+     * @return {Promise<string>[]}
+     */
+    getListSize: (options: {
+        collection: string;
+        limit?: number;
+        orderBy?: {
+            direction: FirebaseFirestore.OrderByDirection;
+            key: string;
+        }[];
+        where?: {
+            field: string | FirebaseFirestore.FieldPath;
+            filter: FirebaseFirestore.WhereFilterOp;
+            value: any;
+        }[];
+    }) => Promise<number>;
     /**
      * Get document instance from firestore
      *
