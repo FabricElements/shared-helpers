@@ -5,6 +5,7 @@
 declare const _default: (options: {
     data?: {};
     domains?: string[];
+    language?: "en";
     text: string;
 }) => string;
 /**
