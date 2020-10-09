@@ -83,7 +83,7 @@ export default (options: {
       case "link": // Replaces link references with a random domain
         replaceValue = randomDomain({domains: options.domains});
         break;
-      case "reply_stop_unsubscribe": // Replaces random unsubscribe message
+      case "replyStopUnsubscribe": // Replaces random unsubscribe message
         replaceValue = replyStop(language);
         break;
       default:
