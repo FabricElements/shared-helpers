@@ -5,18 +5,18 @@
   "types": "./lib/index.d.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.0.82",
+  "version": "0.0.83",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
   },
   "dependencies": {
-    "@google-cloud/bigquery": "^5.2.0",
-    "@types/redis": "^2.8.27",
+    "@google-cloud/bigquery": "^5.3.0",
+    "@types/redis": "^2.8.28",
     "abort-controller": "^3.0.0",
     "firebase-admin": "^9.2.0",
     "firebase-functions": "^3.11.0",
-    "libphonenumber-js": "^1.8.1",
+    "libphonenumber-js": "^1.8.5",
     "lodash": "^4.17.20",
     "moment-timezone": "^0.5.31",
     "node-fetch": "^2.6.1",

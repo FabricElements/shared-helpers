@@ -26,5 +26,6 @@ export declare class Cache {
     prefix: string;
     set: (op1?: any, op2?: any, op3?: any) => Promise<void>;
     setex: (op1?: any, op2?: any, op3?: any) => Promise<void>;
+    willCache: boolean;
     constructor(firebaseConfig?: Config, client?: RedisClient);
 }

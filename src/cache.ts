@@ -34,15 +34,22 @@ export class Cache {
   public prefix: string;
   public set = baseCall;
   public setex = baseCall;
+  public willCache: boolean = false;
 
   constructor(firebaseConfig: Config = {}, client?: RedisClient) {
-    if (!isBeta && client && client?.connected) {
+    try {
       this.config = firebaseConfig;
-      this.client = client;
       this.prefix = firebaseConfig?.redis?.prefix ?? null;
+      this.willCache = !isBeta && client && client?.connected;
+    } catch (error) {
+
+    }
+
+    if (this.willCache) {
       if (!this.prefix) {
         throw new Error("redis prefix is required");
       }
+      this.client = client;
       this.del = promisify(client.del).bind(client);
       this.exists = promisify(client.exists).bind(client);
       this.flushdb = promisify(client.flushdb).bind(client);

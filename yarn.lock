@@ -73,10 +73,10 @@
   dependencies:
     tslib "^1.11.1"
 
-"@google-cloud/bigquery@^5.2.0":
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/@google-cloud/bigquery/-/bigquery-5.2.0.tgz#4654d67b9a5a5835976896e1695c305603e15e16"
-  integrity sha512-O8NNqffCGWvTH/GbCtKsAgSJYKp41U6bGLVvY6D2YxT8id3oHT2CAfXWaS+GSC1YU4RN1QI4amw5w+K4me5x/w==
+"@google-cloud/bigquery@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/bigquery/-/bigquery-5.3.0.tgz#87db58ed6538d0be5dd146901ffd636d6b9fead0"
+  integrity sha512-IxHd7dWJygQgExdnwS7D8zMswe3VG5akKSLTkdl5ky1Xn6VHiXg30c8zK99jqRafA7kU023W/+L9F9zIQp1qiA==
   dependencies:
     "@google-cloud/common" "^3.1.0"
     "@google-cloud/paginator" "^3.0.0"
@@ -299,10 +299,10 @@
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.3.tgz#7ee330ba7caafb98090bece86a5ee44115904c2c"
   integrity sha512-ewFXqrQHlFsgc09MK5jP5iR7vumV/BYayNC6PgJO2LPe8vrnNFyjQjSppfEngITi0qvfKtzFvgKymGheFM9UOA==
 
-"@types/redis@^2.8.27":
-  version "2.8.27"
-  resolved "https://registry.yarnpkg.com/@types/redis/-/redis-2.8.27.tgz#9bc89b472f3fc4a57a06c1823f2fc860c6c2fdf3"
-  integrity sha512-RRHarqPp3mgqHz+qzLVuQCJAIVaB3JBaczoj24QVVYu08wiCmB8vbOeNeK9lIH+pyT7+R/bbEPghAZZuhbZm0g==
+"@types/redis@^2.8.28":
+  version "2.8.28"
+  resolved "https://registry.yarnpkg.com/@types/redis/-/redis-2.8.28.tgz#5862b2b64aa7f7cbc76dafd7e6f06992b52c55e3"
+  integrity sha512-8l2gr2OQ969ypa7hFOeKqtFoY70XkHxISV0pAwmQ2nm6CSPb1brmTmqJCGGrekCo+pAZyWlNXr+Kvo6L/1wijA==
   dependencies:
     "@types/node" "*"
 
@@ -1077,10 +1077,10 @@ jws@^4.0.0:
     jwa "^2.0.0"
     safe-buffer "^5.0.1"
 
-libphonenumber-js@^1.8.1:
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/libphonenumber-js/-/libphonenumber-js-1.8.1.tgz#2c2bdbb774289cb47932bafb60019b664966b4a2"
-  integrity sha512-P3ND6m7hy4W32+Kk8ajBct9mKQnp+fUp190fwkrUbb/q2eHg5C1VtHEabfv4MYRbqN1hDXW3P9vkcF4P1KXwew==
+libphonenumber-js@^1.8.5:
+  version "1.8.5"
+  resolved "https://registry.yarnpkg.com/libphonenumber-js/-/libphonenumber-js-1.8.5.tgz#8d11ac37c2088986d34f6e5aa0ef13f3ead0b3db"
+  integrity sha512-oYRkg5ghcNLSesLvoUKaoGGTym2genpgfgUmMY/fLSnb22I9FmOwLxefGx73XgbAPzeqoqiLmGnsByhb7N4+/w==
   dependencies:
     minimist "^1.2.5"
     xml2js "^0.4.17"
