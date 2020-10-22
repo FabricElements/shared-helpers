@@ -9,7 +9,10 @@ import Config = config.Config;
 
 const projectId: string = String(process?.env?.GCLOUD_PROJECT);
 const isBeta = projectId.search("beta") >= 0;
-const baseCall = async (op1?: any, op2?: any, op3?: any) => {
+const baseCall = async (op1?: any, op2?: any, op3?: any): Promise<any> => {
+  return;
+};
+const baseCallString = async (op1?: any, op2?: any, op3?: any): Promise<string> => {
   return;
 };
 
@@ -23,10 +26,10 @@ export class Cache {
   public exists = baseCall;
   public flushall = baseCall;
   public flushdb = baseCall;
-  public get = baseCall;
+  public get = baseCallString;
   public hdel = baseCall;
   public hexists = baseCall;
-  public hget = baseCall;
+  public hget = baseCallString;
   public hgetall = baseCall;
   public hincrby = baseCall;
   public hset = baseCall;

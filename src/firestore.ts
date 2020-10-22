@@ -54,7 +54,7 @@ export class FirestoreHelper extends Cache {
     const willCache = options.cache && this.willCache;
     if (willCache) {
       try {
-        const requestData: any = await this.get(cachePath);
+        const requestData = await this.get(cachePath);
         if (!requestData) {
           throw new Error("Key not found");
         }
