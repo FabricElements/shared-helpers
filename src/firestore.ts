@@ -44,7 +44,8 @@ export class FirestoreHelper extends Cache {
     collection: string,
     document: string,
   }): Promise<any> => {
-    const cachePath = `${this.prefix}:${options.collection}:${options.document}`;
+    let cachePath = this.prefix ? `${this.prefix}:` : "";
+    cachePath += `${options.collection}:${options.document}`;
     const cacheData = {
       cache: false,
       cacheCalls: 0,

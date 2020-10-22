@@ -49,9 +49,6 @@ export class Cache {
     }
 
     if (this.willCache) {
-      if (!this.prefix) {
-        throw new Error("redis prefix is required");
-      }
       this.client = client;
       this.del = promisify(client.del).bind(client);
       this.exists = promisify(client.exists).bind(client);
