@@ -4,16 +4,28 @@
  */
 import * as admin from "firebase-admin";
 import {config} from "firebase-functions";
-import {RedisClient} from "redis";
-import {Cache} from "./cache";
+import {ClientOpts, RedisClient} from "redis";
+import {Tedis} from "tedis";
 import Config = config.Config;
 
 const projectId: string = String(process?.env?.GCLOUD_PROJECT);
 const isBeta = projectId.search("beta") >= 0;
 
-export class FirestoreHelper extends Cache {
-  constructor(firebaseConfig: Config = {}, client?: RedisClient) {
-    super(firebaseConfig, client);
+export class FirestoreHelper {
+  public canCache: boolean = false;
+  public prefix: string = null;
+  redisClient: Tedis;
+
+  constructor(firebaseConfig: Config = {}, clientOpts?: ClientOpts) {
+    this.prefix = firebaseConfig?.redis?.prefix ?? null;
+    if (clientOpts && Object.keys(clientOpts).length > 0) {
+      const redis = new RedisClient(clientOpts);
+      const connected = redis.connected;
+      if (connected) {
+        this.redisClient = new Tedis(clientOpts);
+        this.canCache = true;
+      }
+    }
   }
 
   /**
@@ -52,14 +64,14 @@ export class FirestoreHelper extends Cache {
       cachePath,
     };
     let data: any = {};
-    const willCache = options.cache && this.willCache;
+    const willCache = options.cache && this.canCache;
     if (willCache) {
       try {
-        const requestData = await this.get(cachePath);
+        const requestData = await this.redisClient.get(cachePath);
         if (!requestData) {
           throw new Error("Key not found");
         }
-        const request = JSON.parse(requestData);
+        const request = JSON.parse(requestData.toString());
         const cacheCalls = request.cacheCalls ? Number(request.cacheCalls) + 1 : 1;
         const cacheLimit = cacheCalls > options.cacheLimit;
         if (cacheLimit) {
@@ -92,7 +104,7 @@ export class FirestoreHelper extends Cache {
       data = {...baseData, ...cacheData};
     }
     if (willCache) {
-      await this.setex(cachePath, 600, JSON.stringify(data));
+      await this.redisClient.setex(cachePath, 600, JSON.stringify(data));
     }
     return data;
   };

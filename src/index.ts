@@ -7,7 +7,6 @@
  */
 import apiRequest from "./api-request";
 import backup from "./backup";
-import {Cache} from "./cache";
 import checkNumber from "./check-number";
 import cleaner from "./cleaner";
 import {FirestoreHelper} from "./firestore";
@@ -27,7 +26,6 @@ export {
   backup,
   checkNumber,
   cleaner,
-  Cache,
   FirestoreHelper,
   global,
   hashId,

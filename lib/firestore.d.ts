@@ -1,9 +1,12 @@
 import { config } from "firebase-functions";
-import { RedisClient } from "redis";
-import { Cache } from "./cache";
+import { ClientOpts } from "redis";
+import { Tedis } from "tedis";
 import Config = config.Config;
-export declare class FirestoreHelper extends Cache {
-    constructor(firebaseConfig?: Config, client?: RedisClient);
+export declare class FirestoreHelper {
+    canCache: boolean;
+    prefix: string;
+    redisClient: Tedis;
+    constructor(firebaseConfig?: Config, clientOpts?: ClientOpts);
     /**
      * Validate if document exists
      *
