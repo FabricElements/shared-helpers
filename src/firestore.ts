@@ -3,10 +3,8 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import * as admin from "firebase-admin";
-import {config} from "firebase-functions";
 import {ClientOpts, RedisClient} from "redis";
 import {Tedis} from "tedis";
-import Config = config.Config;
 
 const projectId: string = String(process?.env?.GCLOUD_PROJECT);
 const isBeta = projectId.search("beta") >= 0;
@@ -16,14 +14,24 @@ export class FirestoreHelper {
   public prefix: string = null;
   redisClient: Tedis;
 
-  constructor(firebaseConfig: Config = {}, clientOpts?: ClientOpts) {
-    this.prefix = firebaseConfig?.redis?.prefix ?? null;
-    if (clientOpts && Object.keys(clientOpts).length > 0) {
-      const redis = new RedisClient(clientOpts);
-      const connected = redis.connected;
-      if (connected) {
-        this.redisClient = new Tedis(clientOpts);
-        this.canCache = true;
+  /**
+   * Constructor
+   * @param config
+   */
+  constructor(config: null | { [key: string]: any }) {
+    if (config && Object.keys(config).length > 0) {
+      const redisHost = config?.host;
+      const redisPort = Number(config?.port);
+      if (redisHost && redisPort) {
+        let clientOpts: ClientOpts = config;
+        clientOpts.port = redisPort;
+        this.prefix = clientOpts?.prefix ?? null;
+        const redis = new RedisClient(clientOpts);
+        const connected = redis.connected;
+        if (connected) {
+          this.redisClient = new Tedis(clientOpts);
+          this.canCache = true;
+        }
       }
     }
   }
@@ -32,12 +40,8 @@ export class FirestoreHelper {
    * Validate if document exists
    *
    * @param options
-   * @returns <Promise<boolean>>
    */
-  public existDocument: (options: { collection: string; document: string }) => Promise<boolean> = async (options: {
-    collection: string,
-    document: string,
-  }): Promise<boolean> => {
+  public existDocument: (options: { collection: string; document: string }) => Promise<boolean> = async (options) => {
     const snap = await this._getDocument({
       collection: options.collection,
       document: options.document,
@@ -48,14 +52,13 @@ export class FirestoreHelper {
   /**
    * Get Document
    * @param options
-   * @return {Promise<any>}
    */
-  public getDocument = async (options: {
-    cache?: boolean,
-    cacheLimit?: number,
-    collection: string,
-    document: string,
-  }): Promise<any> => {
+  public getDocument: (options: {
+    cache?: boolean;
+    cacheLimit?: number;
+    collection: string;
+    document: string;
+  }) => Promise<FirebaseFirestore.DocumentData> = async (options) => {
     let cachePath = this.prefix ? `${this.prefix}:` : "";
     cachePath += `${options.collection}:${options.document}`;
     const cacheData = {
@@ -63,18 +66,20 @@ export class FirestoreHelper {
       cacheCalls: 0,
       cachePath,
     };
-    let data: any = {};
+    let data: FirebaseFirestore.DocumentData = {};
     const willCache = options.cache && this.canCache;
     if (willCache) {
       try {
         const requestData = await this.redisClient.get(cachePath);
         if (!requestData) {
+          // noinspection ExceptionCaughtLocallyJS
           throw new Error("Key not found");
         }
         const request = JSON.parse(requestData.toString());
         const cacheCalls = request.cacheCalls ? Number(request.cacheCalls) + 1 : 1;
         const cacheLimit = cacheCalls > options.cacheLimit;
         if (cacheLimit) {
+          // noinspection ExceptionCaughtLocallyJS
           throw new Error("Cache limit reached");
         }
         data = {
@@ -105,37 +110,33 @@ export class FirestoreHelper {
     }
     if (willCache) {
       await this.redisClient.setex(cachePath, 600, JSON.stringify(data));
+    } else {
+      delete data.cacheCalls;
+      delete data.cachePath;
+      delete data.cache;
     }
     return data;
   };
 
   /**
    * Get list
-   * @param {any} options
-   * @return {Promise<any>[]}
+   * @param options
    */
-  public getList = async (options: {
-    cache?: boolean,
-    cacheLimit?: number,
-    collection: string,
-    limit?: number,
-    orderBy?: {
-      direction: FirebaseFirestore.OrderByDirection,
-      key: string,
-    }[],
-    where?: {
-      field: string | FirebaseFirestore.FieldPath,
-      filter: FirebaseFirestore.WhereFilterOp,
-      value: any,
-    }[],
-  }): Promise<any[]> => {
-    const ids: string[] = await this.getListIds({
+  public getList: (options: {
+    cache?: boolean;
+    cacheLimit?: number;
+    collection: string;
+    limit?: number;
+    orderBy?: { direction: FirebaseFirestore.OrderByDirection; key: string }[];
+    where?: { field: string | FirebaseFirestore.FieldPath; filter: FirebaseFirestore.WhereFilterOp; value: any }[]
+  }) => Promise<FirebaseFirestore.DocumentData[]> = async (options) => {
+    const ids = await this.getListIds({
       collection: options.collection,
       limit: options.limit,
       orderBy: options.orderBy,
       where: options.where,
     });
-    let data: any[] = [];
+    let data: FirebaseFirestore.DocumentData[] = [];
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
       const docData = await this.getDocument({
@@ -151,22 +152,15 @@ export class FirestoreHelper {
 
   /**
    * Get list
-   * @param {any} options
+   * @param options
    * @return {Promise<string>[]}
    */
-  public getListIds = async (options: {
-    collection: string,
-    limit?: number,
-    orderBy?: {
-      direction: FirebaseFirestore.OrderByDirection,
-      key: string,
-    }[],
-    where?: {
-      field: string | FirebaseFirestore.FieldPath,
-      filter: FirebaseFirestore.WhereFilterOp,
-      value: any,
-    }[],
-  }): Promise<string[]> => {
+  public getListIds: (options: {
+    collection: string;
+    limit?: number;
+    orderBy?: { direction: FirebaseFirestore.OrderByDirection; key: string }[];
+    where?: { field: string | FirebaseFirestore.FieldPath; filter: FirebaseFirestore.WhereFilterOp; value: any }[]
+  }) => Promise<string[]> = async (options) => {
     if (!options.collection) {
       throw new Error("collection is undefined");
     }
@@ -199,10 +193,10 @@ export class FirestoreHelper {
 
   /**
    * Get list size
-   * @param {any} options
+   * @param options
    * @return {Promise<string>[]}
    */
-  public getListSize = async (options: {
+  public getListSize: (options: {
     collection: string,
     limit?: number,
     orderBy?: {
@@ -214,7 +208,7 @@ export class FirestoreHelper {
       filter: FirebaseFirestore.WhereFilterOp,
       value: any,
     }[],
-  }): Promise<number> => {
+  }) => Promise<number> = async (options) => {
     if (!options.collection) {
       throw new Error("collection is undefined");
     }
@@ -250,10 +244,10 @@ export class FirestoreHelper {
    * @param options
    * @private
    */
-  private _getDocument = async (options: {
-    collection: string,
-    document: string,
-  }) => {
+  private _getDocument: (options: {
+    collection: string;
+    document: string;
+  }) => Promise<FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>> = async (options) => {
     if (!options.collection) {
       throw new Error("Missing collection");
     }
@@ -271,10 +265,7 @@ export class FirestoreHelper {
    * @param options
    * @private
    */
-  private _getDocumentSnap: any = async (options: {
-    collection: string,
-    document: string,
-  }): Promise<any> => {
+  private _getDocumentSnap: (options: { collection: string; document: string }) => Promise<FirebaseFirestore.DocumentData> = async (options) => {
     const snap = await this._getDocument({
       collection: options.collection,
       document: options.document,
@@ -282,7 +273,7 @@ export class FirestoreHelper {
     if (!snap.exists) {
       throw new Error(`Not found ${options.collection}/${options.document}`);
     }
-    let data: any = snap.data();
+    let data = snap.data();
     data.id = options.document;
     return data;
   };

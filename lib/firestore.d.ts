@@ -1,17 +1,19 @@
-import { config } from "firebase-functions";
-import { ClientOpts } from "redis";
 import { Tedis } from "tedis";
-import Config = config.Config;
 export declare class FirestoreHelper {
     canCache: boolean;
     prefix: string;
     redisClient: Tedis;
-    constructor(firebaseConfig?: Config, clientOpts?: ClientOpts);
+    /**
+     * Constructor
+     * @param config
+     */
+    constructor(config: null | {
+        [key: string]: any;
+    });
     /**
      * Validate if document exists
      *
      * @param options
-     * @returns <Promise<boolean>>
      */
     existDocument: (options: {
         collection: string;
@@ -20,18 +22,16 @@ export declare class FirestoreHelper {
     /**
      * Get Document
      * @param options
-     * @return {Promise<any>}
      */
     getDocument: (options: {
         cache?: boolean;
         cacheLimit?: number;
         collection: string;
         document: string;
-    }) => Promise<any>;
+    }) => Promise<FirebaseFirestore.DocumentData>;
     /**
      * Get list
-     * @param {any} options
-     * @return {Promise<any>[]}
+     * @param options
      */
     getList: (options: {
         cache?: boolean;
@@ -47,10 +47,10 @@ export declare class FirestoreHelper {
             filter: FirebaseFirestore.WhereFilterOp;
             value: any;
         }[];
-    }) => Promise<any[]>;
+    }) => Promise<FirebaseFirestore.DocumentData[]>;
     /**
      * Get list
-     * @param {any} options
+     * @param options
      * @return {Promise<string>[]}
      */
     getListIds: (options: {
@@ -68,7 +68,7 @@ export declare class FirestoreHelper {
     }) => Promise<string[]>;
     /**
      * Get list size
-     * @param {any} options
+     * @param options
      * @return {Promise<string>[]}
      */
     getListSize: (options: {
