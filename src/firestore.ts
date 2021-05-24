@@ -9,6 +9,9 @@ import {Tedis} from "tedis";
 const projectId: string = String(process?.env?.GCLOUD_PROJECT);
 const isBeta = projectId.search("beta") >= 0;
 
+/**
+ * Use FirestoreHelper to get firestore documents from redis cache
+ */
 export class FirestoreHelper {
   public canCache: boolean = false;
   public prefix: string = null;
@@ -18,7 +21,7 @@ export class FirestoreHelper {
    * Constructor
    * @param config
    */
-  constructor(config: null | { [key: string]: any }) {
+  constructor(config?: { [key: string]: any }) {
     if (config && Object.keys(config).length > 0) {
       const redisHost = config?.host;
       const redisPort = Number(config?.port);

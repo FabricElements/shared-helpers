@@ -1,4 +1,7 @@
 import { Tedis } from "tedis";
+/**
+ * Use FirestoreHelper to get firestore documents from redis cache
+ */
 export declare class FirestoreHelper {
     canCache: boolean;
     prefix: string;
@@ -7,7 +10,7 @@ export declare class FirestoreHelper {
      * Constructor
      * @param config
      */
-    constructor(config: null | {
+    constructor(config?: {
         [key: string]: any;
     });
     /**
