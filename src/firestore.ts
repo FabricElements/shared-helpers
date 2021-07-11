@@ -5,14 +5,13 @@
 import * as admin from "firebase-admin";
 import {ClientOpts, RedisClient} from "redis";
 import {Tedis} from "tedis";
-// const projectId: string = String(process?.env?.GCLOUD_PROJECT);
-// const isBeta = projectId.search("beta") >= 0;
-const isBeta = false;
+
 /**
  * Use FirestoreHelper to get firestore documents from redis cache
  */
 export class FirestoreHelper {
   public canCache: boolean = false;
+  public logs: boolean = false;
   public prefix: string = null;
   redisClient: Tedis;
 
@@ -20,10 +19,16 @@ export class FirestoreHelper {
    * Constructor
    * @param config
    */
-  constructor(config?: { [key: string]: any }) {
+  constructor(config?: {
+    host?: string;
+    logs?: boolean;
+    port?: number;
+    [key: string]: any
+  }) {
     if (config && Object.keys(config).length > 0) {
-      const redisHost = config?.host;
-      const redisPort = Number(config?.port);
+      const redisHost = config.host;
+      const redisPort = Number(config.port);
+      this.logs = !!config.logs;
       if (redisHost && redisPort) {
         let clientOpts: ClientOpts = config;
         clientOpts.port = redisPort;
@@ -91,7 +96,7 @@ export class FirestoreHelper {
           cache: true,
         };
       } catch (error) {
-        if (isBeta) {
+        if (this.logs) {
           switch (error.message) {
             case "Key not found":
             case "Cache limit reached":

@@ -4,6 +4,7 @@ import { Tedis } from "tedis";
  */
 export declare class FirestoreHelper {
     canCache: boolean;
+    logs: boolean;
     prefix: string;
     redisClient: Tedis;
     /**
@@ -11,6 +12,9 @@ export declare class FirestoreHelper {
      * @param config
      */
     constructor(config?: {
+        host?: string;
+        logs?: boolean;
+        port?: number;
         [key: string]: any;
     });
     /**

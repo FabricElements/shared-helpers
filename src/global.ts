@@ -17,9 +17,9 @@ export const timeout = (ms: number) => new Promise((res) => setTimeout(res, ms))
  * @return {string}
  */
 export const getPublicUrl = (filename: string) => {
-  const adminConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+  const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
   const uri = encodeURIComponent(filename);
-  return `https://firebasestorage.googleapis.com/v0/b/${adminConfig.storageBucket}/o/${uri}?alt=media`;
+  return `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${uri}?alt=media`;
 };
 
 /**
@@ -29,9 +29,9 @@ export const getPublicUrl = (filename: string) => {
  * @return {string}
  */
 export const getUrlAndGs = (filename: string) => {
-  const adminConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+  const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
   const uri = encodeURIComponent(filename);
-  const bucketName = adminConfig.storageBucket;
+  const bucketName = firebaseConfig.storageBucket;
   const url = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${uri}?alt=media`;
   return {
     gs: filename,
