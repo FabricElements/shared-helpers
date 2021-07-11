@@ -5,10 +5,9 @@
 import * as admin from "firebase-admin";
 import {ClientOpts, RedisClient} from "redis";
 import {Tedis} from "tedis";
-
-const projectId: string = String(process?.env?.GCLOUD_PROJECT);
-const isBeta = projectId.search("beta") >= 0;
-
+// const projectId: string = String(process?.env?.GCLOUD_PROJECT);
+// const isBeta = projectId.search("beta") >= 0;
+const isBeta = false;
 /**
  * Use FirestoreHelper to get firestore documents from redis cache
  */
