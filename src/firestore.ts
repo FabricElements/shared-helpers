@@ -112,7 +112,7 @@ export class FirestoreHelper {
       data = {...baseData, ...cacheData};
     }
     if (willCache) {
-      await this.redisClient.setex(cachePath, 600, JSON.stringify(data));
+      await this.redisClient.setex(cachePath, 86400, JSON.stringify(data)); // Cached for 24 hours
     } else {
       delete data.cacheCalls;
       delete data.cachePath;
