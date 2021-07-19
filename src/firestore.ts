@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as admin from "firebase-admin";
+import admin from "firebase-admin";
 import {ClientOpts, RedisClient} from "redis";
 import {Tedis} from "tedis";
 

@@ -3,9 +3,9 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {BigQuery} from "@google-cloud/bigquery";
-import * as admin from "firebase-admin";
-import * as _ from "lodash";
-import {timeout} from "./global";
+import admin from "firebase-admin";
+import _ from "lodash";
+import {timeout} from "./global.js";
 
 const bigquery = new BigQuery();
 

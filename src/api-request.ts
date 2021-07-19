@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as functions from "firebase-functions";
+import functions from "firebase-functions";
 import fetch from "node-fetch";
 
 /**
