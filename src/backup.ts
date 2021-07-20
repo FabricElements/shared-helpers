@@ -3,7 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {BigQuery} from "@google-cloud/bigquery";
-import admin from "firebase-admin";
+import * as admin from "firebase-admin";
 import _ from "lodash";
 import {timeout} from "./global.js";
 
