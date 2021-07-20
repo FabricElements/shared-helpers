@@ -7,8 +7,7 @@
   "types": "./lib/index.d.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "type": "module",
-  "version": "0.0.95",
+  "version": "0.0.96",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
