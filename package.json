@@ -8,7 +8,7 @@
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
   "type": "module",
-  "version": "0.0.94",
+  "version": "0.0.95",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
