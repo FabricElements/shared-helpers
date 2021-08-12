@@ -13,11 +13,12 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@fabricelements/shared-helpers": "file:.."
+    "@fabricelements/shared-helpers": "github:FabricElements/shared-helpers"
   },
   "devDependencies": {
     "typescript": "^4.3.5",
-    "firebase-functions-test": "^0.3.1"
+    "firebase-functions-test": "^0.3.1",
+    "@fabricelements/shared-helpers": "file:.."
   },
   "private": true
 }
