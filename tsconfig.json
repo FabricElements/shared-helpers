@@ -2,9 +2,10 @@
   "compileOnSave": true,
   "compilerOptions": {
     "lib": [
-      "es2018"
+      "ES6",
+      "es2015.promise"
     ],
-    "target": "es2018",
+    "target": "ES6",
     "noImplicitAny": false,
     "outDir": "lib",
     "stripInternal": true,
@@ -16,13 +17,14 @@
     "alwaysStrict": false,
     "allowJs": true,
     "charset": "utf8",
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "Node",
     "newLine": "LF",
     "pretty": true,
     "removeComments": false,
     "sourceMap": true,
     "declaration": true,
+    "esModuleInterop": true,
     "typeRoots": [
       "node_modules/@types"
     ]

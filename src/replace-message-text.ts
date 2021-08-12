@@ -2,11 +2,10 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-
-import hashId from "./hash-id";
-import {randomDomain} from "./link-domain";
-import specialCharToRegular from "./special-char-to-regular";
-import {toCamelCase} from "./strings";
+import hashId from "./hash-id.js";
+import {randomDomain} from "./link-domain.js";
+import specialCharToRegular from "./special-char-to-regular.js";
+import {toCamelCase} from "./strings.js";
 
 /**
  * Random Reply Stop by language

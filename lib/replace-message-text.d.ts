@@ -1,7 +1,3 @@
-/**
- * @license
- * Copyright FabricElements. All Rights Reserved.
- */
 declare const _default: (options: {
     data?: {};
     domains?: string[];
