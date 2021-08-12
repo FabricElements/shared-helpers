@@ -17,7 +17,7 @@ export declare class UserHelper {
     create: (data: {
         [key: string]: any;
         email?: string;
-        phone?: string;
+        phoneNumber?: string;
     }) => Promise<any>;
     /**
      * Validate if user exist
@@ -26,7 +26,7 @@ export declare class UserHelper {
     exists: (data: {
         [key: string]: any;
         email?: string;
-        phone?: string;
+        phoneNumber?: string;
     }) => Promise<any>;
     /**
      * User invitation function, it listens for a new connection-invite document creation, and creates the user

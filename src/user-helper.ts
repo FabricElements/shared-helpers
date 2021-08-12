@@ -16,7 +16,7 @@ export class UserHelper {
   }
 
   private static hasPhoneOrEmail(data: any) {
-    if (!(data && (data.phone || data.email))) {
+    if (!(data && (data.phoneNumber || data.email))) {
       throw new Error("Incomplete message data");
     }
   }
@@ -29,7 +29,7 @@ export class UserHelper {
   public create = async (data: {
     [key: string]: any,
     email?: string;
-    phone?: string;
+    phoneNumber?: string;
   }) => {
     UserHelper.hasPhoneOrEmail(data);
     let user = await this.exists(data);
@@ -46,13 +46,13 @@ export class UserHelper {
   public exists = async (data: {
     [key: string]: any,
     email?: string;
-    phone?: string;
+    phoneNumber?: string;
   }) => {
     UserHelper.hasPhoneOrEmail(data);
     let _user = null;
     try {
-      if (data.phone) {
-        _user = await admin.auth().getUserByPhoneNumber(data.phone);
+      if (data.phoneNumber) {
+        _user = await admin.auth().getUserByPhoneNumber(data.phoneNumber);
       } else if (data.email) {
         _user = await admin.auth().getUserByEmail(data.email);
       }
@@ -126,15 +126,15 @@ export class UserHelper {
    */
   private createUser = async (data: {
     email?: string;
-    phone?: string;
+    phoneNumber?: string;
   }) => {
     UserHelper.hasPhoneOrEmail(data);
     let userData: any = {};
     if (data.email) {
       userData.email = data.email;
     }
-    if (data.phone) {
-      userData.phoneNumber = data.phone;
+    if (data.phoneNumber) {
+      userData.phoneNumber = data.phoneNumber;
     }
     return admin.auth().createUser(userData);
   };
