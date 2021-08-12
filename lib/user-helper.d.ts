@@ -18,16 +18,17 @@ export declare class UserHelper {
         [key: string]: any;
         email?: string;
         phoneNumber?: string;
-    }) => Promise<any>;
+    }) => Promise<admin.auth.UserRecord>;
     /**
      * Validate if user exist
      * @param data
      */
-    exists: (data: {
+    get: (data: {
         [key: string]: any;
         email?: string;
         phoneNumber?: string;
-    }) => Promise<any>;
+        uid?: string;
+    }) => Promise<admin.auth.UserRecord | null>;
     /**
      * User invitation function, it listens for a new connection-invite document creation, and creates the user
      */

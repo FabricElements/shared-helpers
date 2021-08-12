@@ -17,8 +17,7 @@ export const invite = functions.https.onCall(async (data, context) => {
     await userHelper.invite(data);
     return {message: "User Invited"};
   } catch (error) {
-    // @ts-ignore
-    throw new functions.https.HttpsError("unknown", error.message);
+    throw new Error(error.message);
   }
 });
 
@@ -32,8 +31,7 @@ export const remove = functions.https.onCall(async (data, context) => {
     await userHelper.remove(data);
     return {message: "User Removed"};
   } catch (error) {
-    // @ts-ignore
-    throw new functions.https.HttpsError("unknown", error.message);
+    throw new Error(error.message);
   }
 });
 
@@ -44,10 +42,9 @@ export const remove = functions.https.onCall(async (data, context) => {
  */
 export const exists = functions.https.onCall(async (data, context) => {
   try {
-    const _exists = await userHelper.exists(data);
-    return {message: `User DO ${!_exists ? "NOT" : ""} exists`};
+    const _user = await userHelper.get(data);
+    return {message: `User ${!_user ? "DO NOT exists" : _user.uid}`};
   } catch (error) {
-    // @ts-ignore
-    throw new functions.https.HttpsError("unknown", error.message);
+    throw new Error(error.message);
   }
 });

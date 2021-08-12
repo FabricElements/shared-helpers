@@ -32,7 +32,7 @@ export class UserHelper {
     phoneNumber?: string;
   }) => {
     UserHelper.hasPhoneOrEmail(data);
-    let user = await this.exists(data);
+    let user = await this.get(data);
     if (!user) {
       user = await this.createUser(data);
     }
@@ -43,11 +43,12 @@ export class UserHelper {
    * Validate if user exist
    * @param data
    */
-  public exists = async (data: {
+  public get = async (data: {
     [key: string]: any,
     email?: string;
     phoneNumber?: string;
-  }) => {
+    uid?: string;
+  }): Promise<admin.auth.UserRecord | null> => {
     UserHelper.hasPhoneOrEmail(data);
     let _user = null;
     try {
@@ -55,9 +56,10 @@ export class UserHelper {
         _user = await admin.auth().getUserByPhoneNumber(data.phoneNumber);
       } else if (data.email) {
         _user = await admin.auth().getUserByEmail(data.email);
+      } else if (data.uid) {
+        _user = await admin.auth().getUser(data.uid);
       }
     } catch (error) {
-      throw new Error(error.message);
     }
     return _user;
   };

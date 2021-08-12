@@ -13,7 +13,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@fabricelements/shared-helpers": "github:FabricElements/shared-helpers#beta"
+    "@fabricelements/shared-helpers": "file:.."
   },
   "devDependencies": {
     "typescript": "^4.3.5",
