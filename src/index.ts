@@ -5,21 +5,23 @@
  * Notes:
  * -------------------------------------------
  */
-import apiRequest from "./api-request.js";
-import backup from "./backup.js";
-import checkNumber from "./check-number.js";
-import cleaner from "./cleaner.js";
-import {FirestoreHelper} from "./firestore.js";
-import * as global from "./global.js";
-import hashId from "./hash-id.js";
-import * as linkDomain from "./link-domain.js";
-import messageQueueSpeed from "./message-queue-speed.js";
-import pubSubEvent from "./pubsub-event.js";
-import replaceMessageText from "./replace-message-text.js";
-import specialCharToRegular from "./special-char-to-regular.js";
-import * as status from "./status.js";
-import * as strings from "./strings.js";
-import validateUrl from "./validate-url.js";
+import apiRequest from "./api-request";
+import backup from "./backup";
+import checkNumber from "./check-number";
+import cleaner from "./cleaner";
+import {FirestoreHelper} from "./firestore-helper";
+import * as global from "./global";
+import hashId from "./hash-id";
+import * as linkDomain from "./link-domain";
+import messageQueueSpeed from "./message-queue-speed";
+import pubSubEvent from "./pubsub-event";
+import * as regex from "./regex";
+import replaceMessageText from "./replace-message-text";
+import specialCharToRegular from "./special-char-to-regular";
+import * as status from "./status";
+import * as strings from "./strings";
+import {UserHelper} from "./user-helper";
+import validateUrl from "./validate-url";
 
 export {
   apiRequest,
@@ -36,5 +38,7 @@ export {
   specialCharToRegular,
   strings,
   status,
+  UserHelper,
   validateUrl,
+  regex,
 };
