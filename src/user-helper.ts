@@ -191,7 +191,7 @@ export class UserHelper {
     const refUser = db.collection("user").doc(data.uid);
     if (data.admin) {
       await admin.auth().setCustomUserClaims(data.uid, {
-        role: data.role,
+        role: data.role ?? "user",
       });
     }
     let roles = {};
