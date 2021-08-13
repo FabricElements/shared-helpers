@@ -20,6 +20,11 @@ export declare class UserHelper {
         phoneNumber?: string;
     }) => Promise<admin.auth.UserRecord>;
     /**
+     * Create User Document from UserRecord
+     * @param user
+     */
+    createDocument: (user: any) => Promise<void>;
+    /**
      * Validate if user exist
      * @param data
      */
@@ -37,6 +42,7 @@ export declare class UserHelper {
         admin?: boolean;
         collection?: string;
         collectionId?: string;
+        role?: string;
         uid?: string;
     }) => Promise<void>;
     /**
@@ -60,5 +66,5 @@ export declare class UserHelper {
      *
      * @param data
      */
-    private update;
+    private roleUpdate;
 }

@@ -48,3 +48,15 @@ export const exists = functions.https.onCall(async (data, context) => {
     throw new Error(error.message);
   }
 });
+
+/**
+ * Listener for user creation, initiates base fields
+ *
+ * @type CloudFunction
+ */
+export const created = functions.runWith({
+  memory: "512MB",
+  timeoutSeconds: 60,
+}).auth.user().onCreate(async (user, context) => {
+  await userHelper.createDocument(user);
+});

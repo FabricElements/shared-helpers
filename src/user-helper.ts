@@ -8,6 +8,7 @@ const fieldValue = admin.firestore.FieldValue;
 const timestamp = fieldValue.serverTimestamp();
 
 export class UserHelper {
+
   /**
    * Constructor
    */
@@ -37,6 +38,25 @@ export class UserHelper {
       user = await this.createUser(data);
     }
     return user;
+  };
+
+  /**
+   * Create User Document from UserRecord
+   * @param user
+   */
+  public createDocument = async (user: any) => {
+    const baseData: object = {
+      backup: false,
+      created: timestamp,
+      name: user.displayName || null,
+      updated: timestamp,
+      email: user.email || null,
+      phone: user.phoneNumber || null,
+      avatar: user.photoURL || null,
+    };
+    const db = admin.firestore();
+    const docRef = db.collection("user").doc(user.uid);
+    await docRef.set(baseData, {merge: true});
   };
 
   /**
@@ -72,6 +92,7 @@ export class UserHelper {
     admin?: boolean;
     collection?: string;
     collectionId?: string;
+    role?: string;
     uid?: string;
   }) => {
     try {
@@ -80,13 +101,13 @@ export class UserHelper {
         return;
       }
       // Update data in necessary documents to reflect user creation
-      await this.update({
+      await this.roleUpdate({
         type: "add",
         uid: userObject.uid,
         collection: data.collection || undefined,
         collectionId: data.collectionId || undefined,
         admin: data.admin || undefined,
-        role: data.role || "agent",
+        role: data.role,
       });
     } catch (error) {
       throw new Error(error.message);
@@ -109,7 +130,7 @@ export class UserHelper {
     }
     try {
       // Update the necessary documents to delete the user
-      await this.update({
+      await this.roleUpdate({
         admin: data.admin || undefined,
         type: "remove",
         uid: data.uid,
@@ -146,7 +167,7 @@ export class UserHelper {
    *
    * @param data
    */
-  private update = async (data: {
+  private roleUpdate = async (data: {
     admin?: boolean,
     collection?: string,
     collectionId?: string,
@@ -170,7 +191,7 @@ export class UserHelper {
     const refUser = db.collection("user").doc(data.uid);
     if (data.admin) {
       await admin.auth().setCustomUserClaims(data.uid, {
-        admin: data.type === "add",
+        role: data.role,
       });
     }
     let roles = {};
@@ -202,9 +223,7 @@ export class UserHelper {
         backup: false,
         updated: timestamp,
       }, {merge: true});
-    }
-    // Update user
-    if (grouped) {
+      // Update user
       userData = {
         ...userData,
         [data.collection]: updateGroup
@@ -213,7 +232,7 @@ export class UserHelper {
     if (data.admin) {
       userData = {
         ...userData,
-        admin: data.type === "add",
+        role: data.role,
       };
     }
     batch.set(refUser, userData, {merge: true});
