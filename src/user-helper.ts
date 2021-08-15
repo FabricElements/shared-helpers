@@ -3,6 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import * as admin from "firebase-admin";
+import {CallableContext, HttpsError} from "firebase-functions/lib/common/providers/https";
 
 const fieldValue = admin.firestore.FieldValue;
 const timestamp = fieldValue.serverTimestamp();
@@ -27,6 +28,18 @@ export class UserHelper {
       throw new Error("Incomplete message data");
     }
   }
+
+  /**
+   * Fail if user is unauthenticated
+   * @param context
+   */
+  public authenticated = (context: CallableContext) => {
+    if (!context.auth) {
+      // Throwing an HttpsError so that the client gets the error details.
+      throw new HttpsError("unauthenticated",
+        "The function must be called while authenticated.");
+    }
+  };
 
   /**
    * Gets the user object with email or phone number or create the user if not exists
