@@ -2,9 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-// @ts-ignore
 import {UserHelper} from "@fabricelements/shared-helpers";
-// tslint:disable-next-line:no-implicit-dependencies
 import * as functions from "firebase-functions";
 
 const userHelper = new UserHelper();
@@ -26,8 +24,6 @@ export const invite = functions.https.onCall(async (data, context) => {
 
 /**
  * Remove a user invite
- *
- * @type {HttpsFunction}
  */
 export const remove = functions.https.onCall(async (data, context) => {
   userHelper.authenticated(context);
@@ -43,8 +39,6 @@ export const remove = functions.https.onCall(async (data, context) => {
 
 /**
  * Remove a user invite
- *
- * @type {HttpsFunction}
  */
 export const updateRole = functions.https.onCall(async (data, context) => {
   userHelper.authenticated(context);
@@ -60,13 +54,11 @@ export const updateRole = functions.https.onCall(async (data, context) => {
 
 /**
  * Remove a user invite
- *
- * @type {HttpsFunction}
  */
 export const exists = functions.https.onCall(async (data, context) => {
   try {
     const _user = await userHelper.get(data);
-    return {message: `User ${!_user ? "DO NOT exists" : _user.uid}`};
+    return {message: `User ${_user ? _user.uid : "DO NOT exists"}`};
   } catch (error) {
     throw new functions.https.HttpsError("not-found", error.message);
   }
@@ -74,8 +66,6 @@ export const exists = functions.https.onCall(async (data, context) => {
 
 /**
  * Listener for user creation, initiates base fields
- *
- * @type CloudFunction
  */
 export const created = functions.runWith({
   memory: "512MB",

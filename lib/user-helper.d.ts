@@ -3,7 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import * as admin from "firebase-admin";
-import { CallableContext } from "firebase-functions/lib/common/providers/https";
+import * as functions from "firebase-functions";
 export declare class UserHelper {
     /**
      * Constructor
@@ -15,7 +15,7 @@ export declare class UserHelper {
      * Fail if user is unauthenticated
      * @param context
      */
-    authenticated: (context: CallableContext) => void;
+    authenticated: (context: functions.https.CallableContext) => void;
     /**
      * Gets the user object with email or phone number or create the user if not exists
      * @param data

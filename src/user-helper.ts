@@ -3,7 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import * as admin from "firebase-admin";
-import {CallableContext, HttpsError} from "firebase-functions/lib/common/providers/https";
+import * as functions from "firebase-functions";
 
 const fieldValue = admin.firestore.FieldValue;
 const timestamp = fieldValue.serverTimestamp();
@@ -33,10 +33,9 @@ export class UserHelper {
    * Fail if user is unauthenticated
    * @param context
    */
-  public authenticated = (context: CallableContext) => {
+  public authenticated = (context: functions.https.CallableContext) => {
     if (!context.auth) {
-      // Throwing an HttpsError so that the client gets the error details.
-      throw new HttpsError("unauthenticated",
+      throw new functions.https.HttpsError("unauthenticated",
         "The function must be called while authenticated.");
     }
   };
