@@ -14,6 +14,9 @@ const userHelper = new UserHelper();
  */
 export const invite = functions.https.onCall(async (data, context) => {
   try {
+    const role = await userHelper.getRole(context.auth.uid, data);
+    userHelper.isAdmin({role, fail: true, collection: data?.collection});
+    await userHelper.updateRole(data);
     await userHelper.invite(data);
     return {message: "User Invited"};
   } catch (error) {
@@ -28,8 +31,27 @@ export const invite = functions.https.onCall(async (data, context) => {
  */
 export const remove = functions.https.onCall(async (data, context) => {
   try {
+    const role = await userHelper.getRole(context.auth.uid, data);
+    userHelper.isAdmin({role, fail: true, collection: data?.collection});
+    await userHelper.updateRole(data);
     await userHelper.remove(data);
     return {message: "User Removed"};
+  } catch (error) {
+    throw new Error(error.message);
+  }
+});
+
+/**
+ * Remove a user invite
+ *
+ * @type {HttpsFunction}
+ */
+export const updateRole = functions.https.onCall(async (data, context) => {
+  try {
+    const role = await userHelper.getRole(context.auth.uid, data);
+    userHelper.isAdmin({role, fail: true, collection: data?.collection});
+    await userHelper.updateRole(data);
+    return {message: "User Role Updated"};
   } catch (error) {
     throw new Error(error.message);
   }

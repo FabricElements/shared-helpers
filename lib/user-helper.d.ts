@@ -8,6 +8,7 @@ export declare class UserHelper {
      * Constructor
      */
     constructor();
+    private static hasData;
     private static hasPhoneOrEmail;
     /**
      * Gets the user object with email or phone number or create the user if not exists
@@ -35,16 +36,34 @@ export declare class UserHelper {
         uid?: string;
     }) => Promise<admin.auth.UserRecord | null>;
     /**
+     * Get User Role
+     * @param uid
+     * @param data
+     */
+    getRole: (uid: string, data: {
+        collection?: string;
+        document?: string;
+    }) => Promise<any>;
+    /**
      * User invitation function, it listens for a new connection-invite document creation, and creates the user
      */
     invite: (data: {
         [key: string]: any;
         admin?: boolean;
         collection?: string;
-        collectionId?: string;
+        document?: string;
         role?: string;
         uid?: string;
     }) => Promise<void>;
+    /**
+     * Validates if user is and admin from role
+     * @param options
+     */
+    isAdmin: (options: {
+        collection?: boolean;
+        fail?: boolean;
+        role: string;
+    }) => boolean;
     /**
      * Remove a user
      */
@@ -52,7 +71,17 @@ export declare class UserHelper {
         [key: string]: any;
         admin?: boolean;
         collection?: string;
-        collectionId?: string;
+        document?: string;
+        uid?: string;
+    }) => Promise<void>;
+    /**
+     * Update user role
+     */
+    updateRole: (data: {
+        [key: string]: any;
+        admin?: boolean;
+        collection?: string;
+        document?: string;
         uid?: string;
     }) => Promise<void>;
     /**
@@ -66,5 +95,5 @@ export declare class UserHelper {
      *
      * @param data
      */
-    private roleUpdate;
+    private roleUpdateCall;
 }
