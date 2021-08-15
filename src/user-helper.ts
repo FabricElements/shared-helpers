@@ -3,6 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
 
 const fieldValue = admin.firestore.FieldValue;
 const timestamp = fieldValue.serverTimestamp();
@@ -16,11 +17,28 @@ export class UserHelper {
     //
   }
 
+  private static hasData(data: any) {
+    if (!(data && !data.isEmpty)) {
+      throw new Error("Request is empty");
+    }
+  }
+
   private static hasPhoneOrEmail(data: any) {
     if (!(data && (data.phoneNumber || data.email))) {
       throw new Error("Incomplete message data");
     }
   }
+
+  /**
+   * Fail if user is unauthenticated
+   * @param context
+   */
+  public authenticated = (context: functions.https.CallableContext) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError("unauthenticated",
+        "The function must be called while authenticated.");
+    }
+  };
 
   /**
    * Gets the user object with email or phone number or create the user if not exists
@@ -32,6 +50,7 @@ export class UserHelper {
     email?: string;
     phoneNumber?: string;
   }) => {
+    UserHelper.hasData(data);
     UserHelper.hasPhoneOrEmail(data);
     let user = await this.get(data);
     if (!user) {
@@ -45,6 +64,7 @@ export class UserHelper {
    * @param user
    */
   public createDocument = async (user: any) => {
+    UserHelper.hasData(user);
     const baseData: object = {
       backup: false,
       created: timestamp,
@@ -69,6 +89,7 @@ export class UserHelper {
     phoneNumber?: string;
     uid?: string;
   }): Promise<admin.auth.UserRecord | null> => {
+    UserHelper.hasData(data);
     UserHelper.hasPhoneOrEmail(data);
     let _user = null;
     try {
@@ -85,27 +106,68 @@ export class UserHelper {
   };
 
   /**
+   * Get User Role
+   * @param uid
+   * @param data
+   */
+  public getRole = async (
+    uid: string,
+    data: {
+      collection?: string;
+      document?: string;
+    },
+  ) => {
+    const errorMessage = "You don't have access to request this action";
+    UserHelper.hasData(data);
+    let grouped = data.collection && data.document;
+    /**
+     * Verify admin access on top level
+     */
+    const userRecord = await admin.auth().getUser(uid);
+    const userClaims: any = userRecord.customClaims ?? {};
+    let role = userClaims.role ?? null;
+    if ((!role || role === "user") && grouped) {
+      /**
+       * Verify admin access on collection level
+       */
+      const db = admin.firestore();
+      const ref = db.collection(data.collection).doc(data.document);
+      const snap = await ref.get();
+      const _data: any = snap.data();
+      if (!_data) {
+        throw new Error(`Not found ${data.collection}/${data.document}`);
+      }
+      const _roleInternal = _data.hasOwnProperty("roles") && _data.roles.hasOwnProperty(uid) ? _data.roles[uid] : null;
+      if (_roleInternal) {
+        role = `${data.collection}-${_roleInternal}`;
+      }
+    }
+    return role ?? "user";
+  };
+
+  /**
    * User invitation function, it listens for a new connection-invite document creation, and creates the user
    */
   public invite = async (data: {
     [key: string]: any,
     admin?: boolean;
     collection?: string;
-    collectionId?: string;
+    document?: string;
     role?: string;
     uid?: string;
   }) => {
+    UserHelper.hasData(data);
     try {
       const userObject = await this.create(data);
       if (!userObject) {
         return;
       }
       // Update data in necessary documents to reflect user creation
-      await this.roleUpdate({
+      await this.roleUpdateCall({
         type: "add",
         uid: userObject.uid,
         collection: data.collection || undefined,
-        collectionId: data.collectionId || undefined,
+        document: data.document || undefined,
         admin: data.admin || undefined,
         role: data.role,
       });
@@ -115,30 +177,73 @@ export class UserHelper {
   };
 
   /**
+   * Validates if user is and admin from role
+   * @param options
+   */
+  public isAdmin = (options: { collection?: boolean, fail?: boolean, role: string, }): boolean => {
+    const _isAdmin = typeof options.role === "string"
+      && (options.collection ? options.role.endsWith("admin") : options.role === "admin");
+    if (!_isAdmin && options.fail) {
+      throw new Error("You are not an Admin");
+    }
+    return _isAdmin;
+  };
+
+  /**
    * Remove a user
    */
   public remove = async (data: {
     [key: string]: any,
     admin?: boolean;
     collection?: string;
-    collectionId?: string;
+    document?: string;
     uid?: string;
   }) => {
+    UserHelper.hasData(data);
     // Data uid needs to exist
     if (!data?.uid) {
       throw new Error("uid is required");
     }
     try {
       // Update the necessary documents to delete the user
-      await this.roleUpdate({
+      await this.roleUpdateCall({
         admin: data.admin || undefined,
         type: "remove",
         uid: data.uid,
         collection: data.collection || undefined,
-        collectionId: data.collectionId || undefined,
+        document: data.document || undefined,
       });
     } catch (error) {
       throw new Error(`Error removing user access: ${error.message}`);
+    }
+  };
+
+  /**
+   * Update user role
+   */
+  public updateRole = async (data: {
+    [key: string]: any,
+    admin?: boolean;
+    collection?: string;
+    document?: string;
+    uid?: string;
+  }) => {
+    UserHelper.hasData(data);
+    // Data uid needs to exist
+    if (!data?.uid) {
+      throw new Error("uid is required");
+    }
+    try {
+      // Update the necessary documents to delete the user
+      await this.roleUpdateCall({
+        admin: data.admin || undefined,
+        type: "add",
+        uid: data.uid,
+        collection: data.collection || undefined,
+        document: data.document || undefined,
+      });
+    } catch (error) {
+      throw new Error(`Error updating user access: ${error.message}`);
     }
   };
 
@@ -151,6 +256,7 @@ export class UserHelper {
     email?: string;
     phoneNumber?: string;
   }) => {
+    UserHelper.hasData(data);
     UserHelper.hasPhoneOrEmail(data);
     let userData: any = {};
     if (data.email) {
@@ -167,45 +273,56 @@ export class UserHelper {
    *
    * @param data
    */
-  private roleUpdate = async (data: {
+  private roleUpdateCall = async (data: {
     admin?: boolean,
     collection?: string,
-    collectionId?: string,
+    document?: string,
     role?: string,
-    type: string,
+    type: "add" | "remove",
     uid: string,
   }) => {
     const db = admin.firestore();
     let batch = db.batch();
     let clickerInternal = false; // Adds or removes a user as being a clicker
-    let grouped = data.collection && data.collectionId;
+    let grouped = data.collection && data.document;
     let updateGroup = null; // Action for the group
     let userUpdate = null; // Action for the user
     let userData: any = {
       backup: false,
       updated: timestamp,
     };
-    if (data.collection && !data.collectionId) {
-      throw new Error("collectionId missing");
+    if (data.collection && !data.document) {
+      throw new Error("document missing");
     }
     const refUser = db.collection("user").doc(data.uid);
-    if (data.admin) {
-      await admin.auth().setCustomUserClaims(data.uid, {
-        role: data.role ?? "user",
-      });
+    let _role = data.role ?? "user";
+    if (data.admin && data.uid) {
+      /**
+       * Only update user custom claims on admin level.
+       * Collection level users should not use custom claims to set the role,
+       * or this value will overwrite the admin level users and you'll have security issues.
+       */
+      const userRecord = await admin.auth().getUser(data.uid);
+      let userClaims: any = userRecord.customClaims ?? {};
+      if (data.type === "remove") {
+        delete userClaims.role;
+      } else {
+        userClaims = {...userClaims, role: _role};
+      }
+      await admin.auth().setCustomUserClaims(data.uid, userClaims);
     }
     let roles = {};
     switch (data.type) {
       case "add":
-        updateGroup = fieldValue.arrayUnion(...[data.collectionId]);
+        updateGroup = fieldValue.arrayUnion(...[data.document]);
         userUpdate = fieldValue.arrayUnion(...[data.uid]);
         clickerInternal = true;
         roles = {
-          [data.uid]: data.role,
+          [data.uid]: _role,
         };
         break;
       case "remove":
-        updateGroup = fieldValue.arrayRemove(...[data.collectionId]);
+        updateGroup = fieldValue.arrayRemove(...[data.document]);
         userUpdate = fieldValue.arrayRemove(...[data.uid]);
         clickerInternal = false;
         roles = {
@@ -216,7 +333,7 @@ export class UserHelper {
         throw new Error("Invalid type");
     }
     if (grouped) {
-      const refGroup = db.collection(data.collection).doc(data.collectionId);
+      const refGroup = db.collection(data.collection).doc(data.document);
       batch.set(refGroup, {
         roles,
         users: userUpdate,
@@ -232,7 +349,7 @@ export class UserHelper {
     if (data.admin) {
       userData = {
         ...userData,
-        role: data.role,
+        role: data.type === "remove" ? fieldValue.delete() : _role,
       };
     }
     batch.set(refUser, userData, {merge: true});
