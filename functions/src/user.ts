@@ -10,7 +10,10 @@ const userHelper = new UserHelper();
 /**
  * User invitation function, it listens for a new connection-invite document creation, and creates the user
  */
-export const invite = functions.https.onCall(async (data, context) => {
+export const invite = functions.runWith({
+  memory: "512MB",
+  timeoutSeconds: 30,
+}).https.onCall(async (data, context) => {
   userHelper.authenticated(context);
   try {
     const role = await userHelper.getRole(context.auth.uid, data);
@@ -25,7 +28,10 @@ export const invite = functions.https.onCall(async (data, context) => {
 /**
  * Remove a user invite
  */
-export const remove = functions.https.onCall(async (data, context) => {
+export const remove = functions.runWith({
+  memory: "512MB",
+  timeoutSeconds: 30,
+}).https.onCall(async (data, context) => {
   userHelper.authenticated(context);
   try {
     const role = await userHelper.getRole(context.auth.uid, data);
@@ -40,7 +46,10 @@ export const remove = functions.https.onCall(async (data, context) => {
 /**
  * Remove a user invite
  */
-export const updateRole = functions.https.onCall(async (data, context) => {
+export const updateRole = functions.runWith({
+  memory: "512MB",
+  timeoutSeconds: 30,
+}).https.onCall(async (data, context) => {
   userHelper.authenticated(context);
   try {
     const role = await userHelper.getRole(context.auth.uid, data);
@@ -53,14 +62,19 @@ export const updateRole = functions.https.onCall(async (data, context) => {
 });
 
 /**
- * Remove a user invite
+ * Validate if user exists or fail
  */
-export const exists = functions.https.onCall(async (data, context) => {
+export const exists = functions.runWith({
+  memory: "512MB",
+  timeoutSeconds: 60,
+}).https.onCall(async (data, context) => {
   try {
-    const _user = await userHelper.get(data);
-    return {message: `User ${_user ? _user.uid : "DO NOT exists"}`};
+    const _exists = await userHelper.get(data);
+    if (!_exists) {
+      throw new Error("You are not registered. Please contact your account administrator to request access.");
+    }
   } catch (error) {
-    throw new functions.https.HttpsError("not-found", error.message);
+    throw new functions.https.HttpsError("permission-denied", error.message);
   }
 });
 
