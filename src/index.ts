@@ -12,7 +12,10 @@ import cleaner from "./cleaner";
 import {FirestoreHelper} from "./firestore-helper";
 import * as global from "./global";
 import hashId from "./hash-id";
+import {ImageHelper} from "./image-helper";
+import * as interfaces from "./interfaces";
 import * as linkDomain from "./link-domain";
+import {MediaHelper} from "./media-helper";
 import messageQueueSpeed from "./message-queue-speed";
 import pubSubEvent from "./pubsub-event";
 import * as regex from "./regex";
@@ -28,7 +31,10 @@ export {
   backup,
   checkNumber,
   cleaner,
+  interfaces,
+  ImageHelper,
   FirestoreHelper,
+  MediaHelper,
   global,
   hashId,
   linkDomain,

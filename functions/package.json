@@ -13,7 +13,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "@fabricelements/shared-helpers": "github:FabricElements/shared-helpers#user-management",
+    "@fabricelements/shared-helpers": "file:..",
     "firebase-admin": "^9.11.0",
     "firebase-functions": "^3.15.3"
   },
