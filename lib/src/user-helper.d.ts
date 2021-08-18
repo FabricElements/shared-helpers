@@ -4,14 +4,13 @@
  */
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
+import { CallableContext } from "firebase-functions/lib/common/providers/https";
 export declare class UserHelper {
     firebaseConfig: any;
     isBeta: boolean;
-    mainUrl: string;
     constructor(config?: {
         firebaseConfig?: any;
         isBeta?: boolean;
-        mainUrl?: string;
     });
     private static hasData;
     private static hasPhoneOrEmail;
@@ -85,9 +84,11 @@ export declare class UserHelper {
         uid?: string;
     }) => Promise<void>;
     update: (options: {
+        context: CallableContext;
         data: any;
-        uid: string;
-    }) => Promise<void>;
+    }) => {
+        message: string;
+    };
     /**
      * Update user role
      */
