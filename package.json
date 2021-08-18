@@ -7,11 +7,14 @@
   "types": "./lib/index.d.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
   },
+  "files": [
+    "lib"
+  ],
   "dependencies": {
     "@google-cloud/bigquery": "^5.7.1",
     "@types/redis": "^2.8.31",

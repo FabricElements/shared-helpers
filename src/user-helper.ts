@@ -103,17 +103,17 @@ export class UserHelper {
     uid?: string;
   }): Promise<admin.auth.UserRecord | null> => {
     UserHelper.hasData(data);
-    UserHelper.hasPhoneOrEmail(data);
+    const hasAnyOption = data.phoneNumber || data.email || data.uid;
+    if (!hasAnyOption) {
+      throw new Error("Please enter a any valid options");
+    }
     let _user = null;
-    try {
-      if (data.phoneNumber) {
-        _user = await admin.auth().getUserByPhoneNumber(data.phoneNumber);
-      } else if (data.email) {
-        _user = await admin.auth().getUserByEmail(data.email);
-      } else if (data.uid) {
-        _user = await admin.auth().getUser(data.uid);
-      }
-    } catch (error) {
+    if (data.phoneNumber) {
+      _user = await admin.auth().getUserByPhoneNumber(data.phoneNumber);
+    } else if (data.email) {
+      _user = await admin.auth().getUserByEmail(data.email);
+    } else if (data.uid) {
+      _user = await admin.auth().getUser(data.uid);
     }
     return _user;
   };
@@ -326,6 +326,7 @@ export class UserHelper {
     await ref.set({
       ...updateDataFirestore,
       updated: timestamp,
+      backup: false,
     }, {merge: true});
   };
 

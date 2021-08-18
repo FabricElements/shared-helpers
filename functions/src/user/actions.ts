@@ -7,13 +7,27 @@ import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 import {firebaseConfig, isBeta, mainUrl} from "../helpers/variables";
 
-const userHelper = new UserHelper({
-  firebaseConfig,
-  isBeta,
-  mainUrl
+const fieldValue = admin.firestore.FieldValue;
+
+const userHelper = new UserHelper({firebaseConfig, isBeta, mainUrl});
+
+/**
+ * Validate if user exists or fail
+ */
+export const exists = functions.runWith({
+  memory: "512MB",
+  timeoutSeconds: 60,
+}).https.onCall(async (data, context) => {
+  try {
+    const _exists = await userHelper.get(data);
+    if (!_exists) {
+      throw new Error("You are not registered. Please contact your account administrator to request access.");
+    }
+  } catch (error) {
+    throw new functions.https.HttpsError("permission-denied", error.message);
+  }
+  return {message: "User Exists"};
 });
-const db = admin.firestore();
-const timestamp = admin.firestore.FieldValue.serverTimestamp();
 
 /**
  * User invitation function, it listens for a new connection-invite document creation, and creates the user
@@ -52,6 +66,27 @@ export const remove = functions.runWith({
 });
 
 /**
+ * Request create service
+ *
+ * @type {HttpsFunction}
+ */
+export const update = functions.runWith({
+  memory: "512MB",
+  timeoutSeconds: 30,
+}).https.onCall(async (data, context) => {
+  userHelper.authenticated(context);
+  const uid = context.auth.uid;
+  try {
+    await userHelper.update({data, uid});
+  } catch (error) {
+    throw new functions.https.HttpsError("failed-precondition", error.message);
+  }
+  return {
+    message: "Profile updated",
+  };
+});
+
+/**
  * Remove a user invite
  */
 export const updateRole = functions.runWith({
@@ -67,46 +102,4 @@ export const updateRole = functions.runWith({
   } catch (error) {
     throw new functions.https.HttpsError("unknown", error.message);
   }
-});
-
-/**
- * Validate if user exists or fail
- */
-export const exists = functions.runWith({
-  memory: "512MB",
-  timeoutSeconds: 60,
-}).https.onCall(async (data, context) => {
-  userHelper.authenticated(context);
-  try {
-    const _exists = await userHelper.get(data);
-    if (!_exists) {
-      throw new Error("You are not registered. Please contact your account administrator to request access.");
-    }
-  } catch (error) {
-    throw new functions.https.HttpsError("permission-denied", error.message);
-  }
-});
-
-/**
- * Request create service
- *
- * @type {HttpsFunction}
- */
-export const update = functions.runWith({
-  memory: "512MB",
-  timeoutSeconds: 30,
-}).https.onCall(async (data, context) => {
-  userHelper.authenticated(context);
-  const uid = context.auth.uid;
-  try {
-    await userHelper.update({
-      data,
-      uid,
-    });
-  } catch (error) {
-    throw new functions.https.HttpsError("failed-precondition", error.message);
-  }
-  return {
-    message: "Profile updated",
-  };
 });
