@@ -111,12 +111,16 @@ export class UserHelper {
       throw new Error("Please enter a any valid options");
     }
     let _user = null;
-    if (data.phoneNumber) {
-      _user = await admin.auth().getUserByPhoneNumber(data.phoneNumber);
-    } else if (data.email) {
-      _user = await admin.auth().getUserByEmail(data.email);
-    } else if (data.uid) {
-      _user = await admin.auth().getUser(data.uid);
+    try {
+      if (data.phoneNumber) {
+        _user = await admin.auth().getUserByPhoneNumber(data.phoneNumber);
+      } else if (data.email) {
+        _user = await admin.auth().getUserByEmail(data.email);
+      } else if (data.uid) {
+        _user = await admin.auth().getUser(data.uid);
+      }
+    } catch (e) {
+      console.info(e.message);
     }
     return _user;
   };
@@ -245,11 +249,11 @@ export class UserHelper {
     });
     let {uid, data} = options;
     let updateUserObject = false;
-    const {nameFirst, nameLast, avatar} = data;
+    let {nameFirst, nameLast, avatar} = data;
     const validNameFirst = nameFirst && nameFirst.length > 2;
     const validNameLast = nameLast && nameLast.length > 2;
-    const correctNameFirst = nameFirst && nameFirst.length > 2 ? nameFirst : undefined;
-    const correctNameLast = nameLast && nameLast.length > 2 ? nameLast : undefined;
+    let correctNameFirst: string = nameFirst && nameFirst.length > 2 ? nameFirst : undefined;
+    let correctNameLast: string = nameLast && nameLast.length > 2 ? nameLast : undefined;
     const updateName = correctNameFirst && correctNameLast;
 
     if (nameFirst) {
@@ -268,9 +272,16 @@ export class UserHelper {
     let updateDataUser: any = {};
     let onboarding: any = {};
     if (updateName) {
+      /**
+       * Format User Name
+       */
+      const initialNameFirst = correctNameFirst.charAt(0).toUpperCase();
+      correctNameFirst = initialNameFirst + correctNameFirst.slice(1);
+      const initialNameLast = correctNameLast.charAt(0).toUpperCase();
+      correctNameLast = initialNameLast + correctNameLast.slice(1);
+      let name = `${correctNameFirst} ${correctNameLast}`;
+      let nameInitials = initialNameFirst + initialNameLast;
       updateUserObject = true;
-      let name = `${nameFirst} ${nameLast}`;
-      let nameInitials = (correctNameFirst.charAt(0) + correctNameLast.charAt(0)).toUpperCase();
       updateDataFirestore = {
         name,
         nameFirst: correctNameFirst,
