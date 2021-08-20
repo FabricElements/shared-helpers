@@ -3,11 +3,8 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {UserHelper} from "@fabricelements/shared-helpers";
-import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 import {firebaseConfig, isBeta, mainUrl} from "../helpers/variables";
-
-const fieldValue = admin.firestore.FieldValue;
 
 const userHelper = new UserHelper({firebaseConfig, isBeta, mainUrl});
 

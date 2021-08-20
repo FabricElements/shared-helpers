@@ -6,6 +6,10 @@ import * as admin from "firebase-admin";
 import sharp from "sharp";
 import {imageSizesType, InterfaceImageResize} from "./interfaces";
 
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 export class ImageHelper {
   firebaseConfig: any;
   isBeta: boolean;

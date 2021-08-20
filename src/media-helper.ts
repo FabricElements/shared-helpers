@@ -8,6 +8,10 @@ import {ImageHelper} from "./image-helper";
 import {imageSizesType, InterfaceImageResize} from "./interfaces";
 import {contentTypeIsImageForSharp, contentTypeIsJPEG} from "./regex.js";
 
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 export class MediaHelper {
   firebaseConfig: any;
   isBeta: boolean;

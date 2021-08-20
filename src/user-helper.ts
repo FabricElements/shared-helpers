@@ -4,10 +4,13 @@
  */
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
-
 import {ImageHelper} from "./image-helper";
 import * as interfaces from "./interfaces";
 import {MediaHelper} from "./media-helper";
+
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 
 const fieldValue = admin.firestore.FieldValue;
 const timestamp = fieldValue.serverTimestamp();
@@ -281,8 +284,8 @@ export class UserHelper {
     }
 
     if (avatar) {
-      const uri = avatar.split(";base64,").pop();
-      let imgBuffer = Buffer.from(uri, "base64");
+      // const uri = avatar.split(";base64,").pop();
+      let imgBuffer = Buffer.from(avatar, "base64");
       const imageSize = imageHelper.size("standard");
       let imageResizeOptions: interfaces.InterfaceImageResize = {
         maxHeight: imageSize.height,
