@@ -5,10 +5,14 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 export declare class UserHelper {
-    /**
-     * Constructor
-     */
-    constructor();
+    firebaseConfig: any;
+    isBeta: boolean;
+    mainUrl: string;
+    constructor(config?: {
+        firebaseConfig?: any;
+        isBeta?: boolean;
+        mainUrl?: string;
+    });
     private static hasData;
     private static hasPhoneOrEmail;
     /**
@@ -79,6 +83,10 @@ export declare class UserHelper {
         collection?: string;
         document?: string;
         uid?: string;
+    }) => Promise<void>;
+    update: (options: {
+        data: any;
+        uid: string;
     }) => Promise<void>;
     /**
      * Update user role

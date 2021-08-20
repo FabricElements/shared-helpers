@@ -2,10 +2,8 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as media from "./media";
-import * as user from "./user";
+import open from "./open.js";
 
 export {
-  media,
-  user,
+  open,
 };

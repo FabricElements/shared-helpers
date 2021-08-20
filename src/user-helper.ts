@@ -4,17 +4,33 @@
  */
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
+import {ImageHelper} from "./image-helper";
+import * as interfaces from "./interfaces";
+import {MediaHelper} from "./media-helper";
+
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 
 const fieldValue = admin.firestore.FieldValue;
 const timestamp = fieldValue.serverTimestamp();
 
 export class UserHelper {
 
-  /**
-   * Constructor
-   */
-  constructor() {
-    //
+  firebaseConfig: any;
+  isBeta: boolean;
+  mainUrl: string;
+
+  constructor(config?: {
+    firebaseConfig?: any;
+    isBeta?: boolean,
+    mainUrl?: string;
+  }) {
+    if (config && Object.keys(config).length > 0) {
+      this.firebaseConfig = config.firebaseConfig;
+      this.isBeta = !!config.isBeta;
+      this.mainUrl = config.mainUrl ?? "";
+    }
   }
 
   private static hasData(data: any) {
@@ -90,7 +106,10 @@ export class UserHelper {
     uid?: string;
   }): Promise<admin.auth.UserRecord | null> => {
     UserHelper.hasData(data);
-    UserHelper.hasPhoneOrEmail(data);
+    const hasAnyOption = data.phoneNumber || data.email || data.uid;
+    if (!hasAnyOption) {
+      throw new Error("Please enter a any valid options");
+    }
     let _user = null;
     try {
       if (data.phoneNumber) {
@@ -100,7 +119,8 @@ export class UserHelper {
       } else if (data.uid) {
         _user = await admin.auth().getUser(data.uid);
       }
-    } catch (error) {
+    } catch (e) {
+      console.info(e.message);
     }
     return _user;
   };
@@ -216,6 +236,112 @@ export class UserHelper {
     } catch (error) {
       throw new Error(`Error removing user access: ${error.message}`);
     }
+  };
+
+  public update = async (options: { data: any, uid: string }) => {
+    const imageHelper = new ImageHelper({
+      firebaseConfig: this.firebaseConfig,
+      isBeta: this.isBeta,
+    });
+    const mediaHelper = new MediaHelper({
+      firebaseConfig: this.firebaseConfig,
+      isBeta: this.isBeta,
+    });
+    let {uid, data} = options;
+    let updateUserObject = false;
+    let {nameFirst, nameLast, avatar} = data;
+    const validNameFirst = nameFirst && nameFirst.length > 2;
+    const validNameLast = nameLast && nameLast.length > 2;
+    let correctNameFirst: string = nameFirst && nameFirst.length > 2 ? nameFirst : undefined;
+    let correctNameLast: string = nameLast && nameLast.length > 2 ? nameLast : undefined;
+    const updateName = correctNameFirst && correctNameLast;
+
+    if (nameFirst) {
+      if (!validNameFirst) {
+        throw new Error("First Name must be at least 3 characters");
+      }
+    }
+    if (nameLast) {
+      if (!validNameLast) {
+        throw new Error("Last Name must be at least 3 characters");
+      }
+    }
+    const db = admin.firestore();
+    const ref = db.collection("user").doc(uid);
+    let updateDataFirestore: any = {};
+    let updateDataUser: any = {};
+    let onboarding: any = {};
+    if (updateName) {
+      /**
+       * Format User Name
+       */
+      const initialNameFirst = correctNameFirst.charAt(0).toUpperCase();
+      correctNameFirst = initialNameFirst + correctNameFirst.slice(1);
+      const initialNameLast = correctNameLast.charAt(0).toUpperCase();
+      correctNameLast = initialNameLast + correctNameLast.slice(1);
+      let name = `${correctNameFirst} ${correctNameLast}`;
+      let nameInitials = initialNameFirst + initialNameLast;
+      updateUserObject = true;
+      updateDataFirestore = {
+        name,
+        nameFirst: correctNameFirst,
+        nameLast: correctNameLast,
+        nameInitials,
+      };
+      updateDataUser = {
+        displayName: name,
+      };
+      onboarding.name = true;
+    }
+
+    if (avatar) {
+      // const uri = avatar.split(";base64,").pop();
+      let imgBuffer = Buffer.from(avatar, "base64");
+      const imageSize = imageHelper.size("standard");
+      let imageResizeOptions: interfaces.InterfaceImageResize = {
+        maxHeight: imageSize.height,
+        maxWidth: imageSize.width,
+        crop: true,
+        input: imgBuffer,
+        quality: 90,
+        format: "jpeg",
+      };
+      const media = await imageHelper.bufferImage(imageResizeOptions);
+      await mediaHelper.save({
+        media,
+        id: uid,
+        path: "avatar",
+        contentType: "image/jpeg",
+      });
+      const avatarUrl = `${this.mainUrl}/avatar/${uid}`;
+      updateDataFirestore.avatar = avatarUrl;
+      updateDataUser.photoURL = avatarUrl;
+      updateUserObject = true;
+      onboarding.avatar = true;
+    }
+    /// Set default data values and remove keys before merging
+    let _data = data;
+    delete _data.name;
+    delete _data.nameInitials;
+    delete _data.nameFirst;
+    delete _data.nameLast;
+    delete _data.avatar;
+    delete _data.role; // Prevents insecure implementation of roles
+    delete _data.created;
+    delete _data.updated;
+    updateDataFirestore = {...updateDataFirestore, ..._data}; // Merge input data
+    if (!Object.keys(updateDataFirestore).length) {
+      throw new Error("No changes detected");
+    }
+    if (updateUserObject) {
+      await admin.auth().updateUser(uid, updateDataUser);
+    }
+    updateDataFirestore.onboarding = onboarding;
+    await ref.set({
+      ...updateDataFirestore,
+      updated: timestamp,
+      backup: false,
+    }, {merge: true});
   };
 
   /**

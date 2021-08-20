@@ -1,0 +1,93 @@
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /tester/{document=**} {
+      allow read, write;
+    }
+    
+    match /testers {
+      allow read: if request.auth != null;
+      match /{demosID} {
+        // allow read: if resource.data.keys().hasAll(['users.$(request.auth.uid)'])
+        // allow read: if request.resource.data.users. is int;
+        // allow read: if request.resource.data.users.keys().hasAll([request.auth.uid]);
+        // allow read: if request.resource.data.users.keys().hasAll(['$(request.auth.uid)']);
+        // allow read: if exists(/databases/$(database)/documents/chat/$(document)/users/$(request.auth.uid));
+        // allow read: if request.resource.data.users[request.auth.uid] is bool;
+        allow read: if resource.data.users.keys().hasAll([request.auth.uid]);
+      }
+    }
+    
+    
+     match /user {
+      allow create: if request.auth != null;
+      match /{userID} {
+        allow read;
+        // TODO: replace with function that checks user's role
+	    	allow write, create: if request.auth.uid == userID;
+      }
+    
+      allow create: if request.auth != null;
+      allow read;
+    }
+    
+     match /ping {
+      allow create: if request.auth != null;
+      match /{userID} {
+        allow read;
+        // TODO: replace with function that checks user's role
+	    	allow write, create: if request.auth.uid == userID;
+      }
+    
+      allow create: if request.auth != null;
+      allow read;
+    }
+    
+    match /connection-invite {
+      match /{document=**} {
+        allow read;
+        // TODO: replace with function that checks user's role
+				allow write: if request.auth != null;
+      }
+    }
+    
+    // Reads are divided into get and list operations
+    // allow get, list: if <condition>;
+    function isOnChatUsers(chatID) {
+      return request.auth.uid in get(/databases/$(database)/documents/chat/$(chatID)).data.users;
+    }
+    match /chat {
+      // allow read, get, list;
+      allow create: if request.auth != null;
+      match /{chatID} {
+        allow write, read, update: if isOnChatUsers(chatID);
+        allow get, list, create: if request.auth != null;
+
+      }
+    }
+    match /chat-message {
+			// allow create: if isOnChatUsers(request.resource.data.group);
+     	match /{messageId} {
+        // allow read, get, list: if isOnChatUsers(resource.data.group);
+        allow read;
+				allow write: if isOnChatUsers(request.resource.data.group);
+				allow create: if isOnChatUsers(request.resource.data.group);
+      }
+    }
+    
+    match /notes {
+    	allow read; 
+      match /{noteId} {
+      	allow read;
+        allow write: if request.auth != null;
+      }
+    }
+    match /demo {
+    	allow read; 
+      match /{demoId} {
+      	allow read;
+        allow write;
+      }
+    }
+    // End
+  }
+}

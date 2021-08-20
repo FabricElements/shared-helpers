@@ -1,0 +1,42 @@
+{
+  "rules": {
+    "user-status":{
+			"$uid": {
+          ".read": "auth != null",
+          ".write": true,
+      	}
+    	},
+    // Chat rules
+    "chats": {
+      "groups": {
+        ".write": true,
+        ".read": true,
+        ".indexOn": "users",
+        "$group": {
+          ".indexOn": "users",
+          // any member can read the list of member names
+          "users": {
+            "$uid": {
+              
+            }
+          }
+        }
+      },
+      "messages": {
+        "$group": {
+          ".read": "root.child('chats/groups/'+$group+'/users/'+auth.uid).exists()",
+          ".indexOn": "timestamp/created",
+          "$message": {
+            ".write": "data.child('user/uid').val() === auth.uid || newData.child('user/uid').val() === auth.uid && root.child('chats/groups/'+$group+'/users/'+auth.uid).exists()",
+          }
+        }
+      },
+      "users": {
+				"$uid": {
+          ".read": "auth.uid === $uid",
+        }
+      }
+    },
+    // other rules
+  }
+}
