@@ -31,40 +31,55 @@ export class MediaHelper {
    * @param {any} options
    */
   public preview = async (options: {
-    crop?: boolean;
-    id: string;
-    isCrawler?: boolean;
-    path?: string; // yourPath = yourPath/id. Don't use "/" at the start or end of your path
+    [key: string]: any,
+    crop?: string;
+    dpr?: number,
+    height?: number,
+    path: string;
     request: express.Request;
     response: express.Response;
+    robots?: boolean,
     size?: imageSizesType;
+    width?: number,
   }) => {
-    const {response} = options;
+    let {
+      crop,
+      height,
+      path,
+      dpr,
+      response,
+      robots,
+      size,
+      width,
+    } = options;
     const _cacheTime = this.isBeta ? 60 : 86400; // 1 day in seconds
-    const id = options.id;
     let mediaBuffer: any = null;
     let contentType = "text/html";
     response.set("Content-Type", contentType);
-    const mediaPath = options.path ? `${options.path}/${id}` : id;
+    // Don't use "/" at the start or end of your path
+    if (path.startsWith("/")) {
+      path = path.substring(1);
+    }
     const imageHelper = new ImageHelper({
       firebaseConfig: this.firebaseConfig,
       isBeta: this.isBeta,
     });
     // const publicUrl = global.getUrlAndGs(mediaPath).url;
-    const fileRef = admin.storage().bucket(this.firebaseConfig.storageBucket).file(mediaPath);
-    const imageResizeOptions: InterfaceImageResize = {};
+    const fileRef = admin.storage().bucket(this.firebaseConfig.storageBucket).file(path);
     let ok = true;
+    const imageResizeOptions: InterfaceImageResize = {};
     /**
      * Define image size
      */
-    const imageSize = imageHelper.size(options.size);
-    imageResizeOptions.maxHeight = imageSize.height;
-    imageResizeOptions.maxWidth = imageSize.width;
-
-    if (options.crop || imageSize.size === "thumbnail") {
-      imageResizeOptions.crop = true;
+    const imageSize = imageHelper.size(size);
+    imageResizeOptions.maxHeight = height ? Math.floor(height) : imageSize.height;
+    imageResizeOptions.maxWidth = width ? Math.floor(width) : imageSize.width;
+    if (crop || imageSize.size === "thumbnail") {
+      imageResizeOptions.crop = crop ?? "entropy";
     }
-
+    if (dpr) {
+      imageResizeOptions.dpr = dpr;
+    }
     switch (imageSize.size) {
       case "thumbnail":
       case "small":
@@ -78,7 +93,7 @@ export class MediaHelper {
       case "max":
         imageResizeOptions.quality = 100;
     }
-    let indexRobots: boolean = false;
+    let indexRobots: boolean = !!robots;
     try {
       const [metadata]: any = await fileRef.getMetadata();
       contentType = metadata.contentType || null;
@@ -97,7 +112,7 @@ export class MediaHelper {
         const format = isJPEG ? "jpeg" : "png";
         mediaBuffer = await imageHelper.resize({
           ...imageResizeOptions,
-          fileName: mediaPath,
+          fileName: path,
           format,
         });
         contentType = `image/${format}`;
@@ -111,7 +126,7 @@ export class MediaHelper {
     } catch (error) {
       ok = false;
       if (this.isBeta) {
-        console.warn(`link/${id}:`, error.message);
+        console.warn(`${path}:`, error.message);
       }
     }
     if (!indexRobots) {
@@ -121,7 +136,7 @@ export class MediaHelper {
       /**
        * End request for messages to prevent the provider sending messages with invalid media files
        */
-      if (options.size === "message") {
+      if (size === "message") {
         console.warn("Can't find media file");
         response.set("Cache-Control", "no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate");
         response.status(404);
@@ -129,14 +144,14 @@ export class MediaHelper {
         return;
       }
       mediaBuffer = await imageHelper.resize({
-        fileName: "images/error.jpg",
+        fileName: "media/default/error.jpg",
         ...imageResizeOptions,
       });
       contentType = "image/jpeg";
     }
     if (!mediaBuffer) {
       mediaBuffer = await imageHelper.resize({
-        fileName: "images/default.jpg",
+        fileName: "media/default/default.jpg",
         ...imageResizeOptions,
       });
       contentType = "image/jpeg";
@@ -156,14 +171,12 @@ export class MediaHelper {
   public save =
     async (options: {
       contentType: string;
-      id: string;
       media: Buffer,
       options?: object;
       path?: string; // yourPath = yourPath/id. Don't use "/" at the start or end of your path
     }) => {
       const bucketRef = admin.storage().bucket(this.firebaseConfig.storageBucket);
-      const filePath = `${options.path}/${options.id}`;
-      const fileRef = bucketRef.file(filePath);
+      const fileRef = bucketRef.file(options.path);
       const fileOptions: any = {
         contentType: options.contentType,
         resumable: false,
