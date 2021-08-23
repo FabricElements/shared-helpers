@@ -11,7 +11,6 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-
 /**
  * Export app modules after the app is initialized
  */

@@ -21,7 +21,6 @@ export interface InterfaceUserLinks {
     youtube?: string;
 }
 export interface InterfaceUser {
-    [x: string]: any;
     ads?: InterfaceUserAds;
     avatar?: boolean | string;
     created?: Date;
@@ -37,6 +36,7 @@ export interface InterfaceUser {
     updated?: Date;
     url?: string;
     username?: string;
+    [x: string]: any;
 }
 export declare type linkType = "instagram" | "link" | "youtube" | "twitter" | "tiktok" | "vimeo" | string;
 export interface InterfaceFormatLink {
@@ -62,7 +62,8 @@ export interface InterfaceFormatLink {
     user?: string;
 }
 export interface InterfaceImageResize {
-    crop?: boolean;
+    crop?: string;
+    dpr?: number;
     fileName?: string;
     format?: "jpeg" | "png";
     input?: Buffer | string | any;

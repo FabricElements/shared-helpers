@@ -23,7 +23,6 @@ export interface InterfaceUserLinks {
 
 export interface InterfaceUser {
 
-  [x: string]: any;
   ads?: InterfaceUserAds;
   avatar?: boolean | string;
   created?: Date;
@@ -39,6 +38,8 @@ export interface InterfaceUser {
   updated?: Date;
   url?: string;
   username?: string;
+
+  [x: string]: any;
 }
 
 export type linkType = "instagram" | "link" | "youtube" | "twitter" | "tiktok" | "vimeo" | string;
@@ -67,7 +68,8 @@ export interface InterfaceFormatLink {
 }
 
 export interface InterfaceImageResize {
-  crop?: boolean; // force proportions and cut
+  crop?: string; // force proportions and cut
+  dpr?: number;
   fileName?: string;
   format?: "jpeg" | "png";
   input?: Buffer | string | any;

@@ -17,13 +17,16 @@ export declare class MediaHelper {
      * @param {any} options
      */
     preview: (options: {
-        crop?: boolean;
-        id: string;
-        isCrawler?: boolean;
-        path?: string;
+        [key: string]: any;
+        crop?: string;
+        dpr?: number;
+        height?: number;
+        path: string;
         request: express.Request;
         response: express.Response;
+        robots?: boolean;
         size?: imageSizesType;
+        width?: number;
     }) => Promise<any>;
     /**
      * Preview media file
@@ -31,7 +34,6 @@ export declare class MediaHelper {
      */
     save: (options: {
         contentType: string;
-        id: string;
         media: Buffer;
         options?: object;
         path?: string;

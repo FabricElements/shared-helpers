@@ -19,22 +19,9 @@ app.use(cors({origin: "*"}));
 /**
  * Preview image from origin id or default image response
  */
-app.get("/m/:id", async (request, response) => {
-  const id = request.params.id || null;
-  const size = request.query?.size?.toString();
-  const crop = request.query?.hasOwnProperty("crop");
-  await mediaHelper.preview({id, request, response, size, crop, path: "media"});
-  return null;
-});
-
-/**
- * Preview image from origin id or default image response
- */
-app.get("/avatar/:id", async (request, response) => {
-  const id = request.params.id || null;
-  const size = request.query?.size?.toString();
-  const crop = request.query?.hasOwnProperty("crop");
-  await mediaHelper.preview({id, request, response, size, crop, path: "avatar"});
+app.get("/media/**", async (request, response) => {
+  const query = request.query ?? {};
+  await mediaHelper.preview({request, response, ...query, path: request.path});
   return null;
 });
 

@@ -113,11 +113,7 @@
         "destination": "/index.html"
       },
       {
-        "source": "/m/**",
-        "function": "media-open"
-      },
-      {
-        "source": "/avatar/**",
+        "source": "/media/**",
         "function": "media-open"
       }
     ]

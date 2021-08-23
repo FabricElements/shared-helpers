@@ -295,25 +295,24 @@ export class UserHelper {
     }
 
     if (avatar) {
-      // const uri = avatar.split(";base64,").pop();
       let imgBuffer = Buffer.from(avatar, "base64");
       const imageSize = imageHelper.size("standard");
       let imageResizeOptions: interfaces.InterfaceImageResize = {
         maxHeight: imageSize.height,
         maxWidth: imageSize.width,
-        crop: true,
+        crop: "entropy",
         input: imgBuffer,
         quality: 90,
         format: "jpeg",
       };
       const media = await imageHelper.bufferImage(imageResizeOptions);
+      const avatarPath = `media/avatar/${uid}.jpg`;
       await mediaHelper.save({
         media,
-        id: uid,
-        path: "avatar",
+        path: avatarPath,
         contentType: "image/jpeg",
       });
-      const avatarUrl = `${this.mainUrl}/avatar/${uid}`;
+      const avatarUrl = `${this.mainUrl}/${avatarPath}`;
       updateDataFirestore.avatar = avatarUrl;
       updateDataUser.photoURL = avatarUrl;
       updateUserObject = true;

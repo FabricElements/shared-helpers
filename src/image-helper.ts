@@ -53,15 +53,22 @@ export class ImageHelper {
   }
 
   public bufferImage = async (options: InterfaceImageResize) => {
-    let optionsImage: any = {};
-    if (options.maxHeight || options.crop) {
-      optionsImage.height = options.maxHeight || 800;
+    let optionsImage: any = {
+      // withoutEnlargement: true,
+    };
+    let dpr = Number(options.dpr ?? 1);
+    if (dpr > 3) {
+      dpr = 3;
     }
-    if (options.maxWidth || options.crop) {
-      optionsImage.width = options.maxWidth || 800;
+    const crop = options.maxHeight && options.maxWidth || options.crop;
+    if (options.maxHeight || crop) {
+      optionsImage.height = options.maxHeight * dpr || 800;
     }
-    if (options.crop) {
-      optionsImage.position = sharp.strategy.entropy;
+    if (options.maxWidth || crop) {
+      optionsImage.width = options.maxWidth * dpr || 800;
+    }
+    if (crop) {
+      optionsImage.position = options.crop === "attention" ? sharp.strategy.attention : sharp.strategy.entropy;
       optionsImage.fit = sharp.fit.cover;
     } else {
       optionsImage.withoutEnlargement = true;
@@ -69,7 +76,7 @@ export class ImageHelper {
     }
     const base = sharp(options.input).resize(optionsImage.width, optionsImage.height, optionsImage);
     let final = base;
-    if (options.crop) {
+    if (crop) {
       final = base.extract({left: 0, top: 0, width: optionsImage.width, height: optionsImage.height});
     }
     const resultOptions: any = {
