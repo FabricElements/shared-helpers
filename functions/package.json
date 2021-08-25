@@ -1,12 +1,18 @@
 {
   "name": "functions",
   "scripts": {
-    "build": "tsc",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "lint": "tslint --project ./tsconfig.json",
+    "lint-fix": "tslint -c tslint.json --project .  --project -t codeFrame --fix",
+    "clear": "rm -rf ./lib || true && rm ./css/**/**.css || true",
+    "css": "sass ./css/pages:./css/pages --style compressed --no-source-map",
+    "build": "npm run clear && npm run lint && tsc -p ./tsconfig.json && npm run css",
+    "tsc": "tsc",
+    "deploy": "gcloud app deploy",
+    "start": "node ./lib/index.js"
   },
   "engines": {
     "node": "14"

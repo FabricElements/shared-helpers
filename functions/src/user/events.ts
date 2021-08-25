@@ -21,3 +21,29 @@ export const created = functions.runWith({
 }).auth.user().onCreate(async (user, context) => {
   await userHelper.createDocument(user);
 });
+
+/**
+ * Organization contact is created
+ *
+ * @type {CloudFunction<DocumentSnapshot>}
+ */
+export const createdDoc = functions.runWith({
+  memory: "512MB",
+  timeoutSeconds: 60,
+}).firestore.document("user/{userId}").onCreate(async (snap, context) => {
+  const data = snap.data();
+  let baseData: any = {
+    backup: false,
+    updated: admin.firestore.FieldValue.serverTimestamp(),
+  };
+  if (!data.language) {
+    baseData.language = "en";
+  }
+  if (!data.role) {
+    baseData.role = "user";
+  }
+  if (!data.created) {
+    baseData.created = timestamp;
+  }
+  await snap.ref.set(baseData, {merge: true});
+});
