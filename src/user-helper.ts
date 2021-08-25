@@ -351,6 +351,7 @@ export class UserHelper {
     admin?: boolean;
     collection?: string;
     document?: string;
+    role?: string;
     uid?: string;
   }) => {
     UserHelper.hasData(data);
@@ -366,6 +367,7 @@ export class UserHelper {
         uid: data.uid,
         collection: data.collection || undefined,
         document: data.document || undefined,
+        role: data.role,
       });
     } catch (error) {
       throw new Error(`Error updating user access: ${error.message}`);

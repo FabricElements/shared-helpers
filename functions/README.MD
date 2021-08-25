@@ -12,6 +12,6 @@
 
 ```json
 {
-  "@fabricelements/shared-helpers": "github:FabricElements/shared-helpers#beta"
+  "@fabricelements/shared-helpers": "github:FabricElements/shared-helpers"
 }
 ```

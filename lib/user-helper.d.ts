@@ -96,6 +96,7 @@ export declare class UserHelper {
         admin?: boolean;
         collection?: string;
         document?: string;
+        role?: string;
         uid?: string;
     }) => Promise<void>;
     /**
