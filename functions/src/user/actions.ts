@@ -20,7 +20,7 @@ export const exists = functions.runWith({
     if (!_exists) {
       throw new Error("You are not registered. Please contact your account administrator to request access.");
     }
-  } catch (error) {
+  } catch (error: any) {
     throw new functions.https.HttpsError("permission-denied", error.message);
   }
   return {message: "User Exists"};
@@ -39,7 +39,7 @@ export const invite = functions.runWith({
     userHelper.isAdmin({role, fail: true, collection: data?.collection});
     await userHelper.invite(data);
     return {message: "User Invited"};
-  } catch (error) {
+  } catch (error: any) {
     throw new functions.https.HttpsError("unknown", error.message);
   }
 });
@@ -57,7 +57,7 @@ export const remove = functions.runWith({
     userHelper.isAdmin({role, fail: true, collection: data?.collection});
     await userHelper.remove(data);
     return {message: "User Removed"};
-  } catch (error) {
+  } catch (error: any) {
     throw new functions.https.HttpsError("unknown", error.message);
   }
 });
@@ -75,7 +75,7 @@ export const update = functions.runWith({
   const uid = context.auth.uid;
   try {
     await userHelper.update({data, uid});
-  } catch (error) {
+  } catch (error: any) {
     throw new functions.https.HttpsError("failed-precondition", error.message);
   }
   return {
@@ -96,7 +96,7 @@ export const updateRole = functions.runWith({
     userHelper.isAdmin({role, fail: true, collection: data?.collection});
     await userHelper.updateRole(data);
     return {message: "User Role Updated"};
-  } catch (error) {
+  } catch (error: any) {
     throw new functions.https.HttpsError("unknown", error.message);
   }
 });
