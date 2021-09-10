@@ -60,6 +60,5 @@ export default async (filter: {
     console.info(`Result delete duplicates ${list}`);
   } catch (error) {
     console.warn(`Fail delete duplicates. Dataset: ${filter.dataset}, table: ${filter.table}`, error);
-    return [];
   }
 };

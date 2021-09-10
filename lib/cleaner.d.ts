@@ -3,7 +3,7 @@ declare const _default: (filter: {
     dataset: string;
     table: string;
     timestamp: string;
-}) => Promise<any[]>;
+}) => Promise<void>;
 /**
  * Big Query Clean Database
  * @param filter

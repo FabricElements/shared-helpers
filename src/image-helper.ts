@@ -4,7 +4,7 @@
  */
 import * as admin from "firebase-admin";
 import sharp from "sharp";
-import {imageSizesType, InterfaceImageResize} from "./interfaces";
+import type {imageSizesType, InterfaceImageResize} from "./interfaces";
 
 if (!admin.apps.length) {
   admin.initializeApp();

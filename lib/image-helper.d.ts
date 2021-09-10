@@ -1,5 +1,4 @@
-/// <reference types="node" />
-import { imageSizesType, InterfaceImageResize } from "./interfaces";
+import type { imageSizesType, InterfaceImageResize } from "./interfaces";
 export declare class ImageHelper {
     firebaseConfig: any;
     isBeta: boolean;

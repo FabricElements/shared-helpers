@@ -2,20 +2,22 @@
   "compileOnSave": true,
   "compilerOptions": {
     "lib": [
-      "ES6",
-      "es2015.promise"
+      "es2020"
     ],
-    "target": "ES6",
+    "target": "ES2020",
+    "importsNotUsedAsValues": "error",
     "noImplicitAny": false,
+    "importHelpers": true,
+    "downlevelIteration": true,
     "outDir": "lib",
     "stripInternal": true,
     "inlineSources": false,
     "inlineSourceMap": false,
     "forceConsistentCasingInFileNames": true,
     "strictNullChecks": false,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "alwaysStrict": false,
-    "allowJs": true,
+    "allowJs": false,
     "charset": "utf8",
     "module": "CommonJS",
     "moduleResolution": "Node",
@@ -23,11 +25,17 @@
     "pretty": true,
     "removeComments": false,
     "sourceMap": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "strict": false,
     "declaration": true,
     "esModuleInterop": true,
     "typeRoots": [
       "node_modules/@types"
-    ]
+    ],
+    "rootDir": "src",
+    "baseUrl": "./",
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "src"

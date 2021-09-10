@@ -42,6 +42,7 @@ export default async (apiName: string, path: string, body: any = {}) => {
       if (request.status === 500) {
         throw new Error(`${apiName} isn't available`);
       }
+      // @ts-ignore
       throw new Error(bodyJson.message || "unknown error");
     }
     return bodyJson;

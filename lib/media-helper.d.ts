@@ -1,10 +1,9 @@
-/// <reference types="node" />
 /**
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type express from "express";
-import { imageSizesType } from "./interfaces";
+import type { Response } from "express";
+import type { imageSizesType } from "./interfaces";
 export declare class MediaHelper {
     firebaseConfig: any;
     isBeta: boolean;
@@ -22,8 +21,7 @@ export declare class MediaHelper {
         dpr?: number;
         height?: number;
         path: string;
-        request: express.Request;
-        response: express.Response;
+        response: Response;
         robots?: boolean;
         size?: imageSizesType;
         width?: number;

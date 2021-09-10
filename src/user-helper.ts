@@ -5,7 +5,7 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 import {ImageHelper} from "./image-helper";
-import * as interfaces from "./interfaces";
+import type {InterfaceImageResize} from "./interfaces";
 import {MediaHelper} from "./media-helper";
 
 if (!admin.apps.length) {
@@ -297,7 +297,7 @@ export class UserHelper {
     if (avatar) {
       let imgBuffer = Buffer.from(avatar, "base64");
       const imageSize = imageHelper.size("standard");
-      let imageResizeOptions: interfaces.InterfaceImageResize = {
+      let imageResizeOptions: InterfaceImageResize = {
         maxHeight: imageSize.height,
         maxWidth: imageSize.width,
         crop: "entropy",
