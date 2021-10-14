@@ -29,7 +29,7 @@ export declare class UserHelper {
         [key: string]: any;
         email?: string;
         phoneNumber?: string;
-    }) => Promise<admin.auth.UserRecord>;
+    }) => Promise<import("firebase-admin/lib/auth/user-record").UserRecord>;
     /**
      * Create User Document from UserRecord
      * @param user
