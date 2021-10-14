@@ -7,7 +7,7 @@
   "types": "./lib/index.d.ts",
   "author": "The FabricElements Authors",
   "license": "BSD-3-Clause",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "repository": {
     "type": "git",
     "url": "git@github.com:FabricElements/shared-helpers.git"
@@ -24,7 +24,7 @@
     "libphonenumber-js": "^1.9.37",
     "lodash": "^4.17.21",
     "moment-timezone": "^0.5.33",
-    "node-fetch": "^3.0.0",
+    "node-fetch": "^2.6.2",
     "redis": "^3.1.2",
     "tedis": "^0.1.12",
     "tslint": "^6.1.3",
