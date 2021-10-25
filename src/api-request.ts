@@ -10,8 +10,8 @@ import fetch from "node-fetch";
  */
 export default async (options: {
   body: any,
-  method: "POST" | "GET",
-  parameters: string,
+  credentials: string,
+  method: "GET" | "POST" | "PUT",
   path: string,
   scheme: "Basic" | "Bearer" | "Digest" | "OAuth",
 }) => {
@@ -34,8 +34,8 @@ export default async (options: {
     size: 0,            // maximum response body size in bytes. 0 to disable
     agent: null         // http(s).Agent instance, allows custom proxy, certificate, dns lookup etc.
   };
-  if (options.scheme && options.parameters) {
-    requestOptions.headers.Authorization = `${options.scheme} ${options.parameters}`;
+  if (options.scheme && options.credentials) {
+    requestOptions.headers.Authorization = `${options.scheme} ${options.credentials}`;
   }
   try {
     const request = await fetch(options.path, requestOptions);

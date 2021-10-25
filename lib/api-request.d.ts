@@ -1,7 +1,7 @@
 declare const _default: (options: {
     body: any;
-    method: "POST" | "GET";
-    parameters: string;
+    credentials: string;
+    method: "GET" | "POST" | "PUT";
     path: string;
     scheme: "Basic" | "Bearer" | "Digest" | "OAuth";
 }) => Promise<any>;
