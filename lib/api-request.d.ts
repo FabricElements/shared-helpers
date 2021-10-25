@@ -1,5 +1,4 @@
 declare const _default: (options: {
-    apiName: string;
     body: any;
     method: "POST" | "GET";
     parameters: string;

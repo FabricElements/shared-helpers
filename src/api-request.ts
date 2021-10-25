@@ -9,7 +9,6 @@ import fetch from "node-fetch";
  * @param options
  */
 export default async (options: {
-  apiName: string,
   body: any,
   method: "POST" | "GET",
   parameters: string,
