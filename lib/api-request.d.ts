@@ -1,8 +1,13 @@
-declare const _default: (apiName: string, path: string, body?: any) => Promise<unknown>;
+declare const _default: (options: {
+    apiName: string;
+    body: any;
+    method: "POST" | "GET";
+    parameters: string;
+    path: string;
+    scheme: "Basic" | "Bearer" | "Digest" | "OAuth";
+}) => Promise<any>;
 /**
  * Call firebase project base API
- * @param apiName
- * @param path
- * @param body
+ * @param options
  */
 export default _default;

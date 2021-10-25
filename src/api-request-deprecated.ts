@@ -2,27 +2,26 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
+import * as functions from "firebase-functions";
 import fetch from "node-fetch";
 
 /**
  * Call firebase project base API
- * @param options
+ * @param apiName
+ * @param path
+ * @param body
  */
-export default async (options: {
-  apiName: string,
-  body: any,
-  method: "POST" | "GET",
-  parameters: string,
-  path: string,
-  scheme: "Basic" | "Bearer" | "Digest" | "OAuth",
-}) => {
-  if (!options.path) {
+export default async (apiName: string, path: string, body: any = {}) => {
+  const config = functions.config();
+  const apiBase = config[apiName];
+  if (!(apiName || apiBase)) {
     throw new Error("Invalid api call");
   }
-  const finalBody = JSON.stringify(options.body);
+  const finalBody = JSON.stringify(body);
   let requestOptions: any = {
-    method: options.method,
+    method: "POST",
     headers: {
+      "authorization": `Bearer ${apiBase.token}`,
       "Accept": "application/json",
       "Content-Type": "application/json"
     },
@@ -35,15 +34,13 @@ export default async (options: {
     size: 0,            // maximum response body size in bytes. 0 to disable
     agent: null         // http(s).Agent instance, allows custom proxy, certificate, dns lookup etc.
   };
-  if (options.scheme && options.parameters) {
-    requestOptions.headers.Authorization = `${options.scheme} ${options.parameters}`;
-  }
+  const apiPath = `https://${apiBase.id}.firebaseapp.com/api/${path}`;
   try {
-    const request = await fetch(options.path, requestOptions);
+    const request = await fetch(apiPath, requestOptions);
     const bodyJson = await request.json();
     if (request.status !== 200) {
       if (request.status === 500) {
-        throw new Error(`${options.path} isn't available`);
+        throw new Error(`${apiName} isn't available`);
       }
       // @ts-ignore
       throw new Error(bodyJson.message || "unknown error");

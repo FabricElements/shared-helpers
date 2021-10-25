@@ -6,6 +6,7 @@
  * -------------------------------------------
  */
 import apiRequest from "./api-request";
+import apiRequestDeprecated from "./api-request-deprecated";
 import backup from "./backup";
 import checkNumber from "./check-number";
 import cleaner from "./cleaner";
@@ -28,6 +29,7 @@ import validateUrl from "./validate-url";
 
 export {
   apiRequest,
+  apiRequestDeprecated,
   backup,
   checkNumber,
   cleaner,

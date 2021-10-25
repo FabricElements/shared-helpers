@@ -6,6 +6,7 @@
  * -------------------------------------------
  */
 import apiRequest from "./api-request";
+import apiRequestDeprecated from "./api-request-deprecated";
 import backup from "./backup";
 import checkNumber from "./check-number";
 import cleaner from "./cleaner";
@@ -25,4 +26,4 @@ import * as status from "./status";
 import * as strings from "./strings";
 import { UserHelper } from "./user-helper";
 import validateUrl from "./validate-url";
-export { apiRequest, backup, checkNumber, cleaner, interfaces, ImageHelper, FirestoreHelper, MediaHelper, global, hashId, linkDomain, messageQueueSpeed, pubSubEvent, replaceMessageText, specialCharToRegular, strings, status, UserHelper, validateUrl, regex, };
+export { apiRequest, apiRequestDeprecated, backup, checkNumber, cleaner, interfaces, ImageHelper, FirestoreHelper, MediaHelper, global, hashId, linkDomain, messageQueueSpeed, pubSubEvent, replaceMessageText, specialCharToRegular, strings, status, UserHelper, validateUrl, regex, };
