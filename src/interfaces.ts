@@ -79,3 +79,11 @@ export interface InterfaceImageResize {
 }
 
 export type imageSizesType = null | string | "thumbnail" | "small" | "medium" | "standard" | "high" | "max";
+
+export interface InterfaceAPIRequest {
+  body?: any,
+  credentials?: string,
+  method?: "GET" | "POST" | "PUT",
+  path?: string,
+  scheme?: "Basic" | "Bearer" | "Digest" | "OAuth",
+}

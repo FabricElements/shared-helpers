@@ -3,18 +3,13 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import fetch from "node-fetch";
+import type {InterfaceAPIRequest} from "./interfaces";
 
 /**
  * Call firebase project base API
  * @param options
  */
-export default async (options: {
-  body: any,
-  credentials: string,
-  method: "GET" | "POST" | "PUT",
-  path: string,
-  scheme: "Basic" | "Bearer" | "Digest" | "OAuth",
-}) => {
+export default async (options: InterfaceAPIRequest) => {
   if (!options.path) {
     throw new Error("Invalid api call");
   }
