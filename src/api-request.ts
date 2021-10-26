@@ -36,9 +36,9 @@ export default async (options: InterfaceAPIRequest) => {
     const request = await fetch(options.path, requestOptions);
     const bodyJson = await request.json();
     if (request.status !== 200) {
-      if (request.status === 500) {
-        throw new Error(`${options.path} isn't available`);
-      }
+      // if (request.status === 500) {
+      //   throw new Error(`${options.path} isn't available`);
+      // }
       // @ts-ignore
       throw new Error(bodyJson.message || "unknown error");
     }
