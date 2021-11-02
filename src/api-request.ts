@@ -14,11 +14,13 @@ export default async (options: InterfaceAPIRequest) => {
     throw new Error("Invalid api call");
   }
   const finalBody = JSON.stringify(options.body);
+  const headers = options.headers ?? {};
   let requestOptions: any = {
     method: options.method,
     headers: {
       "Accept": "application/json",
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      ...headers,
     },
     body: finalBody,         // request body. can be null, a string, a Buffer, a Blob, or a Node.js Readable stream
     redirect: "error", // set to `manual` to extract redirect headers, `error` to reject redirect

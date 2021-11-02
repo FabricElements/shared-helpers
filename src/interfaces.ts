@@ -83,6 +83,7 @@ export type imageSizesType = null | string | "thumbnail" | "small" | "medium" | 
 export interface InterfaceAPIRequest {
   body?: any,
   credentials?: string,
+  headers?: any,
   method?: "GET" | "POST" | "PUT",
   path?: string,
   scheme?: "Basic" | "Bearer" | "Digest" | "OAuth",
