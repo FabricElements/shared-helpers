@@ -18,8 +18,8 @@ export default async (options: InterfaceAPIRequest) => {
   let requestOptions: any = {
     method: options.method,
     headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
+      // "Accept": "application/json",
+      // "Content-Type": "application/json",
       ...headers,
     },
     body: finalBody,         // request body. can be null, a string, a Buffer, a Blob, or a Node.js Readable stream
@@ -35,16 +35,32 @@ export default async (options: InterfaceAPIRequest) => {
     requestOptions.headers.Authorization = `${options.scheme} ${options.credentials}`;
   }
   try {
-    const request = await fetch(options.path, requestOptions);
-    const bodyJson = await request.json();
-    if (request.status !== 200) {
-      // if (request.status === 500) {
-      //   throw new Error(`${options.path} isn't available`);
-      // }
+    const response = await fetch(options.path, requestOptions);
+    let responseData = null;
+    if (!response.ok) {
+      const bodyJsonError = await response.json();
       // @ts-ignore
-      throw new Error(bodyJson.message || "unknown error");
+      throw new Error(bodyJsonError.message || "unknown error");
     }
-    return bodyJson;
+    console.log(response.headers.get("content-type"));
+    if (options.raw) {
+      // Return raw body response
+      responseData = await response.body;
+    } else {
+      // Return response depending on the content-type
+      switch (response.headers.get("content-type")?.toString().toLowerCase()) {
+        case "text/plain":
+        case "text/html":
+          responseData = await response.text();
+          break;
+        case "application/json":
+          responseData = await response.json();
+          break;
+        default:
+          responseData = await response.body;
+      }
+    }
+    return responseData;
   } catch (error) {
     throw new Error(error.message);
   }

@@ -86,5 +86,6 @@ export interface InterfaceAPIRequest {
   headers?: any,
   method?: "GET" | "POST" | "PUT",
   path?: string,
+  raw?: boolean,
   scheme?: "Basic" | "Bearer" | "Digest" | "OAuth",
 }
