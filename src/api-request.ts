@@ -18,8 +18,7 @@ export default async (options: InterfaceAPIRequest) => {
   let requestOptions: any = {
     method: options.method,
     headers: {
-      // "Accept": "application/json",
-      // "Content-Type": "application/json",
+      "Content-Type": "application/json",
       ...headers,
     },
     body: finalBody,         // request body. can be null, a string, a Buffer, a Blob, or a Node.js Readable stream
