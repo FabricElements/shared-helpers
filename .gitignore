@@ -7,8 +7,7 @@ logs
 npm-debug.log*
 
 # lock files
-#.package-lock.json
-#package-lock.json
+/functions/package-lock.json
 #yarn.lock
 
 # Runtime data
