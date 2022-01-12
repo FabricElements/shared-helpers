@@ -9,7 +9,7 @@ declare const _default: (data: {
 /**
  * Custom backup from FirestoreHelper to BigQuery
  *
- * @param data
+ * @param {any} data
  * if true, deletes document instead of changing backup to true on document
  * 1500/minute --- Recommended memory 500mb
  */

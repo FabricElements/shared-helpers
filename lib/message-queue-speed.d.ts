@@ -20,6 +20,7 @@ declare const _default: (options?: {
 /**
  * Returns the recommended speed to send messages to a Twilio account
  *
- * @param options
+ * @param {any} options
+ * @return {any}
  */
 export default _default;

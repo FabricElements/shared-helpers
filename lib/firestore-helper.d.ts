@@ -1,4 +1,9 @@
-import { Tedis } from "tedis";
+/**
+ * @license
+ * Copyright FabricElements. All Rights Reserved.
+ */
+import type FirebaseFirestore from '@google-cloud/firestore';
+import { Tedis } from 'tedis';
 /**
  * Use FirestoreHelper to get firestore documents from redis cache
  */
@@ -9,7 +14,7 @@ export declare class FirestoreHelper {
     redisClient: Tedis;
     /**
      * Constructor
-     * @param config
+     * @param {any} config
      */
     constructor(config?: {
         host?: string;
@@ -20,7 +25,7 @@ export declare class FirestoreHelper {
     /**
      * Validate if document exists
      *
-     * @param options
+     * @param {any} options
      */
     existDocument: (options: {
         collection: string;
@@ -28,7 +33,8 @@ export declare class FirestoreHelper {
     }) => Promise<boolean>;
     /**
      * Get Document
-     * @param options
+     * @param {any} options
+     * @return {Promise<FirebaseFirestore.DocumentData>}
      */
     getDocument: (options: {
         cache?: boolean;
@@ -38,7 +44,8 @@ export declare class FirestoreHelper {
     }) => Promise<FirebaseFirestore.DocumentData>;
     /**
      * Get list
-     * @param options
+     * @param {any} options
+     * @return {Promise<FirebaseFirestore.DocumentData[]>}
      */
     getList: (options: {
         cache?: boolean;
@@ -57,7 +64,7 @@ export declare class FirestoreHelper {
     }) => Promise<FirebaseFirestore.DocumentData[]>;
     /**
      * Get list
-     * @param options
+     * @param {any} options
      * @return {Promise<string>[]}
      */
     getListIds: (options: {
@@ -72,10 +79,10 @@ export declare class FirestoreHelper {
             filter: FirebaseFirestore.WhereFilterOp;
             value: any;
         }[];
-    }) => Promise<string[]>;
+    }) => Promise<any>;
     /**
      * Get list size
-     * @param options
+     * @param {any} options
      * @return {Promise<string>[]}
      */
     getListSize: (options: {
@@ -90,18 +97,20 @@ export declare class FirestoreHelper {
             filter: FirebaseFirestore.WhereFilterOp;
             value: any;
         }[];
-    }) => Promise<number>;
+    }) => Promise<any>;
     /**
      * Get document instance from firestore
      *
-     * @param options
+     * @param {any} options
+     * @return {Promise<FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>>}
      * @private
      */
     private _getDocument;
     /**
      * Get document snapshot from firestore
      *
-     * @param options
+     * @param {any} options
+     * @return {Promise<FirebaseFirestore.DocumentData>}
      * @private
      */
     private _getDocumentSnap;

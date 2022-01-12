@@ -1,5 +1,9 @@
 /// <reference types="node" />
-import type { imageSizesType, InterfaceImageResize } from "./interfaces";
+import type { imageSizesType, InterfaceImageResize } from './interfaces';
+/**
+ * ImageHelper
+ * @param {any} options
+ */
 export declare class ImageHelper {
     firebaseConfig: any;
     isBeta: boolean;
@@ -10,10 +14,17 @@ export declare class ImageHelper {
         };
     };
     sizesOptionsArray: string[];
+    /**
+     * @param {any} config
+     */
     constructor(config?: {
         firebaseConfig?: any;
         isBeta?: boolean;
     });
+    /**
+     * bufferImage
+     * @param {InterfaceImageResize} options
+     */
     bufferImage: (options: InterfaceImageResize) => Promise<Buffer>;
     /**
      * Resize Images

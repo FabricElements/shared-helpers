@@ -38,7 +38,7 @@ export interface InterfaceUser {
     username?: string;
     [x: string]: any;
 }
-export declare type linkType = "instagram" | "link" | "youtube" | "twitter" | "tiktok" | "vimeo" | string;
+export declare type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' | 'vimeo' | string;
 export interface InterfaceFormatLink {
     active?: boolean;
     category?: string;
@@ -65,19 +65,19 @@ export interface InterfaceImageResize {
     crop?: string;
     dpr?: number;
     fileName?: string;
-    format?: "jpeg" | "png";
+    format?: 'jpeg' | 'png';
     input?: Buffer | string | any;
     maxHeight?: number;
     maxWidth?: number;
     quality?: number;
 }
-export declare type imageSizesType = null | string | "thumbnail" | "small" | "medium" | "standard" | "high" | "max";
+export declare type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
 export interface InterfaceAPIRequest {
     body?: any;
     credentials?: string;
     headers?: any;
-    method?: "GET" | "POST" | "PUT";
+    method?: 'GET' | 'POST' | 'PUT';
     path?: string;
     raw?: boolean;
-    scheme?: "Basic" | "Bearer" | "Digest" | "OAuth";
+    scheme?: 'Basic' | 'Bearer' | 'Digest' | 'OAuth';
 }

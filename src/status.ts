@@ -2,20 +2,20 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as admin from "firebase-admin";
+import * as admin from 'firebase-admin';
 
 /**
  * Update Status Collection with Errors
- * @param data
+ * @param {any} data
  */
 export const update = async (data: any) => {
   if (!data.id || !data.status) {
-    console.log("Missing input data");
+    console.log('Missing input data');
     return;
   }
   const db = admin.firestore();
   const timestamp = admin.firestore.FieldValue.serverTimestamp();
-  const ref = db.collection("status").doc(data.id);
+  const ref = db.collection('status').doc(data.id);
   const status = {
     backup: false,
     description: data.description || null,

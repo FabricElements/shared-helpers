@@ -42,13 +42,14 @@ export const getUrlAndGs = (filename: string) => {
 /**
  * Stream to buffer
  * Use on buffer media files and pipe functions
- * @param stream
+ * @param {Stream} stream
+ * @return {Promise}
  */
 export const streamToBuffer = (stream) => {
   return new Promise((resolve, reject) => {
-    let buffers = [];
-    stream.on("error", reject);
-    stream.on("data", (data) => buffers.push(data));
-    stream.on("end", () => resolve(Buffer.concat(buffers)));
+    const buffers = [];
+    stream.on('error', reject);
+    stream.on('data', (data) => buffers.push(data));
+    stream.on('end', () => resolve(Buffer.concat(buffers)));
   });
 };

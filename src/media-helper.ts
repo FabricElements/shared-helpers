@@ -2,20 +2,26 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type {Response} from "express";
-import * as admin from "firebase-admin";
-import {ImageHelper} from "./image-helper";
-import type {imageSizesType, InterfaceImageResize} from "./interfaces";
-import {contentTypeIsImageForSharp, contentTypeIsJPEG} from "./regex.js";
+import type {Response} from 'express';
+import * as admin from 'firebase-admin';
+import {ImageHelper} from './image-helper';
+import type {imageSizesType, InterfaceImageResize} from './interfaces';
+import {contentTypeIsImageForSharp, contentTypeIsJPEG} from './regex.js';
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
+/**
+ * MediaHelper
+ */
 export class MediaHelper {
   firebaseConfig: any;
   isBeta: boolean;
 
+  /**
+   * @param {any} config
+   */
   constructor(config?: {
     firebaseConfig?: any,
     isBeta?: boolean
@@ -53,10 +59,10 @@ export class MediaHelper {
     } = options;
     const _cacheTime = this.isBeta ? 60 : 86400; // 1 day in seconds
     let mediaBuffer: any = null;
-    let contentType = "text/html";
-    response.set("Content-Type", contentType);
+    let contentType = 'text/html';
+    response.set('Content-Type', contentType);
     // Don't use "/" at the start or end of your path
-    if (path.startsWith("/")) {
+    if (path.startsWith('/')) {
       path = path.substring(1);
     }
     const imageHelper = new ImageHelper({
@@ -73,23 +79,23 @@ export class MediaHelper {
     const imageSize = imageHelper.size(size);
     imageResizeOptions.maxHeight = height ? Math.floor(height) : imageSize.height;
     imageResizeOptions.maxWidth = width ? Math.floor(width) : imageSize.width;
-    if (crop || imageSize.size === "thumbnail") {
-      imageResizeOptions.crop = crop ?? "entropy";
+    if (crop || imageSize.size === 'thumbnail') {
+      imageResizeOptions.crop = crop ?? 'entropy';
     }
     if (dpr) {
       imageResizeOptions.dpr = dpr;
     }
     switch (imageSize.size) {
-      case "thumbnail":
-      case "small":
-      case "medium":
-      case "standard":
+      case 'thumbnail':
+      case 'small':
+      case 'medium':
+      case 'standard':
         imageResizeOptions.quality = 80;
         break;
-      case "high":
+      case 'high':
         imageResizeOptions.quality = 90;
         break;
-      case "max":
+      case 'max':
         imageResizeOptions.quality = 100;
     }
     let indexRobots: boolean = !!robots;
@@ -98,17 +104,17 @@ export class MediaHelper {
       contentType = metadata.contentType || null;
       const fileSize = metadata.size || 0;
       if (!contentType) {
-        throw new Error("contentType is missing");
+        throw new Error('contentType is missing');
       }
       if (fileSize === 0) {
-        throw new Error("Media file is empty");
+        throw new Error('Media file is empty');
       }
-      if (contentTypeIsImageForSharp.test(contentType) && fileSize !== "max") {
+      if (contentTypeIsImageForSharp.test(contentType) && fileSize !== 'max') {
         /**
          * Handle images
          */
         const isJPEG = contentTypeIsJPEG.test(contentType);
-        const format = isJPEG ? "jpeg" : "png";
+        const format = isJPEG ? 'jpeg' : 'png';
         mediaBuffer = await imageHelper.resize({
           ...imageResizeOptions,
           fileName: path,
@@ -129,37 +135,37 @@ export class MediaHelper {
       }
     }
     if (!indexRobots) {
-      response.set("X-Robots-Tag", "none"); // Prevent robots from indexing
+      response.set('X-Robots-Tag', 'none'); // Prevent robots from indexing
     }
     if (!ok) {
       /**
        * End request for messages to prevent the provider sending messages with invalid media files
        */
-      if (size === "message") {
-        console.warn("Can't find media file");
-        response.set("Cache-Control", "no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate");
+      if (size === 'message') {
+        console.warn('Can\'t find media file');
+        response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
         response.status(404);
         response.end();
         return;
       }
       mediaBuffer = await imageHelper.resize({
-        fileName: "media/default/error.jpg",
+        fileName: 'media/default/error.jpg',
         ...imageResizeOptions,
       });
-      contentType = "image/jpeg";
+      contentType = 'image/jpeg';
     }
     if (!mediaBuffer) {
       mediaBuffer = await imageHelper.resize({
-        fileName: "media/default/default.jpg",
+        fileName: 'media/default/default.jpg',
         ...imageResizeOptions,
       });
-      contentType = "image/jpeg";
-      response.set("Cache-Control", "no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate");
+      contentType = 'image/jpeg';
+      response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
     } else {
       response.status(200);
-      response.set("Cache-Control", `immutable, public, max-age=${_cacheTime}, s-maxage=${_cacheTime * 2}, min-fresh=${_cacheTime}`); // only cache if method changes to get
+      response.set('Cache-Control', `immutable, public, max-age=${_cacheTime}, s-maxage=${_cacheTime * 2}, min-fresh=${_cacheTime}`); // only cache if method changes to get
     }
-    response.set("Content-Type", contentType);
+    response.set('Content-Type', contentType);
     response.send(mediaBuffer);
     return null;
   };

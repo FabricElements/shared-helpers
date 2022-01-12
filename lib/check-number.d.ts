@@ -4,6 +4,6 @@ declare const _default: (phoneNumber: string | number, isMobile?: boolean) => Pr
  *
  * @param {string} phoneNumber
  * @param {boolean} isMobile
- * @returns {string}
+ * @return {string}
  */
 export default _default;

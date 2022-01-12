@@ -3,11 +3,17 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type { Response } from "express";
-import type { imageSizesType } from "./interfaces";
+import type { Response } from 'express';
+import type { imageSizesType } from './interfaces';
+/**
+ * MediaHelper
+ */
 export declare class MediaHelper {
     firebaseConfig: any;
     isBeta: boolean;
+    /**
+     * @param {any} config
+     */
     constructor(config?: {
         firebaseConfig?: any;
         isBeta?: boolean;

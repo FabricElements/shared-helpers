@@ -6,6 +6,6 @@ declare const _default: (filter: {
 }) => Promise<void>;
 /**
  * Big Query Clean Database
- * @param filter
+ * @param {any} filter
  */
 export default _default;

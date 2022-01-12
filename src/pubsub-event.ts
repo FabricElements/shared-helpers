@@ -5,11 +5,12 @@
 
 /**
  * PubSub basic event
- * @param ps
- * @param topic
- * @param data
- * @param attributes
- * @param options
+ *
+ * @param {any} ps
+ * @param {string} topic
+ * @param {object} data
+ * @param {any} attributes
+ * @param {any} options
  */
 export default async (ps: any, topic: string, data: object = {}, attributes: any = {}, options: any = {}) => {
   const message = JSON.stringify(data);

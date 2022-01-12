@@ -2,17 +2,17 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import {BigQuery} from "@google-cloud/bigquery";
-import * as admin from "firebase-admin";
-import _ from "lodash";
-import {timeout} from "./global.js";
+import {BigQuery} from '@google-cloud/bigquery';
+import * as admin from 'firebase-admin';
+import _ from 'lodash';
+import {timeout} from './global.js';
 
 const bigquery = new BigQuery();
 
 /**
  * Custom backup from FirestoreHelper to BigQuery
  *
- * @param data
+ * @param {any} data
  * if true, deletes document instead of changing backup to true on document
  * 1500/minute --- Recommended memory 500mb
  */
@@ -31,17 +31,13 @@ export default async (data: {
   }
   let backup = 0;
   try {
-    await bigquery
-      .dataset(data.dataset)
-      .table(data.table)
-      .insert(data.items, {
-        // @ts-ignore
-        ignoreUnknownValues: true,
-        skipInvalidRows: true,
-      });
+    await bigquery.dataset(data.dataset).table(data.table).insert(data.items, {
+      ignoreUnknownValues: true,
+      skipInvalidRows: true,
+    });
   } catch (error) {
     let errorMessage = error.message || null;
-    if (error.hasOwnProperty("response") && error.response.hasOwnProperty("insertErrors")) {
+    if (Object.prototype.hasOwnProperty.call(error, 'response') && Object.prototype.hasOwnProperty.call(error, 'insertErrors')) {
       const finalError = _.flatten(error.response.insertErrors);
       errorMessage = JSON.stringify(finalError);
     }
@@ -56,7 +52,7 @@ export default async (data: {
     if (!item.id) {
       continue;
     }
-    const updateKey = data.updateKey || "id";
+    const updateKey = data.updateKey || 'id';
     const docRef: any = db.collection(data.collection).doc(item[updateKey]);
     // If delete is true, commit the operation
     if (data.del) {

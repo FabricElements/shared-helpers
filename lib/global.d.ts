@@ -28,6 +28,7 @@ export declare const getUrlAndGs: (filename: string) => {
 /**
  * Stream to buffer
  * Use on buffer media files and pipe functions
- * @param stream
+ * @param {Stream} stream
+ * @return {Promise}
  */
 export declare const streamToBuffer: (stream: any) => Promise<unknown>;

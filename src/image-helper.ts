@@ -2,14 +2,18 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as admin from "firebase-admin";
-import sharp from "sharp";
-import type {imageSizesType, InterfaceImageResize} from "./interfaces";
+import * as admin from 'firebase-admin';
+import sharp from 'sharp';
+import type {imageSizesType, InterfaceImageResize} from './interfaces';
 
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
+/**
+ * ImageHelper
+ * @param {any} options
+ */
 export class ImageHelper {
   firebaseConfig: any;
   isBeta: boolean;
@@ -42,6 +46,9 @@ export class ImageHelper {
   };
   public sizesOptionsArray = Object.keys(this.sizesObject);
 
+  /**
+   * @param {any} config
+   */
   constructor(config?: {
     firebaseConfig?: any,
     isBeta?: boolean
@@ -52,8 +59,12 @@ export class ImageHelper {
     }
   }
 
+  /**
+   * bufferImage
+   * @param {InterfaceImageResize} options
+   */
   public bufferImage = async (options: InterfaceImageResize) => {
-    let optionsImage: any = {
+    const optionsImage: any = {
       // withoutEnlargement: true,
     };
     let dpr = Number(options.dpr ?? 1);
@@ -68,7 +79,7 @@ export class ImageHelper {
       optionsImage.width = options.maxWidth * dpr || 800;
     }
     if (crop) {
-      optionsImage.position = options.crop === "attention" ? sharp.strategy.attention : sharp.strategy.entropy;
+      optionsImage.position = options.crop === 'attention' ? sharp.strategy.attention : sharp.strategy.entropy;
       optionsImage.fit = sharp.fit.cover;
     } else {
       optionsImage.withoutEnlargement = true;
@@ -84,10 +95,10 @@ export class ImageHelper {
     };
     const finalFormat = options.format || null;
     switch (finalFormat) {
-      case "jpeg":
+      case 'jpeg':
         final = final.jpeg(resultOptions);
         break;
-      case "png":
+      case 'png':
         final = final.png(resultOptions);
         break;
     }
@@ -100,7 +111,7 @@ export class ImageHelper {
    */
   public resize = async (options: InterfaceImageResize) => {
     if (!options.fileName) {
-      throw new Error("Google Cloud Storage path not found or invalid");
+      throw new Error('Google Cloud Storage path not found or invalid');
     }
     const fileRef = admin.storage().bucket(this.firebaseConfig.storageBucket).file(options.fileName);
     const [fileObject] = await fileRef.download();
@@ -113,7 +124,7 @@ export class ImageHelper {
    * @return {any}
    */
   public size: (inputSize: (imageSizesType)) => { height: number; size: string; width: number; } = (inputSize) => {
-    const sizeBase = inputSize && this.sizesOptionsArray.indexOf(inputSize) >= 0 ? inputSize : "standard";
+    const sizeBase = inputSize && this.sizesOptionsArray.indexOf(inputSize) >= 0 ? inputSize : 'standard';
     return {
       height: this.sizesObject[sizeBase].height,
       width: this.sizesObject[sizeBase].width,

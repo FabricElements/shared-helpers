@@ -7,7 +7,7 @@ export declare const domains: string[];
  * Return Domain and Url.
  *
  * @param {object} options
- * @returns {string}
+ * @return {string}
  */
 export declare const randomDomain: (options?: {
     domains?: string[];

@@ -2,28 +2,45 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as admin from "firebase-admin";
-import * as functions from "firebase-functions";
+import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions';
+/**
+ * UserHelper
+ */
 export declare class UserHelper {
     firebaseConfig: any;
     isBeta: boolean;
     mainUrl: string;
+    /**
+     * @param {any} config
+     */
     constructor(config?: {
         firebaseConfig?: any;
         isBeta?: boolean;
         mainUrl?: string;
     });
+    /**
+     *
+     * @param {any} data
+     * @private
+     */
     private static hasData;
+    /**
+     * Validate if data object has Phone Or Email
+     * @param {any} data
+     * @private
+     */
     private static hasPhoneOrEmail;
     /**
      * Fail if user is unauthenticated
-     * @param context
+     *
+     * @param {functions.https.CallableContext} context
      */
     authenticated: (context: functions.https.CallableContext) => void;
     /**
      * Gets the user object with email or phone number or create the user if not exists
-     * @param data
-     * @returns {Promise<any>}
+     * @param {any} data
+     * @return {Promise<any>}
      */
     create: (data: {
         [key: string]: any;
@@ -32,12 +49,12 @@ export declare class UserHelper {
     }) => Promise<import("firebase-admin/lib/auth/user-record").UserRecord>;
     /**
      * Create User Document from UserRecord
-     * @param user
+     * @param {any} user
      */
     createDocument: (user: any) => Promise<void>;
     /**
      * Validate if user exist
-     * @param data
+     * @param {any} data
      */
     get: (data: {
         [key: string]: any;
@@ -47,8 +64,9 @@ export declare class UserHelper {
     }) => Promise<admin.auth.UserRecord | null>;
     /**
      * Get User Role
-     * @param uid
-     * @param data
+     *
+     * @param {string} uid
+     * @param {any} data
      */
     getRole: (uid: string, data: {
         collection?: string;
@@ -56,6 +74,7 @@ export declare class UserHelper {
     }) => Promise<any>;
     /**
      * User invitation function, it listens for a new connection-invite document creation, and creates the user
+     * @param {any} data
      */
     invite: (data: {
         [key: string]: any;
@@ -67,7 +86,8 @@ export declare class UserHelper {
     }) => Promise<void>;
     /**
      * Validates if user is and admin from role
-     * @param options
+     * @param {any} options
+     * @return {boolean} boolean
      */
     isAdmin: (options: {
         collection?: boolean;
@@ -76,6 +96,7 @@ export declare class UserHelper {
     }) => boolean;
     /**
      * Remove a user
+     * @param {any} data
      */
     remove: (data: {
         [key: string]: any;
@@ -84,12 +105,17 @@ export declare class UserHelper {
         document?: string;
         uid?: string;
     }) => Promise<void>;
+    /**
+     * Update User
+     * @param {any} options
+     */
     update: (options: {
         data: any;
         uid: string;
     }) => Promise<void>;
     /**
      * Update user role
+     * @param {any} data
      */
     updateRole: (data: {
         [key: string]: any;
@@ -102,13 +128,13 @@ export declare class UserHelper {
     /**
      * Creates the user
      * @param {any} data
-     * @returns {Promise<admin.auth.UserRecord>}
+     * @return {Promise<admin.auth.UserRecord>}
      */
     private createUser;
     /**
      * Updates fields in a number of documents to reflect an update of a user, such as create or delete
      *
-     * @param data
+     * @param {any} data
      */
     private roleUpdateCall;
 }

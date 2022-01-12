@@ -2,33 +2,38 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import fetch from "node-fetch";
-import type {InterfaceAPIRequest} from "./interfaces";
+import fetch from 'node-fetch';
+import type {InterfaceAPIRequest} from './interfaces';
 
 /**
  * Call firebase project base API
- * @param options
+ * @param {InterfaceAPIRequest} options
  */
 export default async (options: InterfaceAPIRequest) => {
   if (!options.path) {
-    throw new Error("Invalid api call");
+    throw new Error('Invalid api call');
   }
   const finalBody = JSON.stringify(options.body);
   const headers = options.headers ?? {};
-  let requestOptions: any = {
+  const requestOptions: any = {
     method: options.method,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...headers,
     },
-    body: finalBody,         // request body. can be null, a string, a Buffer, a Blob, or a Node.js Readable stream
-    redirect: "error", // set to `manual` to extract redirect headers, `error` to reject redirect
+    // can be null, a string, a Buffer, a Blob, or a Node.js Readable stream
+    body: finalBody,
+    // set to `manual` to extract redirect headers, `error` to reject redirect
+    redirect: 'error',
     // The following properties are node-fetch extensions
-    follow: 0,         // maximum redirect count. 0 to not follow redirect
-    timeout: 60000, // req/res timeout in ms, it resets on redirect. 0 to disable (OS limit applies).
+    // maximum redirect count. 0 to not follow redirect
+    follow: 0,
+    // req/res timeout in ms, it resets on redirect. 0 to disable.
+    timeout: 60000,
     // Signal is recommended instead.
-    size: 0,            // maximum response body size in bytes. 0 to disable
-    agent: null         // http(s).Agent instance, allows custom proxy, certificate, dns lookup etc.
+    size: 0, // maximum response body size in bytes. 0 to disable
+    // http(s).Agent instance, allows custom proxy, certificate, dns lookup etc.
+    agent: null,
   };
   if (options.scheme && options.credentials) {
     requestOptions.headers.Authorization = `${options.scheme} ${options.credentials}`;
@@ -38,21 +43,20 @@ export default async (options: InterfaceAPIRequest) => {
     let responseData = null;
     if (!response.ok) {
       const bodyJsonError = await response.json();
-      // @ts-ignore
-      throw new Error(bodyJsonError.message || "unknown error");
+      throw new Error(bodyJsonError.message || 'unknown error');
     }
-    console.log(response.headers.get("content-type"));
+    console.log(response.headers.get('content-type'));
     if (options.raw) {
       // Return raw body response
       responseData = await response.body;
     } else {
       // Return response depending on the content-type
-      switch (response.headers.get("content-type")?.toString().toLowerCase()) {
-        case "text/plain":
-        case "text/html":
+      switch (response.headers.get('content-type')?.toString().toLowerCase()) {
+        case 'text/plain':
+        case 'text/html':
           responseData = await response.text();
           break;
-        case "application/json":
+        case 'application/json':
           responseData = await response.json();
           break;
         default:
@@ -63,4 +67,4 @@ export default async (options: InterfaceAPIRequest) => {
   } catch (error) {
     throw new Error(error.message);
   }
-}
+};
