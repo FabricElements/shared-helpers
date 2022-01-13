@@ -2,8 +2,8 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
+import admin from 'firebase-admin';
+import functions from 'firebase-functions';
 /**
  * UserHelper
  */

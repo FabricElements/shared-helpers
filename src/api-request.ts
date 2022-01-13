@@ -3,7 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import fetch from 'node-fetch';
-import type {InterfaceAPIRequest} from './interfaces';
+import type {InterfaceAPIRequest} from './interfaces.js';
 
 /**
  * Call firebase project base API
@@ -42,9 +42,12 @@ export default async (options: InterfaceAPIRequest) => {
     const response = await fetch(options.path, requestOptions);
     let responseData = null;
     if (!response.ok) {
-      const bodyJsonError = await response.json();
-      throw new Error(bodyJsonError.message || 'unknown error');
+      const BodyJsonError = await response.json();
+      // @ts-ignore
+      throw new Error(Object.prototype.hasOwnProperty.call(BodyJsonError, 'message') ? BodyJsonError['message'] : 'unknown error');
     }
+
+
     console.log(response.headers.get('content-type'));
     if (options.raw) {
       // Return raw body response

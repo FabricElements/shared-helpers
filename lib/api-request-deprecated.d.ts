@@ -1,4 +1,4 @@
-declare const _default: (apiName: string, path: string, body?: any) => Promise<any>;
+declare const _default: (apiName: string, path: string, body?: any) => Promise<unknown>;
 /**
  * Call firebase project base API
  * @param {string} apiName

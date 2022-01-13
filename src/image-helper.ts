@@ -2,11 +2,11 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import sharp from 'sharp';
-import type {imageSizesType, InterfaceImageResize} from './interfaces';
+import type {imageSizesType, InterfaceImageResize} from './interfaces.js';
 
-if (!admin.apps.length) {
+if (admin.apps && !admin.apps.length) {
   admin.initializeApp();
 }
 

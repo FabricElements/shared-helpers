@@ -2,21 +2,17 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import {UserHelper} from "@fabricelements/shared-helpers";
-import * as admin from "firebase-admin";
-import * as functions from "firebase-functions";
+import {UserHelper} from '@fabricelements/shared-helpers';
+import admin from 'firebase-admin';
+import functions from 'firebase-functions';
 
 const userHelper = new UserHelper();
-
-const timestamp = admin.firestore.FieldValue.serverTimestamp();
-
-const db = admin.firestore();
 
 /**
  * Listener for user creation, initiates base fields
  */
 export const created = functions.runWith({
-  memory: "512MB",
+  memory: '512MB',
   timeoutSeconds: 60,
 }).auth.user().onCreate(async (user, context) => {
   await userHelper.createDocument(user);
@@ -28,19 +24,20 @@ export const created = functions.runWith({
  * @type {CloudFunction<DocumentSnapshot>}
  */
 export const createdDoc = functions.runWith({
-  memory: "512MB",
+  memory: '512MB',
   timeoutSeconds: 60,
-}).firestore.document("user/{userId}").onCreate(async (snap, context) => {
+}).firestore.document('user/{userId}').onCreate(async (snap, context) => {
+  const timestamp = admin.firestore.FieldValue.serverTimestamp();
   const data = snap.data();
-  let baseData: any = {
+  const baseData: any = {
     backup: false,
-    updated: admin.firestore.FieldValue.serverTimestamp(),
+    updated: timestamp,
   };
   if (!data.language) {
-    baseData.language = "en";
+    baseData.language = 'en';
   }
   if (!data.role) {
-    baseData.role = "user";
+    baseData.role = 'user';
   }
   if (!data.created) {
     baseData.created = timestamp;

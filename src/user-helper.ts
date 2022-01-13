@@ -2,18 +2,16 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-import {ImageHelper} from './image-helper';
-import type {InterfaceImageResize} from './interfaces';
-import {MediaHelper} from './media-helper';
+import admin from 'firebase-admin';
+import functions from 'firebase-functions';
+import {ImageHelper} from './image-helper.js';
+import type {InterfaceImageResize} from './interfaces.js';
+import {MediaHelper} from './media-helper.js';
 
-if (!admin.apps.length) {
+if (admin.apps && !admin.apps.length) {
   admin.initializeApp();
 }
 
-const fieldValue = admin.firestore.FieldValue;
-const timestamp = fieldValue.serverTimestamp();
 
 // eslint-disable-next-line valid-jsdoc
 /**
@@ -96,6 +94,8 @@ export class UserHelper {
    * @param {any} user
    */
   public createDocument = async (user: any) => {
+    const fieldValue = admin.firestore.FieldValue;
+    const timestamp = fieldValue.serverTimestamp();
     UserHelper.hasData(user);
     const baseData: object = {
       backup: false,
@@ -265,6 +265,8 @@ export class UserHelper {
    * @param {any} options
    */
   public update = async (options: { data: any, uid: string }) => {
+    const fieldValue = admin.firestore.FieldValue;
+    const timestamp = fieldValue.serverTimestamp();
     const imageHelper = new ImageHelper({
       firebaseConfig: this.firebaseConfig,
       isBeta: this.isBeta,
@@ -435,6 +437,8 @@ export class UserHelper {
     type: 'add' | 'remove',
     uid: string,
   }) => {
+    const fieldValue = admin.firestore.FieldValue;
+    const timestamp = fieldValue.serverTimestamp();
     const db = admin.firestore();
     const batch = db.batch();
     // let clickerInternal = false; // Adds or removes a user as being a clicker

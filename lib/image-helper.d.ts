@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import type { imageSizesType, InterfaceImageResize } from './interfaces';
+import type { imageSizesType, InterfaceImageResize } from './interfaces.js';
 /**
  * ImageHelper
  * @param {any} options

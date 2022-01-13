@@ -19,10 +19,10 @@
     "alwaysStrict": false,
     "allowJs": false,
     "charset": "utf8",
-    "module": "CommonJS",
+    "module": "es2020",
     "moduleResolution": "Node",
     "newLine": "LF",
-    "pretty": true,
+    "pretty": false,
     "removeComments": false,
     "sourceMap": true,
     "noImplicitReturns": true,
@@ -41,7 +41,6 @@
     "src"
   ],
   "exclude": [
-    "node_modules",
-    "**/node_modules/**"
+    "node_modules"
   ]
 }
