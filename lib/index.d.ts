@@ -5,25 +5,25 @@
  * Notes:
  * -------------------------------------------
  */
-import apiRequest from './api-request';
-import apiRequestDeprecated from './api-request-deprecated';
-import backup from './backup';
-import checkNumber from './check-number';
-import cleaner from './cleaner';
-import { FirestoreHelper } from './firestore-helper';
-import * as global from './global';
-import hashId from './hash-id';
-import { ImageHelper } from './image-helper';
-import * as interfaces from './interfaces';
-import * as linkDomain from './link-domain';
-import { MediaHelper } from './media-helper';
-import messageQueueSpeed from './message-queue-speed';
-import pubSubEvent from './pubsub-event';
-import * as regex from './regex';
-import replaceMessageText from './replace-message-text';
-import specialCharToRegular from './special-char-to-regular';
-import * as status from './status';
-import * as strings from './strings';
-import { UserHelper } from './user-helper';
-import validateUrl from './validate-url';
+import apiRequestDeprecated from './api-request-deprecated.js';
+import apiRequest from './api-request.js';
+import backup from './backup.js';
+import checkNumber from './check-number.js';
+import cleaner from './cleaner.js';
+import { FirestoreHelper } from './firestore-helper.js';
+import * as global from './global.js';
+import hashId from './hash-id.js';
+import { ImageHelper } from './image-helper.js';
+import * as interfaces from './interfaces.js';
+import * as linkDomain from './link-domain.js';
+import { MediaHelper } from './media-helper.js';
+import messageQueueSpeed from './message-queue-speed.js';
+import pubSubEvent from './pubsub-event.js';
+import * as regex from './regex.js';
+import replaceMessageText from './replace-message-text.js';
+import specialCharToRegular from './special-char-to-regular.js';
+import * as status from './status.js';
+import * as strings from './strings.js';
+import { UserHelper } from './user-helper.js';
+import validateUrl from './validate-url.js';
 export { apiRequest, apiRequestDeprecated, backup, checkNumber, cleaner, interfaces, ImageHelper, FirestoreHelper, MediaHelper, global, hashId, linkDomain, messageQueueSpeed, pubSubEvent, replaceMessageText, specialCharToRegular, strings, status, UserHelper, validateUrl, regex, };

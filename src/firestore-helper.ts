@@ -3,8 +3,9 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import type FirebaseFirestore from '@google-cloud/firestore';
-import * as admin from 'firebase-admin';
-import {ClientOpts, RedisClient} from 'redis';
+import admin from 'firebase-admin';
+import type {RedisClientOptions} from 'redis';
+import {createClient} from 'redis';
 import {Tedis} from 'tedis';
 
 /**
@@ -31,13 +32,18 @@ export class FirestoreHelper {
       const redisPort = Number(config.port);
       this.logs = !!config.logs;
       if (redisHost && redisPort) {
-        const clientOpts: ClientOpts = config;
-        clientOpts.port = redisPort;
-        this.prefix = clientOpts?.prefix ?? null;
-        const redis = new RedisClient(clientOpts);
+        const clientOpts: RedisClientOptions<any, any> = {
+          socket: {
+            port: redisPort,
+            host: redisHost,
+          },
+        };
+        config.port = redisPort;
+        this.prefix = config?.prefix ?? null;
+        const redis = createClient(clientOpts);
         const connected = redis.connected;
         if (connected) {
-          this.redisClient = new Tedis(clientOpts);
+          this.redisClient = new Tedis({host: config.host, port: config.port});
           this.canCache = true;
         }
       }

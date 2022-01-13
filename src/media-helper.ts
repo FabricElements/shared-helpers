@@ -3,12 +3,12 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import type {Response} from 'express';
-import * as admin from 'firebase-admin';
-import {ImageHelper} from './image-helper';
-import type {imageSizesType, InterfaceImageResize} from './interfaces';
+import admin from 'firebase-admin';
+import {ImageHelper} from './image-helper.js';
+import type {imageSizesType, InterfaceImageResize} from './interfaces.js';
 import {contentTypeIsImageForSharp, contentTypeIsJPEG} from './regex.js';
 
-if (!admin.apps.length) {
+if (admin.apps && !admin.apps.length) {
   admin.initializeApp();
 }
 

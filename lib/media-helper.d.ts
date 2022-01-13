@@ -4,7 +4,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import type { Response } from 'express';
-import type { imageSizesType } from './interfaces';
+import type { imageSizesType } from './interfaces.js';
 /**
  * MediaHelper
  */
