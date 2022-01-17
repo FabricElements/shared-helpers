@@ -5,7 +5,6 @@
  * Notes:
  * -------------------------------------------
  */
-import apiRequestDeprecated from './api-request-deprecated.js';
 import apiRequest from './api-request.js';
 import backup from './backup.js';
 import checkNumber from './check-number.js';
@@ -26,4 +25,4 @@ import * as status from './status.js';
 import * as strings from './strings.js';
 import { UserHelper } from './user-helper.js';
 import validateUrl from './validate-url.js';
-export { apiRequest, apiRequestDeprecated, backup, checkNumber, cleaner, interfaces, ImageHelper, FirestoreHelper, MediaHelper, global, hashId, linkDomain, messageQueueSpeed, pubSubEvent, replaceMessageText, specialCharToRegular, strings, status, UserHelper, validateUrl, regex, };
+export { apiRequest, backup, checkNumber, cleaner, interfaces, ImageHelper, FirestoreHelper, MediaHelper, global, hashId, linkDomain, messageQueueSpeed, pubSubEvent, replaceMessageText, specialCharToRegular, strings, status, UserHelper, validateUrl, regex, };

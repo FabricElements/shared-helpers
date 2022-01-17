@@ -2,13 +2,9 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import admin from 'firebase-admin';
+import {getStorage} from 'firebase-admin/storage';
 import sharp from 'sharp';
 import type {imageSizesType, InterfaceImageResize} from './interfaces.js';
-
-if (admin.apps && !admin.apps.length) {
-  admin.initializeApp();
-}
 
 /**
  * ImageHelper
@@ -113,7 +109,7 @@ export class ImageHelper {
     if (!options.fileName) {
       throw new Error('Google Cloud Storage path not found or invalid');
     }
-    const fileRef = admin.storage().bucket(this.firebaseConfig.storageBucket).file(options.fileName);
+    const fileRef = getStorage().bucket(this.firebaseConfig.storageBucket).file(options.fileName);
     const [fileObject] = await fileRef.download();
     return this.bufferImage({...options, input: fileObject});
   };

@@ -2,8 +2,8 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import admin from 'firebase-admin';
-import functions from 'firebase-functions';
+import type { UserRecord } from 'firebase-admin/auth';
+import { https } from 'firebase-functions';
 /**
  * UserHelper
  */
@@ -34,9 +34,9 @@ export declare class UserHelper {
     /**
      * Fail if user is unauthenticated
      *
-     * @param {functions.https.CallableContext} context
+     * @param {https.CallableContext} context
      */
-    authenticated: (context: functions.https.CallableContext) => void;
+    authenticated: (context: https.CallableContext) => void;
     /**
      * Gets the user object with email or phone number or create the user if not exists
      * @param {any} data
@@ -46,7 +46,7 @@ export declare class UserHelper {
         [key: string]: any;
         email?: string;
         phoneNumber?: string;
-    }) => Promise<import("firebase-admin/lib/auth/user-record").UserRecord>;
+    }) => Promise<UserRecord>;
     /**
      * Create User Document from UserRecord
      * @param {any} user
@@ -61,7 +61,7 @@ export declare class UserHelper {
         email?: string;
         phoneNumber?: string;
         uid?: string;
-    }) => Promise<admin.auth.UserRecord | null>;
+    }) => Promise<UserRecord | null>;
     /**
      * Get User Role
      *
@@ -128,7 +128,7 @@ export declare class UserHelper {
     /**
      * Creates the user
      * @param {any} data
-     * @return {Promise<admin.auth.UserRecord>}
+     * @return {Promise<auth.UserRecord>}
      */
     private createUser;
     /**

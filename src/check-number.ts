@@ -38,6 +38,7 @@ export default async (phoneNumber: string | number, isMobile: boolean = false) =
     }
     return finalNumber;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error.message);
   }
 };

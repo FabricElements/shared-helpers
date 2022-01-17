@@ -2,18 +2,14 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import admin from 'firebase-admin';
-import functions from 'firebase-functions';
+import type {UserRecord} from 'firebase-admin/auth';
+import {getAuth} from 'firebase-admin/auth';
+import {FieldValue, getFirestore} from 'firebase-admin/firestore';
+import {https} from 'firebase-functions';
 import {ImageHelper} from './image-helper.js';
 import type {InterfaceImageResize} from './interfaces.js';
 import {MediaHelper} from './media-helper.js';
 
-if (admin.apps && !admin.apps.length) {
-  admin.initializeApp();
-}
-
-
-// eslint-disable-next-line valid-jsdoc
 /**
  * UserHelper
  */
@@ -62,11 +58,11 @@ export class UserHelper {
   /**
    * Fail if user is unauthenticated
    *
-   * @param {functions.https.CallableContext} context
+   * @param {https.CallableContext} context
    */
-  public authenticated = (context: functions.https.CallableContext) => {
+  public authenticated = (context: https.CallableContext) => {
     if (!context.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
+      throw new https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
     }
   };
 
@@ -94,8 +90,7 @@ export class UserHelper {
    * @param {any} user
    */
   public createDocument = async (user: any) => {
-    const fieldValue = admin.firestore.FieldValue;
-    const timestamp = fieldValue.serverTimestamp();
+    const timestamp = FieldValue.serverTimestamp();
     UserHelper.hasData(user);
     const baseData: object = {
       backup: false,
@@ -106,7 +101,7 @@ export class UserHelper {
       phone: user.phoneNumber || null,
       avatar: user.photoURL || null,
     };
-    const db = admin.firestore();
+    const db = getFirestore();
     const docRef = db.collection('user').doc(user.uid);
     await docRef.set(baseData, {merge: true});
   };
@@ -120,7 +115,7 @@ export class UserHelper {
     email?: string;
     phoneNumber?: string;
     uid?: string;
-  }): Promise<admin.auth.UserRecord | null> => {
+  }): Promise<UserRecord | null> => {
     UserHelper.hasData(data);
     const hasAnyOption = data.phoneNumber || data.email || data.uid;
     if (!hasAnyOption) {
@@ -129,14 +124,15 @@ export class UserHelper {
     let _user = null;
     try {
       if (data.phoneNumber) {
-        _user = await admin.auth().getUserByPhoneNumber(data.phoneNumber);
+        _user = await getAuth().getUserByPhoneNumber(data.phoneNumber);
       } else if (data.email) {
-        _user = await admin.auth().getUserByEmail(data.email);
+        _user = await getAuth().getUserByEmail(data.email);
       } else if (data.uid) {
-        _user = await admin.auth().getUser(data.uid);
+        _user = await getAuth().getUser(data.uid);
       }
-    } catch (e) {
-      console.info(e.message);
+    } catch (error) {
+      // @ts-ignore
+      console.info(error.message);
     }
     return _user;
   };
@@ -157,14 +153,14 @@ export class UserHelper {
     /**
      * Verify admin access on top level
      */
-    const userRecord = await admin.auth().getUser(uid);
+    const userRecord = await getAuth().getUser(uid);
     const userClaims: any = userRecord.customClaims ?? {};
     let role = userClaims.role ?? null;
     if ((!role || role === 'user') && grouped) {
       /**
        * Verify admin access on collection level
        */
-      const db = admin.firestore();
+      const db = getFirestore();
       const ref = db.collection(data.collection).doc(data.document);
       const snap = await ref.get();
       const _data: any = snap.data();
@@ -207,6 +203,7 @@ export class UserHelper {
         role: data.role,
       });
     } catch (error) {
+      // @ts-ignore
       throw new Error(error.message);
     }
   };
@@ -256,6 +253,7 @@ export class UserHelper {
         document: data.document || undefined,
       });
     } catch (error) {
+      // @ts-ignore
       throw new Error(`Error removing user access: ${error.message}`);
     }
   };
@@ -265,8 +263,7 @@ export class UserHelper {
    * @param {any} options
    */
   public update = async (options: { data: any, uid: string }) => {
-    const fieldValue = admin.firestore.FieldValue;
-    const timestamp = fieldValue.serverTimestamp();
+    const timestamp = FieldValue.serverTimestamp();
     const imageHelper = new ImageHelper({
       firebaseConfig: this.firebaseConfig,
       isBeta: this.isBeta,
@@ -283,7 +280,6 @@ export class UserHelper {
     let correctNameFirst: string = nameFirst && nameFirst.length > 2 ? nameFirst : undefined;
     let correctNameLast: string = nameLast && nameLast.length > 2 ? nameLast : undefined;
     const updateName = correctNameFirst && correctNameLast;
-
     if (nameFirst) {
       if (!validNameFirst) {
         throw new Error('First Name must be at least 3 characters');
@@ -294,7 +290,7 @@ export class UserHelper {
         throw new Error('Last Name must be at least 3 characters');
       }
     }
-    const db = admin.firestore();
+    const db = getFirestore();
     const ref = db.collection('user').doc(uid);
     let updateDataFirestore: any = {};
     let updateDataUser: any = {};
@@ -361,7 +357,7 @@ export class UserHelper {
       throw new Error('No changes detected');
     }
     if (updateUserObject) {
-      await admin.auth().updateUser(uid, updateDataUser);
+      await getAuth().updateUser(uid, updateDataUser);
     }
     updateDataFirestore.onboarding = onboarding;
     await ref.set({
@@ -399,6 +395,7 @@ export class UserHelper {
         role: data.role,
       });
     } catch (error) {
+      // @ts-ignore
       throw new Error(`Error updating user access: ${error.message}`);
     }
   };
@@ -406,7 +403,7 @@ export class UserHelper {
   /**
    * Creates the user
    * @param {any} data
-   * @return {Promise<admin.auth.UserRecord>}
+   * @return {Promise<auth.UserRecord>}
    */
   private createUser = async (data: {
     email?: string;
@@ -421,7 +418,7 @@ export class UserHelper {
     if (data.phoneNumber) {
       userData.phoneNumber = data.phoneNumber;
     }
-    return admin.auth().createUser(userData);
+    return getAuth().createUser(userData);
   };
 
   /**
@@ -437,9 +434,8 @@ export class UserHelper {
     type: 'add' | 'remove',
     uid: string,
   }) => {
-    const fieldValue = admin.firestore.FieldValue;
-    const timestamp = fieldValue.serverTimestamp();
-    const db = admin.firestore();
+    const timestamp = FieldValue.serverTimestamp();
+    const db = getFirestore();
     const batch = db.batch();
     // let clickerInternal = false; // Adds or removes a user as being a clicker
     const grouped = data.collection && data.document;
@@ -460,31 +456,31 @@ export class UserHelper {
        * Collection level users should not use custom claims to set the role,
        * or this value will overwrite the admin level users and you'll have security issues.
        */
-      const userRecord = await admin.auth().getUser(data.uid);
+      const userRecord = await getAuth().getUser(data.uid);
       let userClaims: any = userRecord.customClaims ?? {};
       if (data.type === 'remove') {
         delete userClaims.role;
       } else {
         userClaims = {...userClaims, role: _role};
       }
-      await admin.auth().setCustomUserClaims(data.uid, userClaims);
+      await getAuth().setCustomUserClaims(data.uid, userClaims);
     }
     let roles = {};
     switch (data.type) {
       case 'add':
-        updateGroup = fieldValue.arrayUnion(...[data.document]);
-        userUpdate = fieldValue.arrayUnion(...[data.uid]);
+        updateGroup = FieldValue.arrayUnion(...[data.document]);
+        userUpdate = FieldValue.arrayUnion(...[data.uid]);
         // clickerInternal = true;
         roles = {
           [data.uid]: _role,
         };
         break;
       case 'remove':
-        updateGroup = fieldValue.arrayRemove(...[data.document]);
-        userUpdate = fieldValue.arrayRemove(...[data.uid]);
+        updateGroup = FieldValue.arrayRemove(...[data.document]);
+        userUpdate = FieldValue.arrayRemove(...[data.uid]);
         // clickerInternal = false;
         roles = {
-          [data.uid]: fieldValue.delete(),
+          [data.uid]: FieldValue.delete(),
         };
         break;
       default:
@@ -507,7 +503,7 @@ export class UserHelper {
     if (data.admin) {
       userData = {
         ...userData,
-        role: data.type === 'remove' ? fieldValue.delete() : _role,
+        role: data.type === 'remove' ? FieldValue.delete() : _role,
       };
     }
     batch.set(refUser, userData, {merge: true});

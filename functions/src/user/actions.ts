@@ -3,7 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {UserHelper} from '@fabricelements/shared-helpers';
-import functions from 'firebase-functions';
+import * as functions from 'firebase-functions';
 import {firebaseConfig, isBeta, mainUrl} from '../helpers/variables.js';
 
 const userHelper = new UserHelper({firebaseConfig, isBeta, mainUrl});
@@ -21,6 +21,7 @@ export const exists = functions.runWith({
       throw new Error('You are not registered. Please contact your account administrator to request access.');
     }
   } catch (error) {
+    // @ts-ignore
     throw new functions.https.HttpsError('permission-denied', error.message);
   }
   return {message: 'User Exists'};
@@ -40,6 +41,7 @@ export const invite = functions.runWith({
     await userHelper.invite(data);
     return {message: 'User Invited'};
   } catch (error) {
+    // @ts-ignore
     throw new functions.https.HttpsError('unknown', error.message);
   }
 });
@@ -58,14 +60,13 @@ export const remove = functions.runWith({
     await userHelper.remove(data);
     return {message: 'User Removed'};
   } catch (error) {
+    // @ts-ignore
     throw new functions.https.HttpsError('unknown', error.message);
   }
 });
 
 /**
- * Request create service
- *
- * @type {HttpsFunction}
+ * Update User data
  */
 export const update = functions.runWith({
   memory: '512MB',
@@ -76,6 +77,7 @@ export const update = functions.runWith({
   try {
     await userHelper.update({data, uid});
   } catch (error) {
+    // @ts-ignore
     throw new functions.https.HttpsError('failed-precondition', error.message);
   }
   return {
@@ -97,6 +99,7 @@ export const updateRole = functions.runWith({
     await userHelper.updateRole(data);
     return {message: 'User Role Updated'};
   } catch (error) {
+    // @ts-ignore
     throw new functions.https.HttpsError('unknown', error.message);
   }
 });

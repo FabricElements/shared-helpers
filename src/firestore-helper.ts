@@ -3,7 +3,8 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import type FirebaseFirestore from '@google-cloud/firestore';
-import admin from 'firebase-admin';
+import {getFirestore} from 'firebase-admin/firestore';
+
 import type {RedisClientOptions} from 'redis';
 import {createClient} from 'redis';
 import {Tedis} from 'tedis';
@@ -40,8 +41,10 @@ export class FirestoreHelper {
         };
         config.port = redisPort;
         this.prefix = config?.prefix ?? null;
+        // eslint-disable-next-line no-unused-vars
         const redis = createClient(clientOpts);
-        const connected = redis.connected;
+        // const connected = redis.connected;
+        const connected = false;
         if (connected) {
           this.redisClient = new Tedis({host: config.host, port: config.port});
           this.canCache = true;
@@ -105,12 +108,15 @@ export class FirestoreHelper {
         };
       } catch (error) {
         if (this.logs) {
+          // @ts-ignore
           switch (error.message) {
             case 'Key not found':
             case 'Cache limit reached':
+              // @ts-ignore
               console.log(error.message);
               break;
             default:
+              // @ts-ignore
               console.log('Created after:', error.message);
           }
         }
@@ -180,7 +186,7 @@ export class FirestoreHelper {
     if (!options.collection) {
       throw new Error('collection is undefined');
     }
-    const db = admin.firestore();
+    const db = getFirestore();
     let ref: any = db.collection(options.collection);
     const orderBy = options.orderBy;
     if (orderBy && orderBy.length > 0) {
@@ -228,7 +234,7 @@ export class FirestoreHelper {
     if (!options.collection) {
       throw new Error('collection is undefined');
     }
-    const db = admin.firestore();
+    const db = getFirestore();
     let ref: any = db.collection(options.collection);
     const orderBy = options.orderBy;
     if (orderBy && orderBy.length > 0) {
@@ -271,7 +277,7 @@ export class FirestoreHelper {
     if (!options.document) {
       throw new Error('Missing document id');
     }
-    const db = admin.firestore();
+    const db = getFirestore();
     const ref = db.collection(options.collection).doc(options.document);
     return ref.get();
   };

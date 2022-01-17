@@ -101,11 +101,8 @@
       }
     ],
     "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**.md",
-      "package.json",
-      "**/node_modules/**"
+      "**",
+      "!public/**"
     ],
     "rewrites": [
       {

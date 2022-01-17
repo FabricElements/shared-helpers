@@ -5,7 +5,7 @@
 import {MediaHelper} from '@fabricelements/shared-helpers';
 import cors from 'cors';
 import express from 'express';
-import functions from 'firebase-functions';
+import * as functions from 'firebase-functions';
 import {firebaseConfig, isBeta} from '../helpers/variables.js';
 
 const mediaHelper = new MediaHelper({

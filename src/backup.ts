@@ -3,7 +3,8 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {BigQuery} from '@google-cloud/bigquery';
-import admin from 'firebase-admin';
+import {getFirestore} from 'firebase-admin/firestore';
+
 import _ from 'lodash';
 import {timeout} from './global.js';
 
@@ -36,15 +37,17 @@ export default async (data: {
       skipInvalidRows: true,
     });
   } catch (error) {
+    // @ts-ignore
     let errorMessage = error.message || null;
     if (Object.prototype.hasOwnProperty.call(error, 'response') && Object.prototype.hasOwnProperty.call(error, 'insertErrors')) {
+      // @ts-ignore
       const finalError = _.flatten(error.response.insertErrors);
       errorMessage = JSON.stringify(finalError);
     }
     throw new Error(errorMessage);
   }
   // Update firestore documents
-  const db = admin.firestore();
+  const db = getFirestore();
   let batch = db.batch();
   let pending = 0;
   for (let i = 0; i < total; i++) {

@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import fetch from 'node-fetch';
+import inclusion from 'inclusion';
 import type {InterfaceAPIRequest} from './interfaces.js';
 
 /**
@@ -39,15 +39,13 @@ export default async (options: InterfaceAPIRequest) => {
     requestOptions.headers.Authorization = `${options.scheme} ${options.credentials}`;
   }
   try {
+    const {default: fetch} = await inclusion('node-fetch');
     const response = await fetch(options.path, requestOptions);
     let responseData = null;
     if (!response.ok) {
       const BodyJsonError = await response.json();
-      // @ts-ignore
       throw new Error(Object.prototype.hasOwnProperty.call(BodyJsonError, 'message') ? BodyJsonError['message'] : 'unknown error');
     }
-
-
     console.log(response.headers.get('content-type'));
     if (options.raw) {
       // Return raw body response
@@ -68,6 +66,7 @@ export default async (options: InterfaceAPIRequest) => {
     }
     return responseData;
   } catch (error) {
+    // @ts-ignore
     throw new Error(error.message);
   }
 };

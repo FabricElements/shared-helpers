@@ -1,10 +1,15 @@
 {
   "compileOnSave": true,
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  },
   "compilerOptions": {
     "lib": [
-      "es2020"
+      "es2021"
     ],
-    "target": "ES2020",
+    "target": "es2021",
     "importsNotUsedAsValues": "error",
     "noImplicitAny": false,
     "importHelpers": true,
@@ -17,17 +22,17 @@
     "strictNullChecks": false,
     "skipLibCheck": true,
     "alwaysStrict": false,
-    "allowJs": false,
+    "allowJs": true,
     "charset": "utf8",
-    "module": "es2020",
-    "moduleResolution": "Node",
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "newLine": "LF",
     "pretty": false,
     "removeComments": false,
     "sourceMap": true,
     "noImplicitReturns": true,
     "noUnusedLocals": false,
-    "strict": false,
+    "strict": true,
     "declaration": true,
     "esModuleInterop": true,
     "typeRoots": [
@@ -35,7 +40,12 @@
     ],
     "rootDir": "src",
     "baseUrl": "./",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "src"

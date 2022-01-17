@@ -5,7 +5,6 @@
  * Notes:
  * -------------------------------------------
  */
-import apiRequestDeprecated from './api-request-deprecated.js';
 import apiRequest from './api-request.js';
 import backup from './backup.js';
 import checkNumber from './check-number.js';
@@ -29,7 +28,6 @@ import validateUrl from './validate-url.js';
 
 export {
   apiRequest,
-  apiRequestDeprecated,
   backup,
   checkNumber,
   cleaner,

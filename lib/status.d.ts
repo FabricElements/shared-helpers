@@ -1,4 +1,8 @@
 /**
+ * @license
+ * Copyright FabricElements. All Rights Reserved.
+ */
+/**
  * Update Status Collection with Errors
  * @param {any} data
  */

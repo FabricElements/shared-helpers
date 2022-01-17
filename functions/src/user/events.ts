@@ -3,8 +3,8 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {UserHelper} from '@fabricelements/shared-helpers';
-import admin from 'firebase-admin';
-import functions from 'firebase-functions';
+import {FieldValue} from 'firebase-admin/firestore';
+import * as functions from 'firebase-functions';
 
 const userHelper = new UserHelper();
 
@@ -14,20 +14,18 @@ const userHelper = new UserHelper();
 export const created = functions.runWith({
   memory: '512MB',
   timeoutSeconds: 60,
-}).auth.user().onCreate(async (user, context) => {
+}).auth.user().onCreate(async (user) => {
   await userHelper.createDocument(user);
 });
 
 /**
- * Organization contact is created
- *
- * @type {CloudFunction<DocumentSnapshot>}
+ * User is created
  */
 export const createdDoc = functions.runWith({
   memory: '512MB',
   timeoutSeconds: 60,
-}).firestore.document('user/{userId}').onCreate(async (snap, context) => {
-  const timestamp = admin.firestore.FieldValue.serverTimestamp();
+}).firestore.document('user/{userId}').onCreate(async (snap) => {
+  const timestamp = FieldValue.serverTimestamp();
   const data = snap.data();
   const baseData: any = {
     backup: false,

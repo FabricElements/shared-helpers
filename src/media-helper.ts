@@ -3,14 +3,10 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import type {Response} from 'express';
-import admin from 'firebase-admin';
+import {getStorage} from 'firebase-admin/storage';
 import {ImageHelper} from './image-helper.js';
 import type {imageSizesType, InterfaceImageResize} from './interfaces.js';
 import {contentTypeIsImageForSharp, contentTypeIsJPEG} from './regex.js';
-
-if (admin.apps && !admin.apps.length) {
-  admin.initializeApp();
-}
 
 /**
  * MediaHelper
@@ -70,7 +66,7 @@ export class MediaHelper {
       isBeta: this.isBeta,
     });
     // const publicUrl = global.getUrlAndGs(mediaPath).url;
-    const fileRef = admin.storage().bucket(this.firebaseConfig.storageBucket).file(path);
+    const fileRef = getStorage().bucket(this.firebaseConfig.storageBucket).file(path);
     let ok = true;
     const imageResizeOptions: InterfaceImageResize = {};
     /**
@@ -131,6 +127,7 @@ export class MediaHelper {
     } catch (error) {
       ok = false;
       if (this.isBeta) {
+        // @ts-ignore
         console.warn(`${path}:`, error.message);
       }
     }
@@ -173,22 +170,21 @@ export class MediaHelper {
    * Preview media file
    * @param {any} options
    */
-  public save =
-    async (options: {
-      contentType: string;
-      media: Buffer,
-      options?: object;
-      path?: string; // yourPath = yourPath/id. Don't use "/" at the start or end of your path
-    }) => {
-      const bucketRef = admin.storage().bucket(this.firebaseConfig.storageBucket);
-      const fileRef = bucketRef.file(options.path);
-      const fileOptions: any = {
-        contentType: options.contentType,
-        resumable: false,
-        validation: true,
-        ...options.options,
-      };
-      // await fileRef.createWriteStream(fileOptions);
-      await fileRef.save(options.media, fileOptions);
+  public save = async (options: {
+    contentType: string;
+    media: Buffer,
+    options?: object;
+    path?: string; // yourPath = yourPath/id. Don't use "/" at the start or end of your path
+  }) => {
+    const bucketRef = getStorage().bucket(this.firebaseConfig.storageBucket);
+    const fileRef = bucketRef.file(options.path);
+    const fileOptions: any = {
+      contentType: options.contentType,
+      resumable: false,
+      validation: true,
+      ...options.options,
     };
+    // await fileRef.createWriteStream(fileOptions);
+    await fileRef.save(options.media, fileOptions);
+  };
 }
