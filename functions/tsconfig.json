@@ -28,7 +28,7 @@
     "noImplicitReturns": true,
     "noUnusedLocals": false,
     "strict": true,
-    "declaration": true,
+    "declaration": false,
     "esModuleInterop": true,
     "typeRoots": [
       "node_modules/@types"
