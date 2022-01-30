@@ -1,3 +1,7 @@
+/**
+ * @license
+ * Copyright FabricElements. All Rights Reserved.
+ */
 import type { UserRecord } from 'firebase-admin/auth';
 import { https } from 'firebase-functions';
 /**

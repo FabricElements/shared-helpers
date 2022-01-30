@@ -2,7 +2,6 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import {getApps, initializeApp} from 'firebase-admin/app';
 import type {UserRecord} from 'firebase-admin/auth';
 import {getAuth} from 'firebase-admin/auth';
 import {FieldValue, getFirestore} from 'firebase-admin/firestore';
@@ -10,13 +9,6 @@ import {https} from 'firebase-functions';
 import {ImageHelper} from './image-helper.js';
 import type {InterfaceImageResize} from './interfaces.js';
 import {MediaHelper} from './media-helper.js';
-
-/**
- * Init firebase app first
- */
-if (!getApps.length) {
-  initializeApp();
-}
 
 /**
  * UserHelper
