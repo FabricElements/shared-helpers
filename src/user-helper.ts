@@ -468,7 +468,10 @@ export class UserHelper {
     let roles = {};
     switch (data.type) {
       case 'add':
-        updateGroup = FieldValue.arrayUnion(...[data.document]);
+        // updateGroup = FieldValue.arrayUnion(...[data.document]);
+        updateGroup = {
+          [data.document]: _role,
+        };
         userUpdate = FieldValue.arrayUnion(...[data.uid]);
         // clickerInternal = true;
         roles = {
@@ -476,7 +479,10 @@ export class UserHelper {
         };
         break;
       case 'remove':
-        updateGroup = FieldValue.arrayRemove(...[data.document]);
+        updateGroup = {
+          [data.document]: FieldValue.delete(),
+        };
+        // updateGroup = FieldValue.arrayRemove(...[data.document]);
         userUpdate = FieldValue.arrayRemove(...[data.uid]);
         // clickerInternal = false;
         roles = {
