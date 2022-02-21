@@ -6,9 +6,12 @@ import type {UserRecord} from 'firebase-admin/auth';
 import {getAuth} from 'firebase-admin/auth';
 import {FieldValue, getFirestore} from 'firebase-admin/firestore';
 import {https} from 'firebase-functions';
+import {FirestoreHelper} from './firestore-helper';
 import {ImageHelper} from './image-helper.js';
 import type {InterfaceImageResize} from './interfaces.js';
 import {MediaHelper} from './media-helper.js';
+
+const firestore = new FirestoreHelper();
 
 /**
  * UserHelper
@@ -450,20 +453,21 @@ export class UserHelper {
     }
     const refUser = db.collection('user').doc(data.uid);
     const _role = data.role ?? 'user';
+    const userRecord = await getAuth().getUser(data.uid);
+    let userClaims: any = userRecord.customClaims ?? {};
+    let updateClaims = false;
     if (data.admin && data.uid) {
       /**
-       * Only update user custom claims on admin level.
-       * Collection level users should not use custom claims to set the role,
-       * or this value will overwrite the admin level users and you'll have security issues.
+       * Only update user custom claims `role` key on admin level.
+       * Collection level users should not use custom claims to set the `role` key,
+       * or this value will overwrite the admin level users, and you'll have security issues.
        */
-      const userRecord = await getAuth().getUser(data.uid);
-      let userClaims: any = userRecord.customClaims ?? {};
       if (data.type === 'remove') {
         delete userClaims.role;
       } else {
         userClaims = {...userClaims, role: _role};
       }
-      await getAuth().setCustomUserClaims(data.uid, userClaims);
+      updateClaims = true;
     }
     let roles = {};
     switch (data.type) {
@@ -512,6 +516,29 @@ export class UserHelper {
     }
     batch.set(refUser, userData, {merge: true});
     await batch.commit();
+
+    /**
+     * Update custom claims
+     */
+    let collectionClaims: any = null;
+    if (grouped) {
+      const userDoc = await firestore.getDocument({
+        collection: 'user',
+        document: data.uid,
+      });
+      if (Object.prototype.hasOwnProperty.call(userDoc, data.collection)) {
+        collectionClaims = userDoc[data.collection];
+        userClaims = {
+          ...userClaims,
+          [data.collection]: collectionClaims,
+        };
+      }
+      updateClaims = true;
+    }
+
+    if (updateClaims) {
+      await getAuth().setCustomUserClaims(data.uid, userClaims);
+    }
     return;
   };
 }
