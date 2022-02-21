@@ -538,6 +538,7 @@ export class UserHelper {
 
     if (updateClaims) {
       await getAuth().setCustomUserClaims(data.uid, userClaims);
+      await getAuth().revokeRefreshTokens(data.uid);
     }
     return;
   };
