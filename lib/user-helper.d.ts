@@ -38,6 +38,13 @@ export declare class UserHelper {
      */
     authenticated: (context: https.CallableContext) => void;
     /**
+     * Return user token from context
+     *
+     * @param {https.CallableContext} context
+     * @return {string}
+     */
+    token: (context: https.CallableContext) => string;
+    /**
      * Gets the user object with email or phone number or create the user if not exists
      * @param {any} data
      * @return {Promise<any>}

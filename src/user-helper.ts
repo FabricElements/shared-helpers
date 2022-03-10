@@ -70,6 +70,25 @@ export class UserHelper {
   };
 
   /**
+   * Return user token from context
+   *
+   * @param {https.CallableContext} context
+   * @return {string}
+   */
+  public token = (context: https.CallableContext): string => {
+    this.authenticated(context);
+    const authHeader = context.rawRequest.headers.authorization;
+    if (!authHeader) {
+      throw new https.HttpsError('unauthenticated', 'Missing Authorization header');
+    }
+    const _token = authHeader.split(' ')[1];
+    if (!_token || _token.length < 5) {
+      throw new https.HttpsError('unauthenticated', 'Missing or invalid token');
+    }
+    return _token;
+  };
+
+  /**
    * Gets the user object with email or phone number or create the user if not exists
    * @param {any} data
    * @return {Promise<any>}
