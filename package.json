@@ -37,7 +37,7 @@
     "moment-timezone": "^0.5.34",
     "node-fetch": "^3.2.3",
     "redis": "^4.0.6",
-    "sharp": "^0.30.3",
+    "sharp": "^0.30.5",
     "tedis": "^0.1.12"
   },
   "devDependencies": {
