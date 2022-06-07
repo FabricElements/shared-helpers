@@ -80,6 +80,8 @@ export interface InterfaceImageResize {
 
 export type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
 
+export type fetchResponse = null | 'json' | 'text' | 'raw' | 'arrayBuffer' | 'formData' | 'blob';
+
 export interface InterfaceAPIRequest {
   body?: any,
   credentials?: string,
@@ -88,4 +90,5 @@ export interface InterfaceAPIRequest {
   path?: string,
   raw?: boolean,
   scheme?: 'Basic' | 'Bearer' | 'Digest' | 'OAuth',
+  as?: fetchResponse,
 }

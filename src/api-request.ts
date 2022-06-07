@@ -34,6 +34,7 @@ export default async (options: InterfaceAPIRequest) => {
     size: 0, // maximum response body size in bytes. 0 to disable
     // http(s).Agent instance, allows custom proxy, certificate, dns lookup etc.
     agent: null,
+    compress: true,
   };
   if (options.scheme && options.credentials) {
     requestOptions.headers.Authorization = `${options.scheme} ${options.credentials}`;
@@ -46,23 +47,39 @@ export default async (options: InterfaceAPIRequest) => {
       const BodyJsonError = await response.json();
       throw new Error(Object.prototype.hasOwnProperty.call(BodyJsonError, 'message') ? BodyJsonError['message'] : 'unknown error');
     }
-    console.log(response.headers.get('content-type'));
-    if (options.raw) {
-      // Return raw body response
-      responseData = await response.body;
-    } else {
-      // Return response depending on the content-type
-      switch (response.headers.get('content-type')?.toString().toLowerCase()) {
-        case 'text/plain':
-        case 'text/html':
-          responseData = await response.text();
-          break;
-        case 'application/json':
-          responseData = await response.json();
-          break;
-        default:
-          responseData = await response.body;
-      }
+    console.log('content-type', response.headers.get('content-type'));
+    switch (options.as) {
+      case 'arrayBuffer':
+        responseData = await response.arrayBuffer();
+        break;
+      case 'formData':
+        responseData = await response.formData();
+        break;
+      case 'blob':
+        responseData = await response.blob();
+        break;
+      case 'json':
+        responseData = await response.json();
+        break;
+      case 'text':
+        responseData = await response.text();
+        break;
+      case 'raw':
+        responseData = await response.body;
+        break;
+      default:
+        // Return response depending on the content-type
+        switch (response.headers.get('content-type')?.toString().toLowerCase()) {
+          case 'text/plain':
+          case 'text/html':
+            responseData = await response.text();
+            break;
+          case 'application/json':
+            responseData = await response.json();
+            break;
+          default:
+            responseData = await response.body;
+        }
     }
     return responseData;
   } catch (error) {
