@@ -2,6 +2,12 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
+/**
+ * Returns the recommended speed to send messages to a Twilio account
+ *
+ * @param {object} options
+ * @return {object}
+ */
 declare const _default: (options?: {
     instances?: number;
     sleep?: number;
@@ -17,10 +23,4 @@ declare const _default: (options?: {
         day: number;
     };
 };
-/**
- * Returns the recommended speed to send messages to a Twilio account
- *
- * @param {object} options
- * @return {object}
- */
 export default _default;

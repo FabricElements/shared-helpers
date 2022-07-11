@@ -2,7 +2,6 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-declare const _default: (ps: any, topic: string, data?: object, attributes?: any, options?: any) => Promise<void>;
 /**
  * PubSub basic event
  *
@@ -12,4 +11,5 @@ declare const _default: (ps: any, topic: string, data?: object, attributes?: any
  * @param {any} attributes
  * @param {any} options
  */
+declare const _default: (ps: any, topic: string, data?: object, attributes?: any, options?: any) => Promise<void>;
 export default _default;
