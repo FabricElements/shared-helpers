@@ -79,6 +79,7 @@ export class ImageHelper {
       optionsImage.fit = sharp.fit.cover;
     } else {
       optionsImage.withoutEnlargement = true;
+      optionsImage.fit = sharp.fit.inside;
     }
     const base = sharp(options.input).resize(optionsImage.width, optionsImage.height, optionsImage);
     let final = base;
