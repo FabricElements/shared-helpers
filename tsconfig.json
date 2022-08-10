@@ -25,7 +25,7 @@
     "allowJs": true,
     "charset": "utf8",
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "Node16",
     "newLine": "LF",
     "pretty": false,
     "removeComments": false,
