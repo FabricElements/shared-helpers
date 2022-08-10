@@ -61,7 +61,7 @@ export class ImageHelper {
    */
   public bufferImage = async (options: InterfaceImageResize) => {
     const optionsImage: any = {
-      withoutEnlargement: true,
+      // withoutEnlargement: true,
     };
     let dpr = Number(options.dpr ?? 1);
     if (dpr > 3) {
@@ -77,6 +77,9 @@ export class ImageHelper {
     if (crop) {
       optionsImage.position = options.crop === 'attention' ? sharp.strategy.attention : sharp.strategy.entropy;
       optionsImage.fit = sharp.fit.cover;
+    } else {
+      optionsImage.withoutEnlargement = true;
+      optionsImage.fit = sharp.fit.inside;
     }
     const base = sharp(options.input).resize(optionsImage.width, optionsImage.height, optionsImage);
     let final = base;
