@@ -73,8 +73,13 @@ export class MediaHelper {
      * Define image size
      */
     const imageSize = imageHelper.size(size);
-    imageResizeOptions.maxHeight = height ? Math.floor(height) : imageSize.height;
-    imageResizeOptions.maxWidth = width ? Math.floor(width) : imageSize.width;
+    if (height) imageResizeOptions.maxHeight = height;
+    if (width) imageResizeOptions.maxWidth = width;
+    // Override size parameters if size is set
+    if (size) {
+      imageResizeOptions.maxHeight = imageSize.height;
+      imageResizeOptions.maxWidth = imageSize.width;
+    }
     if (crop || imageSize.size === 'thumbnail') {
       imageResizeOptions.crop = crop ?? 'entropy';
     }

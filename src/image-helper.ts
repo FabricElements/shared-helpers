@@ -67,22 +67,23 @@ export class ImageHelper {
     if (dpr > 3) {
       dpr = 3;
     }
-    if (options.maxHeight || options.crop) {
+    const crop = options.maxHeight && options.maxWidth || options.crop;
+    if (options.maxHeight || crop) {
       optionsImage.height = options.maxHeight * dpr || 800;
     }
-    if (options.maxWidth || options.crop) {
+    if (options.maxWidth || crop) {
       optionsImage.width = options.maxWidth * dpr || 800;
     }
-    if (options.crop) {
+    if (crop) {
       optionsImage.position = options.crop === 'attention' ? sharp.strategy.attention : sharp.strategy.entropy;
       optionsImage.fit = sharp.fit.cover;
     } else {
       optionsImage.withoutEnlargement = true;
-      optionsImage.fit = sharp.fit.inside;
+      // optionsImage.fit = sharp.fit.inside;
     }
     const base = sharp(options.input).resize(optionsImage.width, optionsImage.height, optionsImage);
     let final = base;
-    if (options.crop) {
+    if (crop) {
       final = base.extract({left: 0, top: 0, width: optionsImage.width, height: optionsImage.height});
     }
     const resultOptions: any = {
