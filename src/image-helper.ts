@@ -81,7 +81,9 @@ export class ImageHelper {
       optionsImage.withoutEnlargement = true;
       optionsImage.fit = sharp.fit.inside;
     }
-    const base = sharp(options.input).resize(optionsImage.width, optionsImage.height, optionsImage);
+    const base = sharp(options.input, {
+      animated: true,
+    }).resize(optionsImage.width, optionsImage.height, optionsImage);
     let final = base;
     if (crop) {
       final = base.extract({left: 0, top: 0, width: optionsImage.width, height: optionsImage.height});
@@ -97,6 +99,9 @@ export class ImageHelper {
       case 'png':
         final = final.png(resultOptions);
         break;
+      // case 'gif':
+      //   final = final.gif(resultOptions);
+      //   break;
     }
     return final.toBuffer();
   };

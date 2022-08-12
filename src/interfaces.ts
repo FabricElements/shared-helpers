@@ -71,7 +71,7 @@ export interface InterfaceImageResize {
   crop?: string; // force proportions and cut
   dpr?: number;
   fileName?: string;
-  format?: 'jpeg' | 'png';
+  format?: 'jpeg' | 'png' | 'gif';
   input?: Buffer | string | any;
   maxHeight?: number;
   maxWidth?: number;
