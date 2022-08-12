@@ -91,7 +91,8 @@ export class ImageHelper {
     const resultOptions: any = {
       quality: options.quality || 90,
     };
-    const finalFormat = options.format || null;
+    let finalFormat = options.contentType.split('/').pop();
+    if (options.input.format != null) finalFormat = options.input.format;
     switch (finalFormat) {
       case 'jpeg':
         final = final.jpeg(resultOptions);
@@ -99,9 +100,9 @@ export class ImageHelper {
       case 'png':
         final = final.png(resultOptions);
         break;
-      // case 'gif':
-      //   final = final.gif(resultOptions);
-      //   break;
+      case 'gif':
+        final = final.gif(resultOptions);
+        break;
     }
     return final.toBuffer();
   };

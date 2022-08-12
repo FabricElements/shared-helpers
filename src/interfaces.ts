@@ -76,6 +76,7 @@ export interface InterfaceImageResize {
   maxHeight?: number;
   maxWidth?: number;
   quality?: number;
+  contentType?: string; // Only for internal use, it will be returned from storage
 }
 
 export type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';

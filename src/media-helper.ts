@@ -6,7 +6,7 @@ import type {Response} from 'express';
 import {getStorage} from 'firebase-admin/storage';
 import {ImageHelper} from './image-helper.js';
 import type {imageSizesType, InterfaceImageResize} from './interfaces.js';
-import {contentTypeIsImageForSharp, contentTypeIsJPEG} from './regex.js';
+import {contentTypeIsImageForSharp} from './regex.js';
 
 /**
  * MediaHelper
@@ -107,6 +107,7 @@ export class MediaHelper {
       if (!contentType) {
         throw new Error('contentType is missing');
       }
+      imageResizeOptions.contentType = contentType;
       if (fileSize === 0) {
         throw new Error('Media file is empty');
       }
@@ -114,14 +115,14 @@ export class MediaHelper {
         /**
          * Handle images
          */
-        const isJPEG = contentTypeIsJPEG.test(contentType);
-        const format = isJPEG ? 'jpeg' : 'png';
+        // const isJPEG = contentTypeIsJPEG.test(contentType);
+        // const format = isJPEG ? 'jpeg' : 'png';
         mediaBuffer = await imageHelper.resize({
           ...imageResizeOptions,
           fileName: path,
-          format,
+          // format: op,
         });
-        contentType = `image/${format}`;
+        // contentType = `image/${format}`;
         indexRobots = true;
       } else {
         /**
