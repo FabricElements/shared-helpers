@@ -3,10 +3,26 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {MediaHelper} from '@fabricelements/shared-helpers';
+import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
 import * as functions from 'firebase-functions';
 import {firebaseConfig, isBeta} from '../helpers/variables.js';
+
+/**
+ * Validate if response should be compressed
+ * @param {Request} req
+ * @param {Response} res
+ * @return {any}
+ */
+function shouldCompress(req, res) {
+  if (req.headers['x-no-compression']) {
+    // don't compress responses with this request header
+    return false;
+  }
+  // fallback to standard filter function
+  return compression.filter(req, res);
+}
 
 const mediaHelper = new MediaHelper({
   firebaseConfig,
@@ -15,6 +31,7 @@ const mediaHelper = new MediaHelper({
 const app = express();
 
 app.use(cors({origin: '*'}));
+app.use(compression({filter: shouldCompress}));
 
 /**
  * Preview image from origin id or default image response
