@@ -21,6 +21,7 @@ function shouldCompress(req, res) {
     return false;
   }
   // fallback to standard filter function
+  // TODO: validate compression
   return compression.filter(req, res);
 }
 
