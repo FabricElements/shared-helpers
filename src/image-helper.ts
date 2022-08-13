@@ -60,9 +60,10 @@ export class ImageHelper {
    * @param {InterfaceImageResize} options
    */
   public bufferImage = async (options: InterfaceImageResize) => {
-    const optionsImage: any = {
-      // withoutEnlargement: true,
-    };
+    let finalFormat = options.contentType.split('/').pop();
+    if (options.input.format != null) finalFormat = options.input.format;
+    const animated = finalFormat === 'gif';
+    const optionsImage: any = {};
     let dpr = Number(options.dpr ?? 1);
     if (dpr > 3) {
       dpr = 3;
@@ -82,7 +83,7 @@ export class ImageHelper {
       optionsImage.fit = sharp.fit.inside;
     }
     const base = sharp(options.input, {
-      animated: true,
+      animated: animated,
     }).resize(optionsImage.width, optionsImage.height, optionsImage);
     let final = base;
     if (crop) {
@@ -91,8 +92,7 @@ export class ImageHelper {
     const resultOptions: any = {
       quality: options.quality || 90,
     };
-    let finalFormat = options.contentType.split('/').pop();
-    if (options.input.format != null) finalFormat = options.input.format;
+
     switch (finalFormat) {
       case 'jpeg':
         final = final.jpeg(resultOptions);
