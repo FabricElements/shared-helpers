@@ -65,11 +65,12 @@ export interface InterfaceImageResize {
     crop?: string;
     dpr?: number;
     fileName?: string;
-    format?: 'jpeg' | 'png';
+    format?: 'jpeg' | 'png' | 'gif';
     input?: Buffer | string | any;
     maxHeight?: number;
     maxWidth?: number;
     quality?: number;
+    contentType?: string;
 }
 export declare type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
 export declare type fetchResponse = null | 'json' | 'text' | 'raw' | 'arrayBuffer' | 'formData' | 'blob';

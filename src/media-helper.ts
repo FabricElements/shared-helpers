@@ -6,7 +6,7 @@ import type {Response} from 'express';
 import {getStorage} from 'firebase-admin/storage';
 import {ImageHelper} from './image-helper.js';
 import type {imageSizesType, InterfaceImageResize} from './interfaces.js';
-import {contentTypeIsImageForSharp, contentTypeIsJPEG} from './regex.js';
+import {contentTypeIsImageForSharp} from './regex.js';
 
 /**
  * MediaHelper
@@ -83,21 +83,21 @@ export class MediaHelper {
     if (crop || imageSize.size === 'thumbnail') {
       imageResizeOptions.crop = crop ?? 'entropy';
     }
-    if (dpr) {
-      imageResizeOptions.dpr = dpr;
-    }
+    if (dpr) imageResizeOptions.dpr = dpr;
     switch (imageSize.size) {
-      case 'thumbnail':
-      case 'small':
-      case 'medium':
-      case 'standard':
-        imageResizeOptions.quality = 80;
-        break;
       case 'high':
         imageResizeOptions.quality = 90;
         break;
       case 'max':
         imageResizeOptions.quality = 100;
+        break;
+      // case 'thumbnail':
+      // case 'small':
+      // case 'medium':
+      // case 'standard':
+      default:
+        imageResizeOptions.quality = 80;
+        break;
     }
     let indexRobots: boolean = !!robots;
     try {
@@ -107,6 +107,7 @@ export class MediaHelper {
       if (!contentType) {
         throw new Error('contentType is missing');
       }
+      imageResizeOptions.contentType = contentType;
       if (fileSize === 0) {
         throw new Error('Media file is empty');
       }
@@ -114,14 +115,14 @@ export class MediaHelper {
         /**
          * Handle images
          */
-        const isJPEG = contentTypeIsJPEG.test(contentType);
-        const format = isJPEG ? 'jpeg' : 'png';
+        // const isJPEG = contentTypeIsJPEG.test(contentType);
+        // const format = isJPEG ? 'jpeg' : 'png';
         mediaBuffer = await imageHelper.resize({
           ...imageResizeOptions,
           fileName: path,
-          format,
+          // format: op,
         });
-        contentType = `image/${format}`;
+        // contentType = `image/${format}`;
         indexRobots = true;
       } else {
         /**

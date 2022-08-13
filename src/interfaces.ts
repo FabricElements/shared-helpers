@@ -71,11 +71,12 @@ export interface InterfaceImageResize {
   crop?: string; // force proportions and cut
   dpr?: number;
   fileName?: string;
-  format?: 'jpeg' | 'png';
+  format?: 'jpeg' | 'png' | 'gif';
   input?: Buffer | string | any;
   maxHeight?: number;
   maxWidth?: number;
   quality?: number;
+  contentType?: string; // Only for internal use, it will be returned from storage
 }
 
 export type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
