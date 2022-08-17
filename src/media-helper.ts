@@ -152,14 +152,14 @@ export class MediaHelper {
         return;
       }
       mediaBuffer = await imageHelper.resize({
-        fileName: 'media/default/error.jpg',
+        fileName: 'default/error.jpg',
         ...imageResizeOptions,
       });
       contentType = 'image/jpeg';
     }
     if (!mediaBuffer) {
       mediaBuffer = await imageHelper.resize({
-        fileName: 'media/default/default.jpg',
+        fileName: 'default/default.jpg',
         ...imageResizeOptions,
       });
       contentType = 'image/jpeg';
