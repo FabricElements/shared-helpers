@@ -3,7 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import type { UserRecord } from 'firebase-admin/auth';
-import { https } from 'firebase-functions';
+import type { CallableRequest } from 'firebase-functions/v2/https';
 /**
  * UserHelper
  */
@@ -34,16 +34,16 @@ export declare class UserHelper {
     /**
      * Fail if user is unauthenticated
      *
-     * @param {https.CallableContext} context
+     * @param {CallableRequest} request
      */
-    authenticated: (context: https.CallableContext) => void;
+    authenticated: (request: CallableRequest) => void;
     /**
      * Return user token from context
      *
-     * @param {https.CallableContext} context
+     * @param {CallableRequest} request
      * @return {string}
      */
-    token: (context: https.CallableContext) => string;
+    token: (request: CallableRequest) => string;
     /**
      * Gets the user object with email or phone number or create the user if not exists
      * @param {any} data

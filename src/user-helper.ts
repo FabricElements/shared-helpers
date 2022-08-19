@@ -5,8 +5,9 @@
 import type {UserRecord} from 'firebase-admin/auth';
 import {getAuth} from 'firebase-admin/auth';
 import {FieldValue, getFirestore} from 'firebase-admin/firestore';
-import {https} from 'firebase-functions';
-import {FirestoreHelper} from './firestore-helper';
+import {https} from 'firebase-functions/v2';
+import type {CallableRequest} from 'firebase-functions/v2/https';
+import {FirestoreHelper} from './firestore-helper.js';
 import {ImageHelper} from './image-helper.js';
 import type {InterfaceImageResize} from './interfaces.js';
 import {MediaHelper} from './media-helper.js';
@@ -61,10 +62,10 @@ export class UserHelper {
   /**
    * Fail if user is unauthenticated
    *
-   * @param {https.CallableContext} context
+   * @param {CallableRequest} request
    */
-  public authenticated = (context: https.CallableContext) => {
-    if (!context.auth) {
+  public authenticated = (request: CallableRequest) => {
+    if (!request.auth) {
       throw new https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
     }
   };
@@ -72,12 +73,13 @@ export class UserHelper {
   /**
    * Return user token from context
    *
-   * @param {https.CallableContext} context
+   * @param {CallableRequest} request
    * @return {string}
    */
-  public token = (context: https.CallableContext): string => {
-    this.authenticated(context);
-    const authHeader = context.rawRequest.headers.authorization;
+  public token = (request: CallableRequest): string => {
+    this.authenticated(request);
+    const authHeader = request.rawRequest.headers.authorization;
+    // const authHeader = request.auth.token;
     if (!authHeader) {
       throw new https.HttpsError('unauthenticated', 'Missing Authorization header');
     }
