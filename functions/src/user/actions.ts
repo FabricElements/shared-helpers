@@ -86,16 +86,16 @@ export const update = https.onCall({
 });
 
 /**
- * Remove a user invite
+ * Update User Role
  */
-export const updateRole = https.onCall({
+export const role = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 30,
 }, async (request) => {
   userHelper.authenticated(request);
   try {
-    const role = await userHelper.getRole(request.auth.uid, request.data);
-    userHelper.isAdmin({role, fail: true, collection: request.data?.collection});
+    const _role = await userHelper.getRole(request.auth.uid, request.data);
+    userHelper.isAdmin({role: _role, fail: true, collection: request.data?.collection});
     await userHelper.updateRole(request.data);
     return {message: 'User Role Updated'};
   } catch (error) {
@@ -103,3 +103,4 @@ export const updateRole = https.onCall({
     throw new https.HttpsError('unknown', error.message);
   }
 });
+

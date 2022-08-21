@@ -22,10 +22,10 @@ app.get('/media/**', async (request, response) => {
   return null;
 });
 
-const runFunction = https.onRequest({
+const defaultFunction = https.onRequest({
   memory: '1GiB',
   timeoutSeconds: 60,
   cors: '*',
 }, app);
 
-export default runFunction;
+export default defaultFunction;
