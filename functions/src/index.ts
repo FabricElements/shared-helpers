@@ -2,8 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import * as admin from 'firebase-admin';
-// import {getApps, initializeApp} from 'firebase-admin/app';
+import admin from 'firebase-admin';
 
 /**
  * Init firebase app first
@@ -11,9 +10,7 @@ import * as admin from 'firebase-admin';
 if (!admin.apps.length) {
   admin.initializeApp();
 }
-// if (!getApps.length) {
-//   initializeApp();
-// }
+
 /**
  * Export app modules after the app is initialized
  */

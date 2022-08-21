@@ -2,8 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-// import {formatNumber, getNumberType, isValidNumber, parseNumber} from 'libphonenumber-js';
-import inclusion from 'inclusion';
+import {formatNumber, getNumberType, isValidNumber, parseNumber} from 'libphonenumber-js';
 
 /**
  * Check if number is valid and format
@@ -14,7 +13,6 @@ import inclusion from 'inclusion';
  */
 export default async (phoneNumber: string | number, isMobile: boolean = false) => {
   try {
-    const {formatNumber, getNumberType, isValidNumber, parseNumber} = await inclusion('libphonenumber-js');
     let originalNumber = phoneNumber.toString();
     originalNumber = originalNumber.replace(/[^+0-9]/g, '');
     const hasFormat = originalNumber.match(/^\+[1-9]{1,3}\d{5,14}$/g);

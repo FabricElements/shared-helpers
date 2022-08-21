@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import inclusion from 'inclusion';
+import fetch from 'node-fetch';
 import type {InterfaceAPIRequest} from './interfaces.js';
 
 /**
@@ -40,7 +40,6 @@ export default async (options: InterfaceAPIRequest) => {
     requestOptions.headers.Authorization = `${options.scheme} ${options.credentials}`;
   }
   try {
-    const {default: fetch} = await inclusion('node-fetch');
     const response = await fetch(options.path, requestOptions);
     let responseData = null;
     if (!response.ok) {

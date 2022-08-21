@@ -3,7 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {UserHelper} from '@fabricelements/shared-helpers';
-import * as functions from 'firebase-functions';
+import {https} from 'firebase-functions/v2';
 import {firebaseConfig, isBeta, mainUrl} from '../helpers/variables.js';
 
 const userHelper = new UserHelper({firebaseConfig, isBeta, mainUrl});
@@ -11,18 +11,18 @@ const userHelper = new UserHelper({firebaseConfig, isBeta, mainUrl});
 /**
  * Validate if user exists or fail
  */
-export const exists = functions.runWith({
-  memory: '512MB',
+export const exists = https.onCall({
+  memory: '512MiB',
   timeoutSeconds: 60,
-}).https.onCall(async (data, context) => {
+}, async (request) => {
   try {
-    const _exists = await userHelper.get(data);
+    const _exists = await userHelper.get(request.data);
     if (!_exists) {
       throw new Error('You are not registered. Please contact your account administrator to request access.');
     }
   } catch (error) {
     // @ts-ignore
-    throw new functions.https.HttpsError('permission-denied', error.message);
+    throw new https.HttpsError('permission-denied', error.message);
   }
   return {message: 'User Exists'};
 });
@@ -30,55 +30,55 @@ export const exists = functions.runWith({
 /**
  * User invitation function, it listens for a new connection-invite document creation, and creates the user
  */
-export const invite = functions.runWith({
-  memory: '512MB',
+export const invite = https.onCall({
+  memory: '512MiB',
   timeoutSeconds: 30,
-}).https.onCall(async (data, context) => {
-  userHelper.authenticated(context);
+}, async (request) => {
+  userHelper.authenticated(request);
   try {
-    const role = await userHelper.getRole(context.auth.uid, data);
-    userHelper.isAdmin({role, fail: true, collection: data?.collection});
-    await userHelper.invite(data);
+    const role = await userHelper.getRole(request.auth.uid, request.data);
+    userHelper.isAdmin({role, fail: true, collection: request.data?.collection});
+    await userHelper.invite(request.data);
     return {message: 'User Invited'};
   } catch (error) {
     // @ts-ignore
-    throw new functions.https.HttpsError('unknown', error.message);
+    throw new https.HttpsError('unknown', error.message);
   }
 });
 
 /**
  * Remove a user invite
  */
-export const remove = functions.runWith({
-  memory: '512MB',
+export const remove = https.onCall({
+  memory: '512MiB',
   timeoutSeconds: 30,
-}).https.onCall(async (data, context) => {
-  userHelper.authenticated(context);
+}, async (request) => {
+  userHelper.authenticated(request);
   try {
-    const role = await userHelper.getRole(context.auth.uid, data);
-    userHelper.isAdmin({role, fail: true, collection: data?.collection});
-    await userHelper.remove(data);
+    const role = await userHelper.getRole(request.auth.uid, request.data);
+    userHelper.isAdmin({role, fail: true, collection: request.data?.collection});
+    await userHelper.remove(request.data);
     return {message: 'User Removed'};
   } catch (error) {
     // @ts-ignore
-    throw new functions.https.HttpsError('unknown', error.message);
+    throw new https.HttpsError('unknown', error.message);
   }
 });
 
 /**
  * Update User data
  */
-export const update = functions.runWith({
-  memory: '512MB',
+export const update = https.onCall({
+  memory: '512MiB',
   timeoutSeconds: 30,
-}).https.onCall(async (data, context) => {
-  userHelper.authenticated(context);
-  const uid = context.auth.uid;
+}, async (request) => {
+  userHelper.authenticated(request);
+  const uid = request.auth.uid;
   try {
-    await userHelper.update({data, uid});
+    await userHelper.update({data: request.data, uid});
   } catch (error) {
     // @ts-ignore
-    throw new functions.https.HttpsError('failed-precondition', error.message);
+    throw new https.HttpsError('failed-precondition', error.message);
   }
   return {
     message: 'Profile updated',
@@ -86,20 +86,21 @@ export const update = functions.runWith({
 });
 
 /**
- * Remove a user invite
+ * Update User Role
  */
-export const updateRole = functions.runWith({
-  memory: '512MB',
+export const role = https.onCall({
+  memory: '512MiB',
   timeoutSeconds: 30,
-}).https.onCall(async (data, context) => {
-  userHelper.authenticated(context);
+}, async (request) => {
+  userHelper.authenticated(request);
   try {
-    const role = await userHelper.getRole(context.auth.uid, data);
-    userHelper.isAdmin({role, fail: true, collection: data?.collection});
-    await userHelper.updateRole(data);
+    const _role = await userHelper.getRole(request.auth.uid, request.data);
+    userHelper.isAdmin({role: _role, fail: true, collection: request.data?.collection});
+    await userHelper.updateRole(request.data);
     return {message: 'User Role Updated'};
   } catch (error) {
     // @ts-ignore
-    throw new functions.https.HttpsError('unknown', error.message);
+    throw new https.HttpsError('unknown', error.message);
   }
 });
+
