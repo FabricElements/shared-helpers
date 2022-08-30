@@ -52,7 +52,7 @@
     "@types/sharp": "^0.30.5",
     "@typescript-eslint/eslint-plugin": "^5.36.0",
     "@typescript-eslint/parser": "^5.36.0",
-    "eslint": "^8.23.0",
+    "eslint": "^8.22.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsdoc": "^39.3.6",
