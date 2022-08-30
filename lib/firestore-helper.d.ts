@@ -1,8 +1,3 @@
-/**
- * @license
- * Copyright FabricElements. All Rights Reserved.
- */
-import type FirebaseFirestore from '@google-cloud/firestore';
 import { Tedis } from 'tedis';
 /**
  * Use FirestoreHelper to get firestore documents from redis cache

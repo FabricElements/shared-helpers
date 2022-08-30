@@ -2,7 +2,6 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type FirebaseFirestore from '@google-cloud/firestore';
 import {getFirestore} from 'firebase-admin/firestore';
 
 import type {RedisClientOptions} from 'redis';
