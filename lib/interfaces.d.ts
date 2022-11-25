@@ -28,9 +28,9 @@ export interface InterfaceUser {
     language?: string;
     links?: InterfaceUserLinks;
     name?: string;
-    nameFirst?: string;
-    nameInitials?: string;
-    nameLast?: string;
+    firstName?: string;
+    abbr?: string;
+    lastName?: string;
     path?: string;
     referrer?: string;
     updated?: Date;
