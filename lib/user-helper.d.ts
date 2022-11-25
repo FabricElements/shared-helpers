@@ -76,8 +76,8 @@ export declare class UserHelper {
      * @param {any} data
      */
     getRole: (uid: string, data: {
-        collection?: string;
-        document?: string;
+        group?: string;
+        groupId?: string;
     }) => Promise<any>;
     /**
      * User invitation function, it listens for a new connection-invite document creation, and creates the user
@@ -86,8 +86,8 @@ export declare class UserHelper {
     invite: (data: {
         [key: string]: any;
         admin?: boolean;
-        collection?: string;
-        document?: string;
+        group?: string;
+        groupId?: string;
         role?: string;
         uid?: string;
     }) => Promise<void>;
@@ -97,7 +97,7 @@ export declare class UserHelper {
      * @return {boolean} boolean
      */
     isAdmin: (options: {
-        collection?: boolean;
+        group?: boolean;
         fail?: boolean;
         role: string;
     }) => boolean;
@@ -108,8 +108,8 @@ export declare class UserHelper {
     remove: (data: {
         [key: string]: any;
         admin?: boolean;
-        collection?: string;
-        document?: string;
+        group?: string;
+        groupId?: string;
         uid?: string;
     }) => Promise<void>;
     /**
@@ -127,8 +127,8 @@ export declare class UserHelper {
     updateRole: (data: {
         [key: string]: any;
         admin?: boolean;
-        collection?: string;
-        document?: string;
+        group?: string;
+        groupId?: string;
         role?: string;
         uid?: string;
     }) => Promise<void>;

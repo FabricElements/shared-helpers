@@ -37,7 +37,7 @@ export const invite = https.onCall({
   userHelper.authenticated(request);
   try {
     const role = await userHelper.getRole(request.auth.uid, request.data);
-    userHelper.isAdmin({role, fail: true, collection: request.data?.collection});
+    userHelper.isAdmin({role, fail: true, group: request.data?.group});
     await userHelper.invite(request.data);
     return {message: 'User Invited'};
   } catch (error) {
@@ -56,7 +56,7 @@ export const remove = https.onCall({
   userHelper.authenticated(request);
   try {
     const role = await userHelper.getRole(request.auth.uid, request.data);
-    userHelper.isAdmin({role, fail: true, collection: request.data?.collection});
+    userHelper.isAdmin({role, fail: true, group: request.data?.group});
     await userHelper.remove(request.data);
     return {message: 'User Removed'};
   } catch (error) {
@@ -95,7 +95,7 @@ export const role = https.onCall({
   userHelper.authenticated(request);
   try {
     const _role = await userHelper.getRole(request.auth.uid, request.data);
-    userHelper.isAdmin({role: _role, fail: true, collection: request.data?.collection});
+    userHelper.isAdmin({role: _role, fail: true, group: request.data?.group});
     await userHelper.updateRole(request.data);
     return {message: 'User Role Updated'};
   } catch (error) {

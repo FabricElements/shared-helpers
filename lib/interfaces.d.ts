@@ -38,7 +38,7 @@ export interface InterfaceUser {
     username?: string;
     [x: string]: any;
 }
-export declare type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' | 'vimeo' | string;
+export type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' | 'vimeo' | string;
 export interface InterfaceFormatLink {
     active?: boolean;
     category?: string;
@@ -72,8 +72,8 @@ export interface InterfaceImageResize {
     quality?: number;
     contentType?: string;
 }
-export declare type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
-export declare type fetchResponse = null | 'json' | 'text' | 'raw' | 'arrayBuffer' | 'formData' | 'blob';
+export type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
+export type fetchResponse = null | 'json' | 'text' | 'raw' | 'arrayBuffer' | 'formData' | 'blob';
 export interface InterfaceAPIRequest {
     body?: any;
     credentials?: string;
