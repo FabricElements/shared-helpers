@@ -468,23 +468,22 @@ export class UserHelper {
     const db = getFirestore();
     const batch = db.batch();
     // let clickerInternal = false; // Adds or removes a user as being a clicker
-    const grouped = data.group && data.groupId;
     let updateGroup = null; // Action for the group
     let userUpdate = null; // Action for the user
     let userData: any = {
       backup: false,
       updated: timestamp,
     };
-    if (data.group || data.groupId && !(data.group && data.groupId)) {
+    if ((data.group || data.groupId) && !(data.group && data.groupId)) {
       throw new Error('group and groupId are required for group roles');
     }
-    const fromGroup = data.group && data.groupId;
+    const grouped = data.group && data.groupId;
     const refUser = db.collection('user').doc(data.id);
     const _role = data.role ?? 'user';
     const userRecord = await getAuth().getUser(data.id);
     let userClaims: any = userRecord.customClaims ?? {};
     let updateClaims = false;
-    if (!fromGroup) {
+    if (!grouped) {
       /**
        * Only update user custom claims `role` key on admin level.
        * Collection level users should not use custom claims to set the `role` key,
