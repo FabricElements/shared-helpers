@@ -195,7 +195,7 @@
     //    "new-parens": "error",
     //    "no-array-constructor": "error",
     //    "no-bitwise": "error",
-        "no-mixed-spaces-and-tabs": "error"
+        "no-mixed-spaces-and-tabs": "error",
     //    "no-whitespace-before-property": "error",
     //    "no-spaced-func": "error",
     //    "no-trailing-spaces": "error",
@@ -226,5 +226,6 @@
     //      "error",
     //      "never"
     //    ]
+    "prefer-const": "off"
   }
 }

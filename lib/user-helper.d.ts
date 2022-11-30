@@ -56,7 +56,7 @@ export declare class UserHelper {
      * @param {any} user
      * @return {Promise<InterfaceUser>}
      */
-    createDocument: (user: UserRecord) => Promise<InterfaceUser>;
+    createDocument: (user: InterfaceUser) => Promise<InterfaceUser>;
     /**
      * Validate if user exist
      * @param {any} data
@@ -117,7 +117,7 @@ export declare class UserHelper {
     }) => Promise<void>;
     /**
      * Creates the user
-     * @param {any} data
+     * @param {InterfaceUser} data
      * @return {Promise<InterfaceUser>}
      */
     private createUser;

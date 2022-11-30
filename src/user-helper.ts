@@ -110,25 +110,22 @@ export class UserHelper {
    * @param {any} user
    * @return {Promise<InterfaceUser>}
    */
-  public createDocument = async (user: UserRecord): Promise<InterfaceUser> => {
+  public createDocument = async (user: InterfaceUser): Promise<InterfaceUser> => {
     const timestamp = FieldValue.serverTimestamp();
     UserHelper.hasData(user);
     const baseData: InterfaceUser = {
-      id: undefined,
+      ...user,
       backup: false,
       created: timestamp,
-      name: user.displayName || undefined,
       updated: timestamp,
-      email: user.email || undefined,
-      phone: user.phoneNumber || undefined,
-      avatar: user.photoURL || undefined,
+      id: undefined,
     };
     const db = getFirestore();
     const docRef = db.collection('user').doc(user.uid);
     await docRef.set(baseData, {merge: true});
     return {
       ...baseData,
-      id: user.uid,
+      id: user.id,
     };
   };
 
@@ -417,24 +414,36 @@ export class UserHelper {
 
   /**
    * Creates the user
-   * @param {any} data
+   * @param {InterfaceUser} data
    * @return {Promise<InterfaceUser>}
    */
-  private createUser = async (data: {
-    email?: string;
-    phone?: string;
-  }): Promise<InterfaceUser> => {
+  private createUser = async (data: InterfaceUser): Promise<InterfaceUser> => {
     UserHelper.hasData(data);
     UserHelper.hasPhoneOrEmail(data);
-    const userData: any = {};
+    let userData: any = {};
     if (data.email) {
       userData.email = data.email;
     }
     if (data.phone) {
       userData.phoneNumber = data.phone;
     }
+    if (data.name != null && data.name.length > 0) {
+      userData.displayName = data.name;
+    }
+    if (data.password != null && data.password.length > 0) {
+      userData.password = data.password;
+    }
     const created = await getAuth().createUser(userData);
-    return this.createDocument(created);
+    const user: InterfaceUser = {
+      ...data,
+      id: created.uid,
+      role: 'user',
+      group: undefined,
+      groupId: undefined,
+      password: undefined,
+    };
+    await this.createDocument(user);
+    return user;
   };
 
   /**
