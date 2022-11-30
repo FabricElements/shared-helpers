@@ -427,8 +427,8 @@ export class UserHelper {
     if (data.phone) {
       userData.phoneNumber = data.phone;
     }
-    if (data.name != null && data.name.length > 0) {
-      userData.displayName = data.name;
+    if (data.name != null || data.firstName != null || data.lastName || null) {
+      userData.displayName = data.name ?? data.firstName ?? data.lastName;
     }
     if (data.password != null && data.password.length > 0) {
       userData.password = data.password;
