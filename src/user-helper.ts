@@ -124,7 +124,7 @@ export class UserHelper {
       id: undefined,
     };
     const db = getFirestore();
-    const docRef = db.collection('user').doc(user.uid);
+    const docRef = db.collection('user').doc(user.id);
     await docRef.set(baseData, {merge: true});
     return {
       ...baseData,
