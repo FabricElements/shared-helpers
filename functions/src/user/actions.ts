@@ -30,7 +30,7 @@ export const exists = https.onCall({
 /**
  * User invitation function, it listens for a new connection-invite document creation, and creates the user
  */
-export const invite = https.onCall({
+export const add = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 30,
 }, async (request) => {
@@ -47,7 +47,7 @@ export const invite = https.onCall({
 });
 
 /**
- * Remove a user invite
+ * Remove a user role
  */
 export const remove = https.onCall({
   memory: '512MiB',
