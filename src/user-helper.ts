@@ -153,7 +153,7 @@ export class UserHelper {
       if (data.email) identifiers.push({email: data.email});
       if (data.phone) identifiers.push({phoneNumber: data.phone});
       const users = await getAuth().getUsers(identifiers);
-      if (users.users.length > 0) _user = users[0];
+      if (users.users.length > 0) _user = users.users[0];
     } catch (error) {
       // @ts-ignore
       console.info(error.message);
