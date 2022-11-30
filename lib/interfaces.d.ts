@@ -22,7 +22,7 @@ export interface InterfaceUserLinks {
 }
 export interface InterfaceUser {
     ads?: InterfaceUserAds;
-    avatar?: boolean | string;
+    avatar?: boolean | string | any;
     created?: Date;
     id?: string;
     language?: string;
@@ -36,7 +36,12 @@ export interface InterfaceUser {
     updated?: Date;
     url?: string;
     username?: string;
-    [x: string]: any;
+    phone?: string;
+    email?: string;
+    role?: string;
+    group?: string;
+    groupId?: string;
+    [key: string]: any;
 }
 export type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' | 'vimeo' | string;
 export interface InterfaceFormatLink {

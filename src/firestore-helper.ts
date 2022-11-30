@@ -2,8 +2,8 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
+import type {DocumentData, FieldPath, OrderByDirection, WhereFilterOp} from 'firebase-admin/firestore';
 import {getFirestore} from 'firebase-admin/firestore';
-
 import type {RedisClientOptions} from 'redis';
 import {createClient} from 'redis';
 import {Tedis} from 'tedis';
@@ -68,7 +68,7 @@ export class FirestoreHelper {
   /**
    * Get Document
    * @param {any} options
-   * @return {Promise<FirebaseFirestore.DocumentData>}
+   * @return {Promise<DocumentData>}
    */
   public getDocument = async (options: {
     cache?: boolean;
@@ -83,7 +83,7 @@ export class FirestoreHelper {
       cacheCalls: 0,
       cachePath,
     };
-    let data: FirebaseFirestore.DocumentData = {};
+    let data: DocumentData = {};
     const willCache = options.cache && this.canCache;
     if (willCache) {
       try {
@@ -141,15 +141,15 @@ export class FirestoreHelper {
   /**
    * Get list
    * @param {any} options
-   * @return {Promise<FirebaseFirestore.DocumentData[]>}
+   * @return {Promise<DocumentData[]>}
    */
   public getList = async (options: {
     cache?: boolean;
     cacheLimit?: number;
     collection: string;
     limit?: number;
-    orderBy?: { direction: FirebaseFirestore.OrderByDirection; key: string }[];
-    where?: { field: string | FirebaseFirestore.FieldPath; filter: FirebaseFirestore.WhereFilterOp; value: any }[]
+    orderBy?: { direction: OrderByDirection; key: string }[];
+    where?: { field: string | FieldPath; filter: WhereFilterOp; value: any }[]
   }) => {
     const ids = await this.getListIds({
       collection: options.collection,
@@ -157,7 +157,7 @@ export class FirestoreHelper {
       orderBy: options.orderBy,
       where: options.where,
     });
-    const data: FirebaseFirestore.DocumentData[] = [];
+    const data: DocumentData[] = [];
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
       const docData = await this.getDocument({
@@ -179,8 +179,8 @@ export class FirestoreHelper {
   public getListIds = async (options: {
     collection: string;
     limit?: number;
-    orderBy?: { direction: FirebaseFirestore.OrderByDirection; key: string }[];
-    where?: { field: string | FirebaseFirestore.FieldPath; filter: FirebaseFirestore.WhereFilterOp; value: any }[]
+    orderBy?: { direction: OrderByDirection; key: string }[];
+    where?: { field: string | FieldPath; filter: WhereFilterOp; value: any }[]
   }) => {
     if (!options.collection) {
       throw new Error('collection is undefined');
@@ -221,12 +221,12 @@ export class FirestoreHelper {
     collection: string,
     limit?: number,
     orderBy?: {
-      direction: FirebaseFirestore.OrderByDirection,
+      direction: OrderByDirection,
       key: string,
     }[],
     where?: {
-      field: string | FirebaseFirestore.FieldPath,
-      filter: FirebaseFirestore.WhereFilterOp,
+      field: string | FieldPath,
+      filter: WhereFilterOp,
       value: any,
     }[],
   }) => {
@@ -263,7 +263,7 @@ export class FirestoreHelper {
    * Get document instance from firestore
    *
    * @param {any} options
-   * @return {Promise<FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>>}
+   * @return {Promise<DocumentSnapshot<DocumentData>>}
    * @private
    */
   private _getDocument = (options: {
@@ -285,7 +285,7 @@ export class FirestoreHelper {
    * Get document snapshot from firestore
    *
    * @param {any} options
-   * @return {Promise<FirebaseFirestore.DocumentData>}
+   * @return {Promise<DocumentData>}
    * @private
    */
   private _getDocumentSnap = async (options: { collection: string; document: string }) => {

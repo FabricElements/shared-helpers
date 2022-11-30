@@ -1,3 +1,8 @@
+/**
+ * @license
+ * Copyright FabricElements. All Rights Reserved.
+ */
+import type { DocumentData, FieldPath, OrderByDirection, WhereFilterOp } from 'firebase-admin/firestore';
 import { Tedis } from 'tedis';
 /**
  * Use FirestoreHelper to get firestore documents from redis cache
@@ -29,18 +34,18 @@ export declare class FirestoreHelper {
     /**
      * Get Document
      * @param {any} options
-     * @return {Promise<FirebaseFirestore.DocumentData>}
+     * @return {Promise<DocumentData>}
      */
     getDocument: (options: {
         cache?: boolean;
         cacheLimit?: number;
         collection: string;
         document: string;
-    }) => Promise<FirebaseFirestore.DocumentData>;
+    }) => Promise<DocumentData>;
     /**
      * Get list
      * @param {any} options
-     * @return {Promise<FirebaseFirestore.DocumentData[]>}
+     * @return {Promise<DocumentData[]>}
      */
     getList: (options: {
         cache?: boolean;
@@ -48,15 +53,15 @@ export declare class FirestoreHelper {
         collection: string;
         limit?: number;
         orderBy?: {
-            direction: FirebaseFirestore.OrderByDirection;
+            direction: OrderByDirection;
             key: string;
         }[];
         where?: {
-            field: string | FirebaseFirestore.FieldPath;
-            filter: FirebaseFirestore.WhereFilterOp;
+            field: string | FieldPath;
+            filter: WhereFilterOp;
             value: any;
         }[];
-    }) => Promise<FirebaseFirestore.DocumentData[]>;
+    }) => Promise<DocumentData[]>;
     /**
      * Get list
      * @param {any} options
@@ -66,12 +71,12 @@ export declare class FirestoreHelper {
         collection: string;
         limit?: number;
         orderBy?: {
-            direction: FirebaseFirestore.OrderByDirection;
+            direction: OrderByDirection;
             key: string;
         }[];
         where?: {
-            field: string | FirebaseFirestore.FieldPath;
-            filter: FirebaseFirestore.WhereFilterOp;
+            field: string | FieldPath;
+            filter: WhereFilterOp;
             value: any;
         }[];
     }) => Promise<any>;
@@ -84,12 +89,12 @@ export declare class FirestoreHelper {
         collection: string;
         limit?: number;
         orderBy?: {
-            direction: FirebaseFirestore.OrderByDirection;
+            direction: OrderByDirection;
             key: string;
         }[];
         where?: {
-            field: string | FirebaseFirestore.FieldPath;
-            filter: FirebaseFirestore.WhereFilterOp;
+            field: string | FieldPath;
+            filter: WhereFilterOp;
             value: any;
         }[];
     }) => Promise<any>;
@@ -97,7 +102,7 @@ export declare class FirestoreHelper {
      * Get document instance from firestore
      *
      * @param {any} options
-     * @return {Promise<FirebaseFirestore.DocumentSnapshot<FirebaseFirestore.DocumentData>>}
+     * @return {Promise<DocumentSnapshot<DocumentData>>}
      * @private
      */
     private _getDocument;
@@ -105,7 +110,7 @@ export declare class FirestoreHelper {
      * Get document snapshot from firestore
      *
      * @param {any} options
-     * @return {Promise<FirebaseFirestore.DocumentData>}
+     * @return {Promise<DocumentData>}
      * @private
      */
     private _getDocumentSnap;

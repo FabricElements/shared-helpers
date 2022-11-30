@@ -73,9 +73,8 @@ export const update = https.onCall({
   timeoutSeconds: 30,
 }, async (request) => {
   userHelper.authenticated(request);
-  const uid = request.auth.uid;
   try {
-    await userHelper.update({data: request.data, uid});
+    await userHelper.update({data: request.data, id: request.auth.uid});
   } catch (error) {
     // @ts-ignore
     throw new https.HttpsError('failed-precondition', error.message);

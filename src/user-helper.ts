@@ -9,7 +9,7 @@ import {https} from 'firebase-functions/v2';
 import type {CallableRequest} from 'firebase-functions/v2/https';
 import {FirestoreHelper} from './firestore-helper.js';
 import {ImageHelper} from './image-helper.js';
-import type {InterfaceImageResize} from './interfaces.js';
+import type {InterfaceImageResize, InterfaceUser} from './interfaces.js';
 import {MediaHelper} from './media-helper.js';
 
 const firestore = new FirestoreHelper();
@@ -54,7 +54,7 @@ export class UserHelper {
    * @private
    */
   private static hasPhoneOrEmail(data: any) {
-    if (!(data && (data.phoneNumber || data.email))) {
+    if (!(data && (data.phone || data.email))) {
       throw new Error('Incomplete message data');
     }
   }
@@ -98,7 +98,7 @@ export class UserHelper {
   public create = async (data: {
     [key: string]: any,
     email?: string;
-    phoneNumber?: string;
+    phone?: string;
   }) => {
     UserHelper.hasData(data);
     UserHelper.hasPhoneOrEmail(data);
@@ -113,7 +113,7 @@ export class UserHelper {
    * Create User Document from UserRecord
    * @param {any} user
    */
-  public createDocument = async (user: any) => {
+  public createDocument = async (user: UserRecord) => {
     const timestamp = FieldValue.serverTimestamp();
     UserHelper.hasData(user);
     const baseData: object = {
@@ -122,7 +122,7 @@ export class UserHelper {
       name: user.displayName || null,
       updated: timestamp,
       email: user.email || null,
-      phoneNumber: user.phoneNumber || null,
+      phone: user.phoneNumber || null,
       avatar: user.photoURL || null,
     };
     const db = getFirestore();
@@ -137,22 +137,22 @@ export class UserHelper {
   public get = async (data: {
     [key: string]: any,
     email?: string;
-    phoneNumber?: string;
-    uid?: string;
+    phone?: string;
+    id?: string;
   }): Promise<UserRecord | null> => {
     UserHelper.hasData(data);
-    const hasAnyOption = data.phoneNumber || data.email || data.uid;
+    const hasAnyOption = data.phone || data.email || data.id;
     if (!hasAnyOption) {
       throw new Error('Please enter a any valid options');
     }
     let _user = null;
     try {
-      if (data.phoneNumber) {
-        _user = await getAuth().getUserByPhoneNumber(data.phoneNumber);
+      if (data.id) {
+        _user = await getAuth().getUser(data.id);
+      } else if (data.phone) {
+        _user = await getAuth().getUserByPhoneNumber(data.phone);
       } else if (data.email) {
         _user = await getAuth().getUserByEmail(data.email);
-      } else if (data.uid) {
-        _user = await getAuth().getUser(data.uid);
       }
     } catch (error) {
       // @ts-ignore
@@ -164,10 +164,10 @@ export class UserHelper {
   /**
    * Get User Role
    *
-   * @param {string} uid
+   * @param {string} id
    * @param {any} data
    */
-  public getRole = async (uid: string, data: {
+  public getRole = async (id: string, data: {
     group?: string;
     groupId?: string;
   }) => {
@@ -177,7 +177,7 @@ export class UserHelper {
     /**
      * Verify admin access on top level
      */
-    const userRecord = await getAuth().getUser(uid);
+    const userRecord = await getAuth().getUser(id);
     const userClaims: any = userRecord.customClaims ?? {};
     let role = userClaims.role ?? null;
     if ((!role || role === 'user') && grouped) {
@@ -191,7 +191,7 @@ export class UserHelper {
       if (!_data) {
         throw new Error(`Not found ${data.group}/${data.groupId}`);
       }
-      const _roleInternal = Object.prototype.hasOwnProperty.call(_data, 'roles') && Object.prototype.hasOwnProperty.call(_data.roles, uid) ? _data.roles[uid] : null;
+      const _roleInternal = Object.prototype.hasOwnProperty.call(_data, 'roles') && Object.prototype.hasOwnProperty.call(_data.roles, id) ? _data.roles[id] : null;
       if (_roleInternal) {
         role = `${data.group}-${_roleInternal}`;
       }
@@ -203,14 +203,7 @@ export class UserHelper {
    * User invitation function, it listens for a new connection-invite document creation, and creates the user
    * @param {any} data
    */
-  public invite = async (data: {
-    [key: string]: any,
-    admin?: boolean;
-    group?: string;
-    groupId?: string;
-    role?: string;
-    uid?: string;
-  }) => {
+  public invite = async (data: InterfaceUser) => {
     UserHelper.hasData(data);
     try {
       const userObject = await this.create(data);
@@ -220,7 +213,7 @@ export class UserHelper {
       // Update data in necessary documents to reflect user creation
       await this.roleUpdateCall({
         type: 'add',
-        uid: userObject.uid,
+        id: userObject.uid,
         group: data.group || undefined,
         groupId: data.groupId || undefined,
         admin: data.admin || undefined,
@@ -255,24 +248,18 @@ export class UserHelper {
    * Remove a user
    * @param {any} data
    */
-  public remove = async (data: {
-    [key: string]: any,
-    admin?: boolean;
-    group?: string;
-    groupId?: string;
-    uid?: string;
-  }) => {
+  public remove = async (data: InterfaceUser) => {
     UserHelper.hasData(data);
-    // Data uid needs to exist
-    if (!data?.uid) {
-      throw new Error('uid is required');
+    // Data id needs to exist
+    if (!data?.id) {
+      throw new Error('user id is required');
     }
     try {
       // Update the necessary documents to delete the user
       await this.roleUpdateCall({
         admin: data.admin || undefined,
         type: 'remove',
-        uid: data.uid,
+        id: data.id,
         group: data.group || undefined,
         groupId: data.groupId || undefined,
       });
@@ -286,7 +273,7 @@ export class UserHelper {
    * Update User
    * @param {any} options
    */
-  public update = async (options: { data: any, uid: string }) => {
+  public update = async (options: { data: InterfaceUser, id: string }) => {
     const timestamp = FieldValue.serverTimestamp();
     const imageHelper = new ImageHelper({
       firebaseConfig: this.firebaseConfig,
@@ -296,7 +283,7 @@ export class UserHelper {
       firebaseConfig: this.firebaseConfig,
       isBeta: this.isBeta,
     });
-    const {uid, data} = options;
+    const {id, data} = options;
     let updateUserObject = false;
     const {firstName, lastName, avatar} = data;
     const validNameFirst = firstName && firstName.length > 2;
@@ -315,7 +302,7 @@ export class UserHelper {
       }
     }
     const db = getFirestore();
-    const ref = db.collection('user').doc(uid);
+    const ref = db.collection('user').doc(id);
     let updateDataFirestore: any = {};
     let updateDataUser: any = {};
     const onboarding: any = {};
@@ -354,7 +341,7 @@ export class UserHelper {
         format: 'jpeg',
       };
       const media = await imageHelper.bufferImage(imageResizeOptions);
-      const avatarPath = `media/avatar/${uid}.jpg`;
+      const avatarPath = `media/avatar/${id}.jpg`;
       await mediaHelper.save({
         media,
         path: avatarPath,
@@ -381,7 +368,7 @@ export class UserHelper {
       throw new Error('No changes detected');
     }
     if (updateUserObject) {
-      await getAuth().updateUser(uid, updateDataUser);
+      await getAuth().updateUser(id, updateDataUser);
     }
     updateDataFirestore.onboarding = onboarding;
     await ref.set({
@@ -401,19 +388,19 @@ export class UserHelper {
     group?: string;
     groupId?: string;
     role?: string;
-    uid?: string;
+    id?: string;
   }) => {
     UserHelper.hasData(data);
-    // Data uid needs to exist
-    if (!data?.uid) {
-      throw new Error('uid is required');
+    // Data id needs to exist
+    if (!data?.id) {
+      throw new Error('User id is required');
     }
     try {
       // Update the necessary documents to delete the user
       await this.roleUpdateCall({
         admin: data.admin || undefined,
         type: 'add',
-        uid: data.uid,
+        id: data.id,
         group: data.group || undefined,
         groupId: data.groupId || undefined,
         role: data.role,
@@ -431,7 +418,7 @@ export class UserHelper {
    */
   private createUser = async (data: {
     email?: string;
-    phoneNumber?: string;
+    phone?: string;
   }) => {
     UserHelper.hasData(data);
     UserHelper.hasPhoneOrEmail(data);
@@ -439,8 +426,8 @@ export class UserHelper {
     if (data.email) {
       userData.email = data.email;
     }
-    if (data.phoneNumber) {
-      userData.phoneNumber = data.phoneNumber;
+    if (data.phone) {
+      userData.phoneNumber = data.phone;
     }
     return getAuth().createUser(userData);
   };
@@ -456,7 +443,7 @@ export class UserHelper {
     groupId?: string,
     role?: string,
     type: 'add' | 'remove',
-    uid: string,
+    id: any,
   }) => {
     const timestamp = FieldValue.serverTimestamp();
     const db = getFirestore();
@@ -472,12 +459,12 @@ export class UserHelper {
     if (data.group && !data.groupId) {
       throw new Error('document missing');
     }
-    const refUser = db.collection('user').doc(data.uid);
+    const refUser = db.collection('user').doc(data.id);
     const _role = data.role ?? 'user';
-    const userRecord = await getAuth().getUser(data.uid);
+    const userRecord = await getAuth().getUser(data.id);
     let userClaims: any = userRecord.customClaims ?? {};
     let updateClaims = false;
-    if (data.admin && data.uid) {
+    if (data.admin && data.id) {
       /**
        * Only update user custom claims `role` key on admin level.
        * Collection level users should not use custom claims to set the `role` key,
@@ -496,20 +483,20 @@ export class UserHelper {
         updateGroup = {
           [data.groupId]: _role,
         };
-        userUpdate = FieldValue.arrayUnion(...[data.uid]);
+        userUpdate = FieldValue.arrayUnion(...[data.id]);
         // clickerInternal = true;
         roles = {
-          [data.uid]: _role,
+          [data.id]: _role,
         };
         break;
       case 'remove':
         updateGroup = {
           [data.groupId]: FieldValue.delete(),
         };
-        userUpdate = FieldValue.arrayRemove(...[data.uid]);
+        userUpdate = FieldValue.arrayRemove(...[data.id]);
         // clickerInternal = false;
         roles = {
-          [data.uid]: FieldValue.delete(),
+          [data.id]: FieldValue.delete(),
         };
         break;
       default:
@@ -543,9 +530,9 @@ export class UserHelper {
      */
     let collectionClaims: any = null;
     if (grouped) {
-      const userDoc = await firestore.getDocument({
+      const userDoc: InterfaceUser = await firestore.getDocument({
         collection: 'user',
-        document: data.uid,
+        document: data.id,
       });
       if (Object.prototype.hasOwnProperty.call(userDoc, data.group)) {
         collectionClaims = userDoc[data.group];
@@ -558,8 +545,8 @@ export class UserHelper {
     }
 
     if (updateClaims) {
-      await getAuth().setCustomUserClaims(data.uid, userClaims);
-      await getAuth().revokeRefreshTokens(data.uid);
+      await getAuth().setCustomUserClaims(data.id, userClaims);
+      await getAuth().revokeRefreshTokens(data.id);
     }
     return;
   };

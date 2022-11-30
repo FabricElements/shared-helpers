@@ -4,6 +4,7 @@
  */
 import type { UserRecord } from 'firebase-admin/auth';
 import type { CallableRequest } from 'firebase-functions/v2/https';
+import type { InterfaceUser } from './interfaces.js';
 /**
  * UserHelper
  */
@@ -52,13 +53,13 @@ export declare class UserHelper {
     create: (data: {
         [key: string]: any;
         email?: string;
-        phoneNumber?: string;
+        phone?: string;
     }) => Promise<UserRecord>;
     /**
      * Create User Document from UserRecord
      * @param {any} user
      */
-    createDocument: (user: any) => Promise<void>;
+    createDocument: (user: UserRecord) => Promise<void>;
     /**
      * Validate if user exist
      * @param {any} data
@@ -66,16 +67,16 @@ export declare class UserHelper {
     get: (data: {
         [key: string]: any;
         email?: string;
-        phoneNumber?: string;
-        uid?: string;
+        phone?: string;
+        id?: string;
     }) => Promise<UserRecord | null>;
     /**
      * Get User Role
      *
-     * @param {string} uid
+     * @param {string} id
      * @param {any} data
      */
-    getRole: (uid: string, data: {
+    getRole: (id: string, data: {
         group?: string;
         groupId?: string;
     }) => Promise<any>;
@@ -83,14 +84,7 @@ export declare class UserHelper {
      * User invitation function, it listens for a new connection-invite document creation, and creates the user
      * @param {any} data
      */
-    invite: (data: {
-        [key: string]: any;
-        admin?: boolean;
-        group?: string;
-        groupId?: string;
-        role?: string;
-        uid?: string;
-    }) => Promise<void>;
+    invite: (data: InterfaceUser) => Promise<void>;
     /**
      * Validates if user is and admin from role
      * @param {any} options
@@ -105,20 +99,14 @@ export declare class UserHelper {
      * Remove a user
      * @param {any} data
      */
-    remove: (data: {
-        [key: string]: any;
-        admin?: boolean;
-        group?: string;
-        groupId?: string;
-        uid?: string;
-    }) => Promise<void>;
+    remove: (data: InterfaceUser) => Promise<void>;
     /**
      * Update User
      * @param {any} options
      */
     update: (options: {
-        data: any;
-        uid: string;
+        data: InterfaceUser;
+        id: string;
     }) => Promise<void>;
     /**
      * Update user role
@@ -130,7 +118,7 @@ export declare class UserHelper {
         group?: string;
         groupId?: string;
         role?: string;
-        uid?: string;
+        id?: string;
     }) => Promise<void>;
     /**
      * Creates the user
