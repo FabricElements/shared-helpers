@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type {UserRecord} from 'firebase-admin/auth';
+import type {UserIdentifier, UserRecord} from 'firebase-admin/auth';
 import {getAuth} from 'firebase-admin/auth';
 import {FieldValue, getFirestore} from 'firebase-admin/firestore';
 import {https} from 'firebase-functions/v2';
@@ -144,17 +144,16 @@ export class UserHelper {
     UserHelper.hasData(data);
     const hasAnyOption = data.phone || data.email || data.id;
     if (!hasAnyOption) {
-      throw new Error('Please enter a any valid options');
+      throw new Error('Please enter a any valid options: phone, email or id');
     }
     let _user = null;
     try {
-      if (data.id) {
-        _user = await getAuth().getUser(data.id);
-      } else if (data.phone) {
-        _user = await getAuth().getUserByPhoneNumber(data.phone);
-      } else if (data.email) {
-        _user = await getAuth().getUserByEmail(data.email);
-      }
+      let identifiers: UserIdentifier[] = [];
+      if (data.id) identifiers.push({uid: data.id});
+      if (data.email) identifiers.push({email: data.email});
+      if (data.phone) identifiers.push({phoneNumber: data.phone});
+      const users = await getAuth().getUsers(identifiers);
+      if (users.users.length > 0) _user = users[0];
     } catch (error) {
       // @ts-ignore
       console.info(error.message);
