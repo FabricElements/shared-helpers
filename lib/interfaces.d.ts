@@ -1,4 +1,5 @@
 /// <reference types="node" resolution-mode="require"/>
+import type { FieldValue } from 'firebase-admin/firestore';
 /**
  * @license
  * Copyright FabricElements. All Rights Reserved.
@@ -23,7 +24,7 @@ export interface InterfaceUserLinks {
 export interface InterfaceUser {
     ads?: InterfaceUserAds;
     avatar?: boolean | string | any;
-    created?: Date;
+    created?: Date | FieldValue | String;
     id?: string;
     language?: string;
     links?: InterfaceUserLinks;
@@ -33,7 +34,7 @@ export interface InterfaceUser {
     lastName?: string;
     path?: string;
     referrer?: string;
-    updated?: Date;
+    updated?: Date | FieldValue | String;
     url?: string;
     username?: string;
     phone?: string;
@@ -47,7 +48,7 @@ export type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' |
 export interface InterfaceFormatLink {
     active?: boolean;
     category?: string;
-    created?: Date;
+    created?: Date | FieldValue | String;
     description?: string;
     featured?: boolean;
     hashtags?: string;
@@ -62,7 +63,7 @@ export interface InterfaceFormatLink {
     source?: string;
     title?: string;
     type?: linkType;
-    updated?: Date;
+    updated?: Date | FieldValue | String;
     url?: string;
     user?: string;
 }

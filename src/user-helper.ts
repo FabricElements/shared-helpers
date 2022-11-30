@@ -93,16 +93,12 @@ export class UserHelper {
   /**
    * Gets the user object with email or phone number or create the user if not exists
    * @param {any} data
-   * @return {Promise<any>}
+   * @return {Promise<InterfaceUser>}
    */
-  public create = async (data: {
-    [key: string]: any,
-    email?: string;
-    phone?: string;
-  }) => {
+  public create = async (data: InterfaceUser): Promise<InterfaceUser> => {
     UserHelper.hasData(data);
     UserHelper.hasPhoneOrEmail(data);
-    let user = await this.get(data);
+    let user: InterfaceUser = await this.get(data);
     if (!user) {
       user = await this.createUser(data);
     }
@@ -112,22 +108,28 @@ export class UserHelper {
   /**
    * Create User Document from UserRecord
    * @param {any} user
+   * @return {Promise<InterfaceUser>}
    */
-  public createDocument = async (user: UserRecord) => {
+  public createDocument = async (user: UserRecord): Promise<InterfaceUser> => {
     const timestamp = FieldValue.serverTimestamp();
     UserHelper.hasData(user);
-    const baseData: object = {
+    const baseData: InterfaceUser = {
+      id: undefined,
       backup: false,
       created: timestamp,
-      name: user.displayName || null,
+      name: user.displayName || undefined,
       updated: timestamp,
-      email: user.email || null,
-      phone: user.phoneNumber || null,
-      avatar: user.photoURL || null,
+      email: user.email || undefined,
+      phone: user.phoneNumber || undefined,
+      avatar: user.photoURL || undefined,
     };
     const db = getFirestore();
     const docRef = db.collection('user').doc(user.uid);
     await docRef.set(baseData, {merge: true});
+    return {
+      ...baseData,
+      id: user.uid,
+    };
   };
 
   /**
@@ -135,7 +137,6 @@ export class UserHelper {
    * @param {any} data
    */
   public get = async (data: {
-    [key: string]: any,
     email?: string;
     phone?: string;
     id?: string;
@@ -180,7 +181,14 @@ export class UserHelper {
     const userRecord = await getAuth().getUser(id);
     const userClaims: any = userRecord.customClaims ?? {};
     let role = userClaims.role ?? null;
-    if ((!role || role === 'user') && grouped) {
+    if (!role) {
+      const userDoc: InterfaceUser = await firestore.getDocument({
+        collection: 'user',
+        document: id,
+      });
+      role = userDoc.role;
+    }
+    if (grouped && (!role || role === 'user')) {
       /**
        * Verify admin access on collection level
        */
@@ -213,10 +221,9 @@ export class UserHelper {
       // Update data in necessary documents to reflect user creation
       await this.roleUpdateCall({
         type: 'add',
-        id: userObject.uid,
+        id: userObject.id,
         group: data.group || undefined,
         groupId: data.groupId || undefined,
-        admin: data.admin || undefined,
         role: data.role,
       });
     } catch (error) {
@@ -257,7 +264,6 @@ export class UserHelper {
     try {
       // Update the necessary documents to delete the user
       await this.roleUpdateCall({
-        admin: data.admin || undefined,
         type: 'remove',
         id: data.id,
         group: data.group || undefined,
@@ -384,7 +390,6 @@ export class UserHelper {
    */
   public updateRole = async (data: {
     [key: string]: any,
-    admin?: boolean;
     group?: string;
     groupId?: string;
     role?: string;
@@ -398,7 +403,6 @@ export class UserHelper {
     try {
       // Update the necessary documents to delete the user
       await this.roleUpdateCall({
-        admin: data.admin || undefined,
         type: 'add',
         id: data.id,
         group: data.group || undefined,
@@ -414,12 +418,12 @@ export class UserHelper {
   /**
    * Creates the user
    * @param {any} data
-   * @return {Promise<auth.UserRecord>}
+   * @return {Promise<InterfaceUser>}
    */
   private createUser = async (data: {
     email?: string;
     phone?: string;
-  }) => {
+  }): Promise<InterfaceUser> => {
     UserHelper.hasData(data);
     UserHelper.hasPhoneOrEmail(data);
     const userData: any = {};
@@ -429,7 +433,8 @@ export class UserHelper {
     if (data.phone) {
       userData.phoneNumber = data.phone;
     }
-    return getAuth().createUser(userData);
+    const created = await getAuth().createUser(userData);
+    return this.createDocument(created);
   };
 
   /**
@@ -438,7 +443,6 @@ export class UserHelper {
    * @param {any} data
    */
   private roleUpdateCall = async (data: {
-    admin?: boolean,
     group?: string,
     groupId?: string,
     role?: string,
@@ -459,12 +463,13 @@ export class UserHelper {
     if (data.group && !data.groupId) {
       throw new Error('document missing');
     }
+    const fromGroup = data.group && data.groupId;
     const refUser = db.collection('user').doc(data.id);
     const _role = data.role ?? 'user';
     const userRecord = await getAuth().getUser(data.id);
     let userClaims: any = userRecord.customClaims ?? {};
     let updateClaims = false;
-    if (data.admin && data.id) {
+    if (!fromGroup && data.id) {
       /**
        * Only update user custom claims `role` key on admin level.
        * Collection level users should not use custom claims to set the `role` key,
@@ -516,7 +521,7 @@ export class UserHelper {
         [data.group]: updateGroup,
       };
     }
-    if (data.admin) {
+    if (!grouped) {
       userData = {
         ...userData,
         role: data.type === 'remove' ? FieldValue.delete() : _role,

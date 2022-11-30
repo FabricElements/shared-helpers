@@ -48,24 +48,20 @@ export declare class UserHelper {
     /**
      * Gets the user object with email or phone number or create the user if not exists
      * @param {any} data
-     * @return {Promise<any>}
+     * @return {Promise<InterfaceUser>}
      */
-    create: (data: {
-        [key: string]: any;
-        email?: string;
-        phone?: string;
-    }) => Promise<UserRecord>;
+    create: (data: InterfaceUser) => Promise<InterfaceUser>;
     /**
      * Create User Document from UserRecord
      * @param {any} user
+     * @return {Promise<InterfaceUser>}
      */
-    createDocument: (user: UserRecord) => Promise<void>;
+    createDocument: (user: UserRecord) => Promise<InterfaceUser>;
     /**
      * Validate if user exist
      * @param {any} data
      */
     get: (data: {
-        [key: string]: any;
         email?: string;
         phone?: string;
         id?: string;
@@ -114,7 +110,6 @@ export declare class UserHelper {
      */
     updateRole: (data: {
         [key: string]: any;
-        admin?: boolean;
         group?: string;
         groupId?: string;
         role?: string;
@@ -123,7 +118,7 @@ export declare class UserHelper {
     /**
      * Creates the user
      * @param {any} data
-     * @return {Promise<auth.UserRecord>}
+     * @return {Promise<InterfaceUser>}
      */
     private createUser;
     /**
