@@ -65,7 +65,7 @@ const replyStop = (language: string): string => {
 export default (options: {
   data?: {},
   domains?: string[],
-  language?: 'en',
+  language?: string,
   text: string,
 }) => {
   let final = options.text ? options.text.replace(/ +(?= )/g, '') : '';

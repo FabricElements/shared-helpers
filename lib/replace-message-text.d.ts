@@ -7,7 +7,7 @@
 declare const _default: (options: {
     data?: {};
     domains?: string[];
-    language?: 'en';
+    language?: string;
     text: string;
 }) => string;
 export default _default;
