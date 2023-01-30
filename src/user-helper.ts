@@ -62,10 +62,11 @@ export class UserHelper {
   /**
    * Fail if user is unauthenticated
    *
-   * @param {CallableRequest} request
+   * @param {any} auth
+   * context.auth || request.auth
    */
-  public authenticated = (request: CallableRequest) => {
-    if (!request.auth) {
+  public authenticated = (auth: any) => {
+    if (!auth) {
       throw new https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
     }
   };
@@ -77,7 +78,7 @@ export class UserHelper {
    * @return {string}
    */
   public token = (request: CallableRequest): string => {
-    this.authenticated(request);
+    this.authenticated(request.auth);
     const authHeader = request.rawRequest.headers.authorization;
     // const authHeader = request.auth.token;
     if (!authHeader) {
