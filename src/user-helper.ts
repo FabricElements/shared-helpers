@@ -345,6 +345,7 @@ export class UserHelper {
         input: imgBuffer,
         quality: 90,
         format: 'jpeg',
+        contentType: 'image/jpeg',
       };
       const media = await imageHelper.bufferImage(imageResizeOptions);
       const avatarPath = `media/avatar/${id}.jpg`;
