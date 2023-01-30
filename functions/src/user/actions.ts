@@ -34,7 +34,7 @@ export const add = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 30,
 }, async (request) => {
-  userHelper.authenticated(request);
+  userHelper.authenticated(request.auth);
   try {
     const role = await userHelper.getRole(request.auth.uid, request.data);
     userHelper.isAdmin({role, fail: true, group: request.data?.group});
@@ -53,7 +53,7 @@ export const remove = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 30,
 }, async (request) => {
-  userHelper.authenticated(request);
+  userHelper.authenticated(request.auth);
   try {
     const role = await userHelper.getRole(request.auth.uid, request.data);
     userHelper.isAdmin({role, fail: true, group: request.data?.group});
@@ -72,7 +72,7 @@ export const update = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 30,
 }, async (request) => {
-  userHelper.authenticated(request);
+  userHelper.authenticated(request.auth);
   try {
     await userHelper.update({data: request.data, id: request.auth.uid});
   } catch (error) {
@@ -91,7 +91,7 @@ export const role = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 30,
 }, async (request) => {
-  userHelper.authenticated(request);
+  userHelper.authenticated(request.auth);
   try {
     const _role = await userHelper.getRole(request.auth.uid, request.data);
     userHelper.isAdmin({role: _role, fail: true, group: request.data?.group});

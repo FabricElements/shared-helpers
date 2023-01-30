@@ -35,9 +35,10 @@ export declare class UserHelper {
     /**
      * Fail if user is unauthenticated
      *
-     * @param {CallableRequest} request
+     * @param {any} auth
+     * context.auth || request.auth
      */
-    authenticated: (request: CallableRequest) => void;
+    authenticated: (auth: any) => void;
     /**
      * Return user token from context
      *
