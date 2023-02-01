@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import {UserHelper} from '@fabricelements/shared-helpers';
+import {interfaces, UserHelper} from '@fabricelements/shared-helpers';
 import {https} from 'firebase-functions/v2';
 import {firebaseConfig, isBeta, mainUrl} from '../helpers/variables.js';
 
@@ -15,8 +15,9 @@ export const exists = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 60,
 }, async (request) => {
+  const data: interfaces.InterfaceUser = request.data;
   try {
-    const _exists = await userHelper.get(request.data);
+    const _exists = await userHelper.get(data);
     if (!_exists) {
       throw new Error('You are not registered. Please contact your account administrator to request access.');
     }
@@ -35,10 +36,11 @@ export const add = https.onCall({
   timeoutSeconds: 30,
 }, async (request) => {
   userHelper.authenticated(request.auth);
+  const data: interfaces.InterfaceUser = request.data;
   try {
-    const role = await userHelper.getRole(request.auth.uid, request.data);
-    userHelper.isAdmin({role, fail: true, group: request.data?.group});
-    await userHelper.invite(request.data);
+    const role = await userHelper.getRole(request.auth.uid, data);
+    userHelper.isAdmin({role, fail: true, group: data?.group});
+    await userHelper.add(data);
     return {message: 'User Invited'};
   } catch (error) {
     // @ts-ignore
@@ -54,10 +56,11 @@ export const remove = https.onCall({
   timeoutSeconds: 30,
 }, async (request) => {
   userHelper.authenticated(request.auth);
+  const data: interfaces.InterfaceUser = request.data;
   try {
-    const role = await userHelper.getRole(request.auth.uid, request.data);
-    userHelper.isAdmin({role, fail: true, group: request.data?.group});
-    await userHelper.remove(request.data);
+    const role = await userHelper.getRole(request.auth.uid, data);
+    userHelper.isAdmin({role, fail: true, group: data?.group});
+    await userHelper.remove(data);
     return {message: 'User Removed'};
   } catch (error) {
     // @ts-ignore
@@ -73,8 +76,9 @@ export const update = https.onCall({
   timeoutSeconds: 30,
 }, async (request) => {
   userHelper.authenticated(request.auth);
+  const data: interfaces.InterfaceUser = request.data;
   try {
-    await userHelper.update({data: request.data, id: request.auth.uid});
+    await userHelper.update({...data, id: request.auth.uid});
   } catch (error) {
     // @ts-ignore
     throw new https.HttpsError('failed-precondition', error.message);
@@ -92,14 +96,28 @@ export const role = https.onCall({
   timeoutSeconds: 30,
 }, async (request) => {
   userHelper.authenticated(request.auth);
+  const data: interfaces.InterfaceUser = request.data;
   try {
-    const _role = await userHelper.getRole(request.auth.uid, request.data);
-    userHelper.isAdmin({role: _role, fail: true, group: request.data?.group});
-    await userHelper.updateRole(request.data);
-    return {message: 'User Role Updated'};
+    const _role = await userHelper.getRole(request.auth.uid, data);
+    userHelper.isAdmin({role: _role, fail: true, group: data?.group});
+  } catch (error) {
+    // @ts-ignore
+    throw new https.HttpsError('permission-denied', error.message);
+  }
+  try {
+    await userHelper.updateRole(data);
   } catch (error) {
     // @ts-ignore
     throw new https.HttpsError('unknown', error.message);
   }
+  if (data.firstName || data.lastName) {
+    try {
+      await userHelper.update(data);
+    } catch (error) {
+      // @ts-ignore
+      throw new https.HttpsError('failed-precondition', error.message);
+    }
+  }
+  return {message: 'User Updated'};
 });
 

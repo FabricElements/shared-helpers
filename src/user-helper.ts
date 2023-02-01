@@ -169,37 +169,33 @@ export class UserHelper {
    * @param {any} data
    */
   public getRole = async (id: string, data: {
+    id?: string;
     group?: string;
-    groupId?: string;
   }) => {
     // const errorMessage = 'You don\'t have access to request this action';
     UserHelper.hasData(data);
-    const grouped = data.group && data.groupId;
+    const grouped = data.group && data.group.length > 0;
     /**
      * Verify admin access on top level
      */
     const userRecord = await getAuth().getUser(id);
     const userClaims: any = userRecord.customClaims ?? {};
     let role = userClaims.role ?? null;
+    const userDoc: InterfaceUser = await firestore.getDocument({
+      collection: 'user',
+      document: id,
+    });
     if (!role) {
-      const userDoc: InterfaceUser = await firestore.getDocument({
-        collection: 'user',
-        document: id,
-      });
       role = userDoc.role;
     }
     if (grouped && (!role || role === 'user')) {
       /**
        * Verify admin access on collection level
        */
-      const db = getFirestore();
-      const ref = db.collection(data.group).doc(data.groupId);
-      const snap = await ref.get();
-      const _data: any = snap.data();
-      if (!_data) {
-        throw new Error(`Not found ${data.group}/${data.groupId}`);
+      if (!data.id) {
+        throw new Error(`Not found user/${data.id}`);
       }
-      const _roleInternal = Object.prototype.hasOwnProperty.call(_data, 'roles') && Object.prototype.hasOwnProperty.call(_data.roles, id) ? _data.roles[id] : null;
+      const _roleInternal = userDoc.groups != null ? userDoc.groups[data.group] : null;
       if (_roleInternal) {
         role = `${data.group}-${_roleInternal}`;
       }
@@ -211,7 +207,7 @@ export class UserHelper {
    * User invitation function, it listens for a new connection-invite document creation, and creates the user
    * @param {any} data
    */
-  public invite = async (data: InterfaceUser) => {
+  public add = async (data: InterfaceUser) => {
     UserHelper.hasData(data);
     try {
       const userObject = await this.create(data);
@@ -223,7 +219,6 @@ export class UserHelper {
         type: 'add',
         id: userObject.id,
         group: data.group || undefined,
-        groupId: data.groupId || undefined,
         role: data.role,
       });
     } catch (error) {
@@ -262,13 +257,22 @@ export class UserHelper {
       throw new Error('user id is required');
     }
     try {
-      // Update the necessary documents to delete the user
-      await this.roleUpdateCall({
-        type: 'remove',
-        id: data.id,
-        group: data.group || undefined,
-        groupId: data.groupId || undefined,
-      });
+      const grouped = data.group && data.group.length > 0;
+      // Remove user if not grouped
+      if (grouped) {
+        // Update the necessary documents to delete the user
+        await this.roleUpdateCall({
+          type: 'remove',
+          id: data.id,
+          group: data.group,
+        });
+      } else {
+        // Remove user document and reference if is not grouped
+        const db = getFirestore();
+        const refUser = db.collection('user').doc(data.id);
+        await refUser.delete();
+        await getAuth().deleteUser(data.id);
+      }
     } catch (error) {
       // @ts-ignore
       throw new Error(`Error removing user access: ${error.message}`);
@@ -277,9 +281,9 @@ export class UserHelper {
 
   /**
    * Update User
-   * @param {any} options
+   * @param {InterfaceUser} data
    */
-  public update = async (options: { data: InterfaceUser, id: string }) => {
+  public update = async (data: InterfaceUser) => {
     const timestamp = FieldValue.serverTimestamp();
     const imageHelper = new ImageHelper({
       firebaseConfig: this.firebaseConfig,
@@ -289,9 +293,8 @@ export class UserHelper {
       firebaseConfig: this.firebaseConfig,
       isBeta: this.isBeta,
     });
-    const {id, data} = options;
     let updateUserObject = false;
-    const {firstName, lastName, avatar} = data;
+    const {firstName, lastName, avatar, id} = data;
     const validNameFirst = firstName && firstName.length > 2;
     const validNameLast = lastName && lastName.length > 2;
     let correctNameFirst: string = firstName && firstName.length > 2 ? firstName : undefined;
@@ -368,9 +371,14 @@ export class UserHelper {
     delete _data.lastName;
     delete _data.avatar;
     delete _data.role; // Prevents insecure implementation of roles
+    delete _data.groups;
+    delete _data.group;
+    delete _data.phone;
+    delete _data.email;
+    delete _data.backup;
     delete _data.created;
     delete _data.updated;
-    updateDataFirestore = {...updateDataFirestore, ..._data}; // Merge input data
+    updateDataFirestore = {..._data, ...updateDataFirestore}; // Merge input data
     if (!Object.keys(updateDataFirestore).length) {
       throw new Error('No changes detected');
     }
@@ -392,7 +400,6 @@ export class UserHelper {
   public updateRole = async (data: {
     [key: string]: any,
     group?: string;
-    groupId?: string;
     role?: string;
     id?: string;
   }) => {
@@ -407,7 +414,6 @@ export class UserHelper {
         type: 'add',
         id: data.id,
         group: data.group || undefined,
-        groupId: data.groupId || undefined,
         role: data.role,
       });
     } catch (error) {
@@ -443,7 +449,6 @@ export class UserHelper {
       id: created.uid,
       role: 'user',
       group: undefined,
-      groupId: undefined,
       password: undefined,
     };
     await this.createDocument(user);
@@ -457,7 +462,6 @@ export class UserHelper {
    */
   private roleUpdateCall = async (data: {
     group?: string,
-    groupId?: string,
     id: string,
     role?: string,
     type: 'add' | 'remove',
@@ -467,21 +471,24 @@ export class UserHelper {
     }
     const timestamp = FieldValue.serverTimestamp();
     const db = getFirestore();
-    const batch = db.batch();
-    // let clickerInternal = false; // Adds or removes a user as being a clicker
     let updateGroup = null; // Action for the group
-    let userUpdate = null; // Action for the user
-    let userData: any = {
-      backup: false,
-      updated: timestamp,
-    };
-    if ((data.group || data.groupId) && !(data.group && data.groupId)) {
-      throw new Error('group and groupId are required for group roles');
+    if (data.group && data.group.length == 0) {
+      throw new Error('group can\'t be empty for group roles');
     }
-    const grouped = data.group && data.groupId;
+    const grouped = data.group && data.group.length > 0;
     const refUser = db.collection('user').doc(data.id);
     const _role = data.role ?? 'user';
     const userRecord = await getAuth().getUser(data.id);
+    let userData: any = {
+      backup: false,
+      updated: timestamp,
+      created: timestamp,
+    };
+    const userDoc = await firestore.getDocument({
+      collection: 'user',
+      document: data.id,
+    });
+    userData.created = userDoc.created ?? timestamp;
     let userClaims: any = userRecord.customClaims ?? {};
     let updateClaims = false;
     if (!grouped) {
@@ -497,43 +504,25 @@ export class UserHelper {
       }
       updateClaims = true;
     }
-    let roles = {};
     switch (data.type) {
       case 'add':
         updateGroup = {
-          [data.groupId]: _role,
-        };
-        userUpdate = FieldValue.arrayUnion(...[data.id]);
-        // clickerInternal = true;
-        roles = {
-          [data.id]: _role,
+          [data.group]: _role,
         };
         break;
       case 'remove':
         updateGroup = {
-          [data.groupId]: FieldValue.delete(),
-        };
-        userUpdate = FieldValue.arrayRemove(...[data.id]);
-        // clickerInternal = false;
-        roles = {
-          [data.id]: FieldValue.delete(),
+          [data.group]: FieldValue.delete(),
         };
         break;
       default:
         throw new Error('Invalid type');
     }
     if (grouped) {
-      const refGroup = db.collection(data.group).doc(data.groupId);
-      batch.set(refGroup, {
-        roles,
-        users: userUpdate,
-        backup: false,
-        updated: timestamp,
-      }, {merge: true});
       // Update user
       userData = {
         ...userData,
-        [data.group]: updateGroup,
+        ['groups']: updateGroup,
       };
     }
     if (!grouped) {
@@ -542,28 +531,21 @@ export class UserHelper {
         role: data.type === 'remove' ? FieldValue.delete() : _role,
       };
     }
-    batch.set(refUser, userData, {merge: true});
-    await batch.commit();
-
+    await refUser.set(userData, {merge: true});
     /**
      * Update custom claims
      */
     let collectionClaims: any = null;
     if (grouped) {
-      const userDoc: InterfaceUser = await firestore.getDocument({
-        collection: 'user',
-        document: data.id,
-      });
-      if (Object.prototype.hasOwnProperty.call(userDoc, data.group)) {
-        collectionClaims = userDoc[data.group];
+      if (Object.prototype.hasOwnProperty.call(userDoc, 'groups')) {
+        collectionClaims = userDoc['groups'];
         userClaims = {
           ...userClaims,
-          [data.group]: collectionClaims,
+          'groups': collectionClaims,
         };
       }
       updateClaims = true;
     }
-
     if (updateClaims) {
       await getAuth().setCustomUserClaims(data.id, userClaims);
       await getAuth().revokeRefreshTokens(data.id);

@@ -41,7 +41,9 @@ export interface InterfaceUser {
     email?: string;
     role?: string;
     group?: string;
-    groupId?: string;
+    groups?: {
+        [key: string]: any;
+    };
     [key: string]: any;
 }
 export type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' | 'vimeo' | string;

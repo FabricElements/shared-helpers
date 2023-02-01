@@ -75,7 +75,7 @@ export class FirestoreHelper {
     cacheLimit?: number;
     collection: string;
     document: string;
-  }) => {
+  }): Promise<DocumentData> => {
     let cachePath = this.prefix ? `${this.prefix}:` : '';
     cachePath += `${options.collection}:${options.document}`;
     const cacheData = {

@@ -24,6 +24,7 @@ export interface InterfaceUserLinks {
 }
 
 export interface InterfaceUser {
+  backup?: boolean;
   ads?: InterfaceUserAds;
   avatar?: boolean | string | any;
   created?: Date | FieldValue | String;
@@ -42,11 +43,13 @@ export interface InterfaceUser {
   phone?: string;
   email?: string;
   role?: string;
-  // Use [group] and [groupId] only to create / update user group
+  // Use [group] to create / update user group
   group?: string;
-  groupId?: string;
+  groups?: {
+    [key: string]: any;
+  };
 
-  [key: string]: any,
+  [key: string]: any;
 }
 
 export type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' | 'vimeo' | string;
