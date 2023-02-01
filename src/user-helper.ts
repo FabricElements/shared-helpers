@@ -337,32 +337,36 @@ export class UserHelper {
       };
       onboarding.name = true;
     }
-
     if (avatar) {
-      const imgBuffer = Buffer.from(avatar, 'base64');
-      const imageSize = imageHelper.size('standard');
-      const imageResizeOptions: InterfaceImageResize = {
-        maxHeight: imageSize.height,
-        maxWidth: imageSize.width,
-        crop: 'entropy',
-        input: imgBuffer,
-        quality: 90,
-        format: 'jpeg',
-        contentType: 'image/jpeg',
-      };
-      const media = await imageHelper.bufferImage(imageResizeOptions);
-      const avatarPath = `media/avatar/${id}.jpg`;
-      await mediaHelper.save({
-        media,
-        path: avatarPath,
-        contentType: 'image/jpeg',
-      });
-      const avatarUrl = `${this.mainUrl}/${avatarPath}`;
-      updateDataFirestore.avatar = avatarUrl;
-      updateDataUser.photoURL = avatarUrl;
-      updateUserObject = true;
-      onboarding.avatar = true;
+      try {
+        const imgBuffer = Buffer.from(avatar, 'base64');
+        const imageSize = imageHelper.size('standard');
+        const imageResizeOptions: InterfaceImageResize = {
+          maxHeight: imageSize.height,
+          maxWidth: imageSize.width,
+          crop: 'entropy',
+          input: imgBuffer,
+          quality: 90,
+          format: 'jpeg',
+          contentType: 'image/jpeg',
+        };
+        const media = await imageHelper.bufferImage(imageResizeOptions);
+        const avatarPath = `media/avatar/${id}.jpg`;
+        await mediaHelper.save({
+          media,
+          path: avatarPath,
+          contentType: 'image/jpeg',
+        });
+        const avatarUrl = `${this.mainUrl}/${avatarPath}`;
+        updateDataFirestore.avatar = avatarUrl;
+        updateDataUser.photoURL = avatarUrl;
+        updateUserObject = true;
+        onboarding.avatar = true;
+      } catch (e) {
+        //
+      }
     }
+
     // / Set default data values and remove keys before merging
     const _data = data;
     delete _data.name;
