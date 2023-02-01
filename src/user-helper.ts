@@ -295,10 +295,10 @@ export class UserHelper {
     });
     let updateUserObject = false;
     const {firstName, lastName, avatar, id} = data;
-    const validNameFirst = firstName && firstName.length > 2;
-    const validNameLast = lastName && lastName.length > 2;
-    let correctNameFirst: string = firstName && firstName.length > 2 ? firstName : undefined;
-    let correctNameLast: string = lastName && lastName.length > 2 ? lastName : undefined;
+    const validNameFirst = firstName && firstName.length > 0;
+    const validNameLast = lastName && lastName.length > 0;
+    let correctNameFirst: string = validNameFirst ? firstName : undefined;
+    let correctNameLast: string = validNameLast ? lastName : undefined;
     const updateName = correctNameFirst && correctNameLast;
     if (firstName) {
       if (!validNameFirst) {
