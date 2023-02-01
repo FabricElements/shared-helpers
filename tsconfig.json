@@ -33,7 +33,7 @@
     "noImplicitReturns": true,
     "noUnusedLocals": false,
     "strict": true,
-    "declaration": false,
+    "declaration": true,
     "esModuleInterop": true,
     "typeRoots": [
       "node_modules/@types"

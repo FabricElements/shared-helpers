@@ -48,6 +48,8 @@ export interface InterfaceUser {
   groups?: {
     [key: string]: any;
   };
+  ping?: any;
+  fcm?: string;
 
   [key: string]: any;
 }

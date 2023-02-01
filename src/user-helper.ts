@@ -369,6 +369,7 @@ export class UserHelper {
 
     // / Set default data values and remove keys before merging
     const _data = data;
+    delete _data.username;
     delete _data.name;
     delete _data.abbr;
     delete _data.firstName;
@@ -382,6 +383,11 @@ export class UserHelper {
     delete _data.backup;
     delete _data.created;
     delete _data.updated;
+    delete _data.ping;
+    delete _data.fcm;
+    delete _data.id;
+    delete _data.onboarding;
+
     updateDataFirestore = {..._data, ...updateDataFirestore}; // Merge input data
     if (!Object.keys(updateDataFirestore).length) {
       throw new Error('No changes detected');
