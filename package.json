@@ -5,7 +5,7 @@
   "main": "./lib/index.js",
   "exports": "./lib/index.js",
   "module": "./lib/index.js",
-  "types": "./src/index.ts",
+  "types": "./lib/index.d.ts",
   "author": "Erny Sans",
   "license": "BSD-3-Clause",
   "version": "0.2.1",
