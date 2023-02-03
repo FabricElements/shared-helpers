@@ -233,7 +233,7 @@ export class UserHelper {
    * @return {boolean} boolean
    */
   public isAdmin = (options: {
-    group?: boolean,
+    group?: string,
     fail?: boolean,
     role: string,
   }): boolean => {

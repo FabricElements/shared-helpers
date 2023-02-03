@@ -88,7 +88,7 @@ export declare class UserHelper {
      * @return {boolean} boolean
      */
     isAdmin: (options: {
-        group?: boolean;
+        group?: string;
         fail?: boolean;
         role: string;
     }) => boolean;
