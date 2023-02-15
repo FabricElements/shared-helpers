@@ -77,7 +77,7 @@ export interface InterfaceImageResize {
     dpr?: number;
     fileName?: string;
     format?: 'jpeg' | 'png' | 'gif';
-    input?: Buffer | string | any;
+    input?: Buffer | Uint8Array | string | any;
     maxHeight?: number;
     maxWidth?: number;
     quality?: number;

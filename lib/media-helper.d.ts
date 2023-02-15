@@ -27,14 +27,16 @@ export declare class MediaHelper {
         crop?: string;
         dpr?: number;
         height?: number;
-        path: string;
+        path?: string;
+        file?: Uint8Array | ArrayBuffer;
         response: Response;
         robots?: boolean;
         size?: imageSizesType;
         width?: number;
+        contentType?: string;
     }) => Promise<any>;
     /**
-     * Preview media file
+     * Save media file
      * @param {any} options
      */
     save: (options: {

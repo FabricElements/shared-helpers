@@ -35,13 +35,15 @@ export class MediaHelper {
   public preview = async (options: {
     [key: string]: any,
     crop?: string;
-    dpr?: number,
-    height?: number,
-    path: string;
+    dpr?: number;
+    height?: number;
+    path?: string;
+    file?: Uint8Array | ArrayBuffer;
     response: Response;
-    robots?: boolean,
+    robots?: boolean;
     size?: imageSizesType;
-    width?: number,
+    width?: number;
+    contentType?: string;
   }) => {
     let {
       crop,
@@ -52,13 +54,14 @@ export class MediaHelper {
       robots,
       size,
       width,
+      file,
     } = options;
     const _cacheTime = this.isBeta ? 60 : 86400; // 1 day in seconds
     let mediaBuffer: any = null;
-    let contentType = 'text/html';
+    let contentType = options.contentType ?? 'text/html';
     response.set('Content-Type', contentType);
     // Don't use "/" at the start or end of your path
-    if (path.startsWith('/')) {
+    if (path && path.startsWith('/')) {
       path = path.substring(1);
     }
     const imageHelper = new ImageHelper({
@@ -66,7 +69,6 @@ export class MediaHelper {
       isBeta: this.isBeta,
     });
     // const publicUrl = global.getUrlAndGs(mediaPath).url;
-    const fileRef = getStorage().bucket(this.firebaseConfig.storageBucket).file(path);
     let ok = true;
     const imageResizeOptions: InterfaceImageResize = {};
     /**
@@ -100,41 +102,60 @@ export class MediaHelper {
         break;
     }
     let indexRobots: boolean = !!robots;
-    try {
-      const [metadata]: any = await fileRef.getMetadata();
-      contentType = metadata.contentType || null;
-      const fileSize = metadata.size || 0;
-      if (!contentType) {
-        throw new Error('contentType is missing');
+    if (path) {
+      try {
+        const fileRef = getStorage().bucket(this.firebaseConfig.storageBucket).file(path);
+        const [metadata]: any = await fileRef.getMetadata();
+        contentType = metadata.contentType || null;
+        const fileSize = metadata.size || 0;
+        if (!contentType) {
+          throw new Error('contentType is missing');
+        }
+        imageResizeOptions.contentType = contentType;
+        if (fileSize === 0) {
+          throw new Error('Media file is empty');
+        }
+        if (contentTypeIsImageForSharp.test(contentType) && fileSize !== 'max') {
+          /**
+           * Handle images
+           */
+          // const isJPEG = contentTypeIsJPEG.test(contentType);
+          // const format = isJPEG ? 'jpeg' : 'png';
+          mediaBuffer = await imageHelper.resize({
+            ...imageResizeOptions,
+            fileName: path,
+          });
+          // contentType = `image/${format}`;
+          indexRobots = true;
+        } else {
+          /**
+           * Handle all media file types
+           */
+          [mediaBuffer] = await fileRef.download();
+        }
+      } catch (error) {
+        ok = false;
+        if (this.isBeta) {
+          // @ts-ignore
+          console.warn(`${path}:`, error.message);
+        }
       }
-      imageResizeOptions.contentType = contentType;
-      if (fileSize === 0) {
-        throw new Error('Media file is empty');
-      }
-      if (contentTypeIsImageForSharp.test(contentType) && fileSize !== 'max') {
-        /**
-         * Handle images
-         */
-        // const isJPEG = contentTypeIsJPEG.test(contentType);
-        // const format = isJPEG ? 'jpeg' : 'png';
-        mediaBuffer = await imageHelper.resize({
-          ...imageResizeOptions,
-          fileName: path,
-          // format: op,
-        });
-        // contentType = `image/${format}`;
-        indexRobots = true;
-      } else {
-        /**
-         * Handle all media file types
-         */
-        [mediaBuffer] = await fileRef.download();
-      }
-    } catch (error) {
-      ok = false;
-      if (this.isBeta) {
-        // @ts-ignore
-        console.warn(`${path}:`, error.message);
+    }
+    if (file) {
+      try {
+        if (contentTypeIsImageForSharp.test(contentType)) {
+          /**
+           * Handle images
+           */
+          // const isJPEG = contentTypeIsJPEG.test(contentType);
+          // const format = isJPEG ? 'jpeg' : 'png';
+          mediaBuffer = await imageHelper.bufferImage({...imageResizeOptions, input: file});
+          // contentType = `image/${format}`;
+          indexRobots = true;
+        }
+      } catch (e) {
+        //
+        ok = false;
       }
     }
     if (!indexRobots) {
@@ -173,7 +194,7 @@ export class MediaHelper {
     return null;
   };
   /**
-   * Preview media file
+   * Save media file
    * @param {any} options
    */
   public save = async (options: {
