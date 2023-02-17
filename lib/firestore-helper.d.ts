@@ -79,7 +79,7 @@ export declare class FirestoreHelper {
             filter: WhereFilterOp;
             value: any;
         }[];
-    }) => Promise<any>;
+    }) => Promise<string[]>;
     /**
      * Get list size
      * @param {any} options
@@ -97,7 +97,7 @@ export declare class FirestoreHelper {
             filter: WhereFilterOp;
             value: any;
         }[];
-    }) => Promise<any>;
+    }) => Promise<number>;
     /**
      * Get document instance from firestore
      *

@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type {DocumentData, FieldPath, OrderByDirection, WhereFilterOp} from 'firebase-admin/firestore';
+import type {DocumentData, FieldPath, OrderByDirection, Query, WhereFilterOp} from 'firebase-admin/firestore';
 import {getFirestore} from 'firebase-admin/firestore';
 import type {RedisClientOptions} from 'redis';
 import {createClient} from 'redis';
@@ -186,7 +186,7 @@ export class FirestoreHelper {
       throw new Error('collection is undefined');
     }
     const db = getFirestore();
-    let ref: any = db.collection(options.collection);
+    let ref: Query = db.collection(options.collection);
     const orderBy = options.orderBy;
     if (orderBy && orderBy.length > 0) {
       for (let i = 0; i < orderBy.length; i++) {
@@ -234,7 +234,7 @@ export class FirestoreHelper {
       throw new Error('collection is undefined');
     }
     const db = getFirestore();
-    let ref: any = db.collection(options.collection);
+    let ref: Query = db.collection(options.collection);
     const orderBy = options.orderBy;
     if (orderBy && orderBy.length > 0) {
       for (let i = 0; i < orderBy.length; i++) {
