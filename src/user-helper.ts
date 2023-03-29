@@ -12,8 +12,6 @@ import {ImageHelper} from './image-helper.js';
 import type {InterfaceImageResize, InterfaceUser} from './interfaces.js';
 import {MediaHelper} from './media-helper.js';
 
-const firestore = new FirestoreHelper();
-
 /**
  * UserHelper
  */
@@ -181,7 +179,7 @@ export class UserHelper {
     const userRecord = await getAuth().getUser(id);
     const userClaims: any = userRecord.customClaims ?? {};
     let role = userClaims.role ?? null;
-    const userDoc: InterfaceUser = await firestore.getDocument({
+    const userDoc: InterfaceUser = await FirestoreHelper.getDocument({
       collection: 'user',
       document: id,
     });
@@ -494,7 +492,7 @@ export class UserHelper {
       updated: timestamp,
       created: timestamp,
     };
-    const userDoc = await firestore.getDocument({
+    const userDoc = await FirestoreHelper.getDocument({
       collection: 'user',
       document: data.id,
     });
