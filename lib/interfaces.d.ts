@@ -89,7 +89,7 @@ export interface InterfaceAPIRequest {
     body?: any;
     credentials?: string;
     headers?: any;
-    method?: 'GET' | 'POST' | 'PUT';
+    method?: 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'CONNECT' | 'OPTIONS' | 'TRACE' | 'PATCH';
     path?: string;
     raw?: boolean;
     scheme?: 'Basic' | 'Bearer' | 'Digest' | 'OAuth';
