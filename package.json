@@ -8,7 +8,7 @@
   "types": "./lib/index.d.ts",
   "author": "Erny Sans",
   "license": "BSD-3-Clause",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/FabricElements/shared-helpers.git"
@@ -34,9 +34,7 @@
     "lodash": "^4.17.21",
     "moment-timezone": "^0.5.42",
     "node-fetch": "^3.3.1",
-    "redis": "^4.6.5",
-    "sharp": "^0.32.0",
-    "tedis": "^0.1.12"
+    "sharp": "^0.32.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.3",

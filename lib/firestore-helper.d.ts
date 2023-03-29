@@ -2,116 +2,80 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type { DocumentData, FieldPath, OrderByDirection, WhereFilterOp } from 'firebase-admin/firestore';
-import { Tedis } from 'tedis';
+import type { DocumentData, FieldPath, OrderByDirection, Query, WhereFilterOp } from 'firebase-admin/firestore';
+export interface InterfaceFirestoreQueryOrderBy {
+    direction: OrderByDirection;
+    key: string;
+}
+export interface InterfaceFirestoreQueryWhere {
+    field: string | FieldPath;
+    filter: WhereFilterOp;
+    value: any;
+}
+export interface InterfaceFirestoreQuery {
+    collection: string;
+    limit?: number;
+    orderBy?: InterfaceFirestoreQueryOrderBy[];
+    where?: InterfaceFirestoreQueryWhere[];
+}
+export interface InterfaceFirestoreDocument {
+    collection: string;
+    document: string;
+}
 /**
- * Use FirestoreHelper to get firestore documents from redis cache
+ * Use FirestoreHelper to get firestore documents
  */
 export declare class FirestoreHelper {
-    canCache: boolean;
-    logs: boolean;
-    prefix: string;
-    redisClient: Tedis;
-    /**
-     * Constructor
-     * @param {any} config
-     */
-    constructor(config?: {
-        host?: string;
-        logs?: boolean;
-        port?: number;
-        [key: string]: any;
-    });
     /**
      * Validate if document exists
      *
-     * @param {any} options
+     * @param {InterfaceFirestoreDocument} options
      */
-    existDocument: (options: {
-        collection: string;
-        document: string;
-    }) => Promise<boolean>;
+    static exists: (options: InterfaceFirestoreDocument) => Promise<boolean>;
     /**
      * Get Document
-     * @param {any} options
+     * @param {InterfaceFirestoreDocument} options
      * @return {Promise<DocumentData>}
      */
-    getDocument: (options: {
-        cache?: boolean;
-        cacheLimit?: number;
-        collection: string;
-        document: string;
-    }) => Promise<DocumentData>;
+    static getDocument: (options: InterfaceFirestoreDocument) => Promise<DocumentData>;
     /**
      * Get list
-     * @param {any} options
+     * @param {InterfaceFirestoreQuery} options
      * @return {Promise<DocumentData[]>}
      */
-    getList: (options: {
-        cache?: boolean;
-        cacheLimit?: number;
-        collection: string;
-        limit?: number;
-        orderBy?: {
-            direction: OrderByDirection;
-            key: string;
-        }[];
-        where?: {
-            field: string | FieldPath;
-            filter: WhereFilterOp;
-            value: any;
-        }[];
-    }) => Promise<DocumentData[]>;
+    static getList: (options: InterfaceFirestoreQuery) => Promise<DocumentData[]>;
+    /**
+     * Get List reference for later use
+     * @param {InterfaceFirestoreQuery} options
+     * @return {Query}
+     */
+    static getListReference: (options: InterfaceFirestoreQuery) => Query<DocumentData>;
     /**
      * Get list
-     * @param {any} options
+     * @param {InterfaceFirestoreQuery} options
      * @return {Promise<string>[]}
      */
-    getListIds: (options: {
-        collection: string;
-        limit?: number;
-        orderBy?: {
-            direction: OrderByDirection;
-            key: string;
-        }[];
-        where?: {
-            field: string | FieldPath;
-            filter: WhereFilterOp;
-            value: any;
-        }[];
-    }) => Promise<string[]>;
+    static getListIds: (options: InterfaceFirestoreQuery) => Promise<string[]>;
     /**
-     * Get list size
-     * @param {any} options
+     * Count documents on a query
+     * @param {InterfaceFirestoreQuery} options
      * @return {Promise<string>[]}
      */
-    getListSize: (options: {
-        collection: string;
-        limit?: number;
-        orderBy?: {
-            direction: OrderByDirection;
-            key: string;
-        }[];
-        where?: {
-            field: string | FieldPath;
-            filter: WhereFilterOp;
-            value: any;
-        }[];
-    }) => Promise<number>;
+    static count: (options: InterfaceFirestoreQuery) => Promise<number>;
     /**
      * Get document instance from firestore
      *
-     * @param {any} options
-     * @return {Promise<DocumentSnapshot<DocumentData>>}
+     * @param {InterfaceFirestoreDocument} options
+     * @return {Promise<Promise<DocumentSnapshot>>}
      * @private
      */
-    private _getDocument;
+    private static _getDocument;
     /**
      * Get document snapshot from firestore
      *
-     * @param {any} options
+     * @param {InterfaceFirestoreDocument} options
      * @return {Promise<DocumentData>}
      * @private
      */
-    private _getDocumentSnap;
+    private static _getDocumentSnap;
 }
