@@ -428,6 +428,10 @@ export class UserHelper {
       // @ts-ignore
       throw new Error(`Error updating user access: ${error.message}`);
     }
+    // Remove avatar first
+    delete data.avatar;
+    // Update other user data
+    await this.update(data);
   };
 
   /**
