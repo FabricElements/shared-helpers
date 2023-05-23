@@ -4,11 +4,10 @@
  */
 import {BigQuery} from '@google-cloud/bigquery';
 import {getFirestore} from 'firebase-admin/firestore';
+import {logger} from 'firebase-functions/v2';
 
 import _ from 'lodash';
 import {timeout} from './global.js';
-
-const bigquery = new BigQuery();
 
 /**
  * Custom backup from FirestoreHelper to BigQuery
@@ -20,31 +19,35 @@ const bigquery = new BigQuery();
 export default async (data: {
   collection: string,
   dataset: string,
-  del?: boolean,
-  items: any,
+  delete?: boolean,
+  items: any[],
   table: string,
-  updateKey?: string | null,
 }) => {
+  if (!data.collection) throw new Error('collection is required');
+  if (!data.dataset) throw new Error('dataset is required');
+  if (!data.items) throw new Error('items is required');
+  if (!data.table) throw new Error('table is required');
   const total = data.items.length;
   if (total === 0) {
-    // console.info(`Nothing to backup in collection "${data.collection}"`);
-    return null;
+    logger.info(`Nothing to backup in collection "${data.collection}"`);
+    return;
   }
   let backup = 0;
   try {
+    const bigquery = new BigQuery();
     await bigquery.dataset(data.dataset).table(data.table).insert(data.items, {
       ignoreUnknownValues: true,
       skipInvalidRows: true,
     });
   } catch (error) {
-    // @ts-ignore
-    let errorMessage = error.message || null;
+    let errorMessage = error['message'] ?? null;
     if (Object.prototype.hasOwnProperty.call(error, 'response') && Object.prototype.hasOwnProperty.call(error, 'insertErrors')) {
       // @ts-ignore
       const finalError = _.flatten(error.response.insertErrors);
       errorMessage = JSON.stringify(finalError);
     }
-    throw new Error(errorMessage);
+    if (errorMessage) logger.error(errorMessage);
+    throw error;
   }
   // Update firestore documents
   const db = getFirestore();
@@ -52,13 +55,10 @@ export default async (data: {
   let pending = 0;
   for (let i = 0; i < total; i++) {
     const item = data.items[i];
-    if (!item.id) {
-      continue;
-    }
-    const updateKey = data.updateKey || 'id';
-    const docRef: any = db.collection(data.collection).doc(item[updateKey]);
+    if (!item.id) continue;
+    const docRef = db.collection(data.collection).doc(item.id);
     // If delete is true, commit the operation
-    if (data.del) {
+    if (data.delete) {
       batch.delete(docRef);
     } else {
       batch.update(docRef, {
@@ -80,5 +80,4 @@ export default async (data: {
     await batch.commit();
   }
   console.info(`${backup} items backup for collection "${data.collection}"`);
-  return null;
 };

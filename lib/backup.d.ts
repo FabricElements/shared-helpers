@@ -8,9 +8,8 @@
 declare const _default: (data: {
     collection: string;
     dataset: string;
-    del?: boolean;
-    items: any;
+    delete?: boolean;
+    items: any[];
     table: string;
-    updateKey?: string | null;
-}) => Promise<any>;
+}) => Promise<void>;
 export default _default;
