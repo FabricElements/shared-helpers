@@ -47,6 +47,7 @@ export interface InterfaceUser {
     };
     ping?: any;
     fcm?: string;
+    customer?: string;
     [key: string]: any;
 }
 export type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' | 'vimeo' | string;

@@ -50,6 +50,7 @@ export interface InterfaceUser {
   };
   ping?: any;
   fcm?: string;
+  customer?: string;
 
   [key: string]: any;
 }
