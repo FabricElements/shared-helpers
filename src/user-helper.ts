@@ -283,7 +283,7 @@ export class UserHelper {
    */
   public update = async (data: InterfaceUser) => {
     const timestamp = FieldValue.serverTimestamp();
-    const {id, phone, email, firstName, lastName, avatar} = data;
+    const {id, phone, email, firstName, lastName, avatar, language} = data;
     const imageHelper = new ImageHelper({
       firebaseConfig: this.firebaseConfig,
       isBeta: this.isBeta,
@@ -306,6 +306,7 @@ export class UserHelper {
       updateDataUser.emailVerified = false;
       updateDataFirestore.email = email;
     }
+    if (language) updateDataFirestore.language = language;
     const validNameFirst = firstName && firstName.length > 0;
     const validNameLast = lastName && lastName.length > 0;
     let correctNameFirst: string = validNameFirst ? firstName : undefined;

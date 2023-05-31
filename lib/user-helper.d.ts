@@ -98,15 +98,10 @@ export declare class UserHelper {
      */
     remove: (data: InterfaceUser) => Promise<void>;
     /**
-     * Update User
-     * @param {InterfaceUser} data
-     */
-    update: (data: InterfaceUser) => Promise<void>;
-    /**
      * Update User account data
      * @param {InterfaceUser} data
      */
-    updateAccount: (data: InterfaceUser) => Promise<void>;
+    update: (data: InterfaceUser) => Promise<void>;
     /**
      * Update user role
      * @param {any} data
