@@ -103,6 +103,11 @@ export declare class UserHelper {
      */
     update: (data: InterfaceUser) => Promise<void>;
     /**
+     * Update User account data
+     * @param {InterfaceUser} data
+     */
+    updateAccount: (data: InterfaceUser) => Promise<void>;
+    /**
      * Update user role
      * @param {any} data
      */
