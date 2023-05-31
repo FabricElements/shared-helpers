@@ -21,7 +21,7 @@
   ],
   "dependencies": {
     "@google-cloud/bigquery": "^6.2.0",
-    "firebase-admin": "^11.8.0",
+    "firebase-admin": "^11.9.0",
     "firebase-functions": "^4.4.0",
     "libphonenumber-js": "^1.10.31",
     "lodash": "^4.17.21",
@@ -37,7 +37,7 @@
     "eslint": "^8.41.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-jsdoc": "^45.0.0",
+    "eslint-plugin-jsdoc": "^46.0.0",
     "eslint-plugin-no-explicit-type-exports": "^0.12.1",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-promise": "^6.1.1",
