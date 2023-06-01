@@ -51,7 +51,14 @@ export interface InterfaceUser {
   ping?: any;
   fcm?: string;
   customer?: string;
+  // Billing Client ID
+  bcId?: string;
+  // Billing Subscription ID
+  bsId?: string;
+  // Billing Subscription Item ID to track events
+  bsiId?: string;
 
+  // Accept other keys
   [key: string]: any;
 }
 
