@@ -43,11 +43,10 @@ export interface InterfaceUser {
     role?: string;
     group?: string;
     groups?: {
-        [key: string]: any;
+        [key: string]: string | number;
     };
     ping?: any;
     fcm?: string;
-    customer?: string;
     bcId?: string;
     bsId?: string;
     bsiId?: string;

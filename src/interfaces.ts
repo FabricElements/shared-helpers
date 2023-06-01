@@ -46,11 +46,10 @@ export interface InterfaceUser {
   // Use [group] to create / update user group
   group?: string;
   groups?: {
-    [key: string]: any;
+    [key: string]: string | number;
   };
   ping?: any;
   fcm?: string;
-  customer?: string;
   // Billing Client ID
   bcId?: string;
   // Billing Subscription ID
