@@ -50,7 +50,7 @@ export interface InterfaceUser {
   };
   ping?: any;
   fcm?: string;
-  // Billing Client ID
+  // Billing Customer ID
   bcId?: string;
   // Billing Subscription ID
   bsId?: string;
