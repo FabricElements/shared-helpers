@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type { DocumentData, FieldPath, OrderByDirection, Query, WhereFilterOp } from 'firebase-admin/firestore';
+import type { DocumentData, DocumentReference, FieldPath, OrderByDirection, Query, WhereFilterOp } from 'firebase-admin/firestore';
 export interface InterfaceFirestoreQueryOrderBy {
     direction: OrderByDirection;
     key: string;
@@ -13,14 +13,16 @@ export interface InterfaceFirestoreQueryWhere {
     value: any;
 }
 export interface InterfaceFirestoreQuery {
-    collection: string;
+    collection?: string;
+    collectionGroup?: string;
     limit?: number;
     orderBy?: InterfaceFirestoreQueryOrderBy[];
     where?: InterfaceFirestoreQueryWhere[];
 }
 export interface InterfaceFirestoreDocument {
-    collection: string;
-    document: string;
+    collection?: string;
+    document?: string;
+    reference?: DocumentReference;
 }
 /**
  * Use FirestoreHelper to get firestore documents
@@ -57,6 +59,12 @@ export declare class FirestoreHelper {
      */
     static getListIds: (options: InterfaceFirestoreQuery) => Promise<string[]>;
     /**
+     * Get list
+     * @param {InterfaceFirestoreQuery} options
+     * @return {Promise<DocumentReference>[]}
+     */
+    static getListRef: (options: InterfaceFirestoreQuery) => Promise<DocumentReference<DocumentData>[]>;
+    /**
      * Count documents on a query
      * @param {InterfaceFirestoreQuery} options
      * @return {Promise<string>[]}
@@ -66,7 +74,7 @@ export declare class FirestoreHelper {
      * Get document instance from firestore
      *
      * @param {InterfaceFirestoreDocument} options
-     * @return {Promise<Promise<DocumentSnapshot>>}
+     * @return {Promise<Promise<FirebaseFirestore.DocumentSnapshot>>}
      * @private
      */
     private static _getDocument;

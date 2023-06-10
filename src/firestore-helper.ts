@@ -2,7 +2,14 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type {DocumentData, FieldPath, OrderByDirection, Query, WhereFilterOp} from 'firebase-admin/firestore';
+import type {
+  DocumentData,
+  DocumentReference,
+  FieldPath,
+  OrderByDirection,
+  Query,
+  WhereFilterOp,
+} from 'firebase-admin/firestore';
 import {getFirestore} from 'firebase-admin/firestore';
 
 export interface InterfaceFirestoreQueryOrderBy {
@@ -17,15 +24,17 @@ export interface InterfaceFirestoreQueryWhere {
 }
 
 export interface InterfaceFirestoreQuery {
-  collection: string;
+  collection?: string;
+  collectionGroup?: string;
   limit?: number;
   orderBy?: InterfaceFirestoreQueryOrderBy[];
   where?: InterfaceFirestoreQueryWhere[]
 }
 
 export interface InterfaceFirestoreDocument {
-  collection: string;
-  document: string
+  collection?: string;
+  document?: string;
+  reference?: DocumentReference;
 }
 
 /**
@@ -38,10 +47,7 @@ export class FirestoreHelper {
    * @param {InterfaceFirestoreDocument} options
    */
   public static exists = async (options: InterfaceFirestoreDocument) => {
-    const snap = await this._getDocument({
-      collection: options.collection,
-      document: options.document,
-    });
+    const snap = await this._getDocument(options);
     return snap.exists;
   };
 
@@ -50,10 +56,7 @@ export class FirestoreHelper {
    * @param {InterfaceFirestoreDocument} options
    * @return {Promise<DocumentData>}
    */
-  public static getDocument = async (options: InterfaceFirestoreDocument) => await this._getDocumentSnap({
-    collection: options.collection,
-    document: options.document,
-  });
+  public static getDocument = async (options: InterfaceFirestoreDocument) => await this._getDocumentSnap(options);
 
   /**
    * Get list
@@ -61,19 +64,11 @@ export class FirestoreHelper {
    * @return {Promise<DocumentData[]>}
    */
   public static getList = async (options: InterfaceFirestoreQuery) => {
-    const ids = await this.getListIds({
-      collection: options.collection,
-      limit: options.limit,
-      orderBy: options.orderBy,
-      where: options.where,
-    });
+    const references = await this.getListRef(options);
     const data: DocumentData[] = [];
-    for (let i = 0; i < ids.length; i++) {
-      const id = ids[i];
-      const docData = await this.getDocument({
-        collection: options.collection,
-        document: id,
-      });
+    for (let i = 0; i < references.length; i++) {
+      const ref = references[i];
+      const docData = await this._getDocumentSnap({reference: ref});
       data.push(docData);
     }
     return data;
@@ -85,11 +80,13 @@ export class FirestoreHelper {
    * @return {Query}
    */
   public static getListReference = (options: InterfaceFirestoreQuery) => {
-    if (!options.collection) {
-      throw new Error('collection is undefined');
+    if (!(options.collection || options.collectionGroup)) {
+      throw new Error('collection or collectionGroup is required');
     }
     const db = getFirestore();
-    let ref: Query = db.collection(options.collection);
+    let ref: Query;
+    if (options.collection) ref = db.collection(options.collection);
+    if (options.collectionGroup) ref = db.collectionGroup(options.collectionGroup);
     const orderBy = options.orderBy;
     if (orderBy && orderBy.length > 0) {
       for (let i = 0; i < orderBy.length; i++) {
@@ -126,6 +123,21 @@ export class FirestoreHelper {
   };
 
   /**
+   * Get list
+   * @param {InterfaceFirestoreQuery} options
+   * @return {Promise<DocumentReference>[]}
+   */
+  public static getListRef = async (options: InterfaceFirestoreQuery) => {
+    const ref = this.getListReference(options);
+    const snapshot = await ref.get();
+    if (!snapshot || !snapshot.docs || snapshot.empty) {
+      return [];
+    }
+    const docs = snapshot.docs;
+    return docs.map((doc) => doc.ref);
+  };
+
+  /**
    * Count documents on a query
    * @param {InterfaceFirestoreQuery} options
    * @return {Promise<string>[]}
@@ -141,10 +153,13 @@ export class FirestoreHelper {
    * Get document instance from firestore
    *
    * @param {InterfaceFirestoreDocument} options
-   * @return {Promise<Promise<DocumentSnapshot>>}
+   * @return {Promise<Promise<FirebaseFirestore.DocumentSnapshot>>}
    * @private
    */
   private static _getDocument = (options: InterfaceFirestoreDocument) => {
+    // Get from Reference
+    if (options.reference) return options.reference.get();
+    // Get From collection and document
     if (!options.collection) {
       throw new Error('Missing collection');
     }
@@ -164,11 +179,9 @@ export class FirestoreHelper {
    * @private
    */
   private static _getDocumentSnap = async (options: InterfaceFirestoreDocument) => {
-    const snap = await this._getDocument({
-      collection: options.collection,
-      document: options.document,
-    });
+    const snap = await this._getDocument(options);
     if (!snap.exists) {
+      if (options.reference) throw new Error(`Not found ${options.reference.path}`);
       throw new Error(`Not found ${options.collection}/${options.document}`);
     }
     const data = snap.data();
