@@ -56,7 +56,7 @@ export class FirestoreHelper {
    * @param {InterfaceFirestoreDocument} options
    * @return {Promise<DocumentData>}
    */
-  public static getDocument = async (options: InterfaceFirestoreDocument) => await this._getDocumentSnap(options);
+  public static getDocument = async (options: InterfaceFirestoreDocument) => this._getDocumentSnap(options);
 
   /**
    * Get list
@@ -178,14 +178,15 @@ export class FirestoreHelper {
    * @return {Promise<DocumentData>}
    * @private
    */
-  private static _getDocumentSnap = async (options: InterfaceFirestoreDocument) => {
+  private static _getDocumentSnap = async (options: InterfaceFirestoreDocument): Promise<DocumentData> => {
     const snap = await this._getDocument(options);
     if (!snap.exists) {
       if (options.reference) throw new Error(`Not found ${options.reference.path}`);
       throw new Error(`Not found ${options.collection}/${options.document}`);
     }
-    const data = snap.data();
-    data.id = options.document;
-    return data;
+    return {
+      ...snap.data(),
+      id: options.document,
+    } as DocumentData;
   };
 }
