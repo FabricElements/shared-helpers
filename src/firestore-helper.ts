@@ -65,7 +65,7 @@ export class FirestoreHelper {
    */
   public static getList = async (options: InterfaceFirestoreQuery) => {
     const references = await this.getListRef(options);
-    const data: DocumentData[] = [];
+    let data: DocumentData[] = [];
     for (let i = 0; i < references.length; i++) {
       const ref = references[i];
       const docData = await this._getDocumentSnap({reference: ref});
@@ -186,7 +186,7 @@ export class FirestoreHelper {
     }
     return {
       ...snap.data(),
-      id: options.document,
+      id: snap.id,
     } as DocumentData;
   };
 }
