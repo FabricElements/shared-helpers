@@ -163,25 +163,21 @@ export class UserHelper {
   /**
    * Get User Role
    *
-   * @param {string} id
-   * @param {any} data
+   * @param {string} uid
+   * @param {string?} group
    */
-  public getRole = async (id: string, data: {
-    id?: string;
-    group?: string;
-  }) => {
+  public getRole = async (uid: string, group?: string) => {
     // const errorMessage = 'You don\'t have access to request this action';
-    UserHelper.hasData(data);
-    const grouped = data.group && data.group.length > 0;
+    const grouped = group && group.length > 0;
     /**
      * Verify admin access on top level
      */
-    const userRecord = await getAuth().getUser(id);
+    const userRecord = await getAuth().getUser(uid);
     const userClaims: any = userRecord.customClaims ?? {};
     let role = userClaims.role ?? null;
     const userDoc: InterfaceUser = await FirestoreHelper.getDocument({
       collection: 'user',
-      document: id,
+      document: uid,
     });
     if (!role) {
       role = userDoc.role;
@@ -190,12 +186,9 @@ export class UserHelper {
       /**
        * Verify admin access on collection level
        */
-      if (!data.id) {
-        throw new Error(`Not found user/${data.id}`);
-      }
-      const _roleInternal = userDoc.groups != null ? userDoc.groups[data.group] : null;
+      const _roleInternal = userDoc.groups != null ? userDoc.groups[group] : null;
       if (_roleInternal) {
-        role = `${data.group}-${_roleInternal}`;
+        role = `${group}-${_roleInternal}`;
       }
     }
     return role ?? 'user';

@@ -70,13 +70,10 @@ export declare class UserHelper {
     /**
      * Get User Role
      *
-     * @param {string} id
-     * @param {any} data
+     * @param {string} uid
+     * @param {string?} group
      */
-    getRole: (id: string, data: {
-        id?: string;
-        group?: string;
-    }) => Promise<any>;
+    getRole: (uid: string, group?: string) => Promise<any>;
     /**
      * User invitation function, it listens for a new connection-invite document creation, and creates the user
      * @param {any} data
