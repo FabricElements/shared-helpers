@@ -229,7 +229,7 @@ export class UserHelper {
     role: string,
   }): boolean => {
     const _isAdmin = typeof options.role === 'string' &&
-      (options.group ? options.role.endsWith('admin') :
+      (options.group ? (options.role.endsWith('admin') || options.role.endsWith('owner')) :
         options.role === 'admin');
     if (!_isAdmin && options.fail) {
       throw new Error('You are not an Admin');
