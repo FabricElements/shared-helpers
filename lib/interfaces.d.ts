@@ -47,9 +47,30 @@ export interface InterfaceUser {
     };
     ping?: any;
     fcm?: string;
+    /**
+     * Billing Customer ID
+     */
     bcId?: string;
+    /**
+     * Billing Subscription ID
+     */
     bsId?: string;
+    /**
+     * Billing Subscription Item ID to track events
+     */
     bsiId?: string;
+    /**
+     * Billing Subscription Time
+     */
+    bst?: any;
+    /**
+     * Billing usage time
+     */
+    but?: any;
+    /**
+     * Billing usage quantity
+     */
+    buq?: number;
     [key: string]: any;
 }
 export type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' | 'vimeo' | string;
