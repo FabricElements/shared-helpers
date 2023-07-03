@@ -9,7 +9,7 @@ export interface InterfaceFirestoreQueryOrderBy {
 }
 export interface InterfaceFirestoreQueryWhere {
     field: string | FieldPath;
-    filter: WhereFilterOp;
+    operator: WhereFilterOp;
     value: any;
 }
 export interface InterfaceFirestoreQuery {
