@@ -19,7 +19,7 @@ export interface InterfaceFirestoreQueryOrderBy {
 
 export interface InterfaceFirestoreQueryWhere {
   field: string | FieldPath;
-  filter: WhereFilterOp;
+  operator: WhereFilterOp;
   value: any;
 }
 
@@ -98,7 +98,7 @@ export class FirestoreHelper {
     if (where && where.length > 0) {
       for (let i = 0; i < where.length; i++) {
         const item = where[i];
-        ref = ref.where(item.field, item.filter, item.value);
+        ref = ref.where(item.field, item.operator, item.value);
       }
     }
     if (options.limit) {
