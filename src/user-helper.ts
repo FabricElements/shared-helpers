@@ -417,9 +417,13 @@ export class UserHelper {
     if (data.phone) {
       userData.phoneNumber = data.phone;
     }
-    if (data.name != null || data.firstName != null || data.lastName || null) {
-      userData.displayName = data.name ?? data.firstName ?? data.lastName;
+    if (!data.name || !data.name.length) {
+      data.name = '';
+      if (data.firstName) data.name += data.firstName;
+      if (data.lastName) data.name += ` ${data.lastName}`;
+      if (!data.name.length) data.name = 'unknown';
     }
+    userData.displayName = data.name;
     if (data.password != null && data.password.length > 0) {
       userData.password = data.password;
     }
