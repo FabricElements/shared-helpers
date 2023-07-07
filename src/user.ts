@@ -378,32 +378,45 @@ export namespace User {
      */
     static formatUserNames = (data: InterfaceUser): InterfaceUser => {
       const {firstName, lastName} = data;
-      const validNameFirst = firstName && firstName.length > 0;
-      const validNameLast = lastName && lastName.length > 0;
+      const validNameFirst = firstName && firstName.length > 1;
+      const validNameLast = lastName && lastName.length > 1;
       let correctNameFirst: string = validNameFirst ? firstName : undefined;
       let correctNameLast: string = validNameLast ? lastName : undefined;
+      // Validate First Name
       if (firstName && !validNameFirst) {
-        throw new Error('First Name must be at least 3 characters');
+        throw new Error('First Name must be at least 2 characters');
       }
+      // Validate Last Name
       if (lastName && !validNameLast) {
-        throw new Error('Last Name must be at least 3 characters');
+        throw new Error('Last Name must be at least 2 characters');
       }
-      /**
-       * Format User Name
-       */
-      const initialNameFirst = correctNameFirst.charAt(0).toUpperCase();
-      correctNameFirst = initialNameFirst + correctNameFirst.slice(1);
-      const initialNameLast = correctNameLast.charAt(0).toUpperCase();
-      correctNameLast = initialNameLast + correctNameLast.slice(1);
-      const name = `${correctNameFirst} ${correctNameLast}`;
-      const abbr = initialNameFirst + initialNameLast;
-      return {
+      const validName = validNameFirst && validNameLast;
+      // Validate First and Last Name
+      if ((validNameFirst || validNameLast) && !validName) {
+        throw new Error('Please add a valid First and Last Name');
+      }
+      let userData: InterfaceUser = {
         ...data,
-        firstName: correctNameFirst,
-        lastName: correctNameLast,
-        name: name,
-        abbr: abbr,
+        // Reset User Name
+        firstName: undefined,
+        lastName: undefined,
+        name: undefined,
+        abbr: undefined,
       };
+      if (validName) {
+        // Format User Name
+        const initialNameFirst = correctNameFirst.charAt(0).toUpperCase();
+        correctNameFirst = initialNameFirst + correctNameFirst.slice(1);
+        const initialNameLast = correctNameLast.charAt(0).toUpperCase();
+        correctNameLast = initialNameLast + correctNameLast.slice(1);
+        const name = `${correctNameFirst} ${correctNameLast}`;
+        const abbr = initialNameFirst + initialNameLast;
+        userData.firstName = correctNameFirst;
+        userData.lastName = correctNameLast;
+        userData.name = name;
+        userData.abbr = abbr;
+      }
+      return userData;
     };
 
     /**
