@@ -2,11 +2,9 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import {interfaces, UserHelper} from '@fabricelements/shared-helpers';
+import {User} from '@fabricelements/shared-helpers';
 import {https} from 'firebase-functions/v2';
-import {firebaseConfig, isBeta, mainUrl} from '../helpers/variables.js';
-
-const userHelper = new UserHelper({firebaseConfig, isBeta, mainUrl});
+import {mainUrl} from '../helpers/variables.js';
 
 /**
  * Validate if user exists or fail
@@ -15,9 +13,9 @@ export const exists = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 60,
 }, async (request) => {
-  const data: interfaces.InterfaceUser = request.data;
+  const data: User.InterfaceUser = request.data;
   try {
-    const _exists = await userHelper.get(data);
+    const _exists = await User.Helper.get(data);
     if (!_exists) {
       throw new Error('You are not registered. Please contact your account administrator to request access.');
     }
@@ -35,12 +33,12 @@ export const add = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 30,
 }, async (request) => {
-  userHelper.authenticated(request.auth);
-  const data: interfaces.InterfaceUser = request.data;
+  User.Helper.authenticated(request.auth);
+  const data: User.InterfaceUser = request.data;
   try {
-    const role = await userHelper.getRole(request.auth.uid, data);
-    userHelper.isAdmin({role, fail: true, group: data?.group});
-    await userHelper.add(data);
+    const role = await User.Helper.getRole(request.auth.uid, data?.role);
+    User.Helper.isAdmin({role, fail: true, group: data?.group});
+    await User.Helper.add(data);
     return {message: 'User Invited'};
   } catch (error) {
     // @ts-ignore
@@ -55,12 +53,12 @@ export const remove = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 30,
 }, async (request) => {
-  userHelper.authenticated(request.auth);
-  const data: interfaces.InterfaceUser = request.data;
+  User.Helper.authenticated(request.auth);
+  const data: User.InterfaceUser = request.data;
   try {
-    const role = await userHelper.getRole(request.auth.uid, data);
-    userHelper.isAdmin({role, fail: true, group: data?.group});
-    await userHelper.remove(data);
+    const role = await User.Helper.getRole(request.auth.uid, data?.role);
+    User.Helper.isAdmin({role, fail: true, group: data?.group});
+    await User.Helper.remove(data);
     return {message: 'User Removed'};
   } catch (error) {
     // @ts-ignore
@@ -75,10 +73,10 @@ export const update = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 30,
 }, async (request) => {
-  userHelper.authenticated(request.auth);
-  const data: interfaces.InterfaceUser = request.data;
+  User.Helper.authenticated(request.auth);
+  const data: User.InterfaceUser = request.data;
   try {
-    await userHelper.update({...data, id: request.auth.uid});
+    await User.Helper.update({...data, id: request.auth.uid}, mainUrl);
   } catch (error) {
     // @ts-ignore
     throw new https.HttpsError('failed-precondition', error.message);
@@ -95,26 +93,24 @@ export const role = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 30,
 }, async (request) => {
-  userHelper.authenticated(request.auth);
-  const data: interfaces.InterfaceUser = request.data;
+  User.Helper.authenticated(request.auth);
+  const data: User.InterfaceUser = request.data;
   try {
-    const _role = await userHelper.getRole(request.auth.uid, data);
-    userHelper.isAdmin({role: _role, fail: true, group: data?.group});
+    const _role = await User.Helper.getRole(request.auth.uid, data?.role);
+    User.Helper.isAdmin({role: _role, fail: true, group: data?.group});
   } catch (error) {
     // @ts-ignore
     throw new https.HttpsError('permission-denied', error.message);
   }
   try {
-    await userHelper.updateRole(data);
-  } catch (error) {
-    // @ts-ignore
+    await User.Helper.updateRole(data, mainUrl);
+  } catch (error: any) {
     throw new https.HttpsError('unknown', error.message);
   }
   if (data.firstName || data.lastName) {
     try {
-      await userHelper.update(data);
-    } catch (error) {
-      // @ts-ignore
+      await User.Helper.update(data, mainUrl);
+    } catch (error: any) {
       throw new https.HttpsError('failed-precondition', error.message);
     }
   }

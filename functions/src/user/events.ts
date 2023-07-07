@@ -2,11 +2,9 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import {UserHelper} from '@fabricelements/shared-helpers';
+import {User} from '@fabricelements/shared-helpers';
 import {FieldValue} from 'firebase-admin/firestore';
 import * as functions from 'firebase-functions';
-
-const userHelper = new UserHelper();
 
 /**
  * Listener for user creation, initiates base fields
@@ -15,7 +13,7 @@ export const created = functions.runWith({
   memory: '512MB',
   timeoutSeconds: 60,
 }).auth.user().onCreate(async (user) => {
-  await userHelper.createDocument(user);
+  await User.Helper.createDocument(user);
 });
 
 /**
@@ -31,14 +29,8 @@ export const createdDoc = functions.runWith({
     backup: false,
     updated: timestamp,
   };
-  if (!data.language) {
-    baseData.language = 'en';
-  }
-  if (!data.role) {
-    baseData.role = 'user';
-  }
-  if (!data.created) {
-    baseData.created = timestamp;
-  }
+  if (!data.language) baseData.language = 'en';
+  if (!data.role) baseData.role = 'user';
+  if (!data.created) baseData.created = timestamp;
   await snap.ref.set(baseData, {merge: true});
 });

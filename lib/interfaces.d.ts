@@ -1,78 +1,4 @@
-/// <reference types="node" resolution-mode="require"/>
 import type { FieldValue } from 'firebase-admin/firestore';
-/**
- * @license
- * Copyright FabricElements. All Rights Reserved.
- */
-export interface InterfaceUserAds {
-    adsense?: {
-        client: string;
-        slot: string;
-    };
-}
-export interface InterfaceUserLinks {
-    behance?: string;
-    dribbble?: string;
-    facebook?: string;
-    instagram?: string;
-    linkedin?: string;
-    tiktok?: string;
-    twitter?: string;
-    website?: string;
-    youtube?: string;
-}
-export interface InterfaceUser {
-    backup?: boolean;
-    ads?: InterfaceUserAds;
-    avatar?: boolean | string | any;
-    created?: Date | FieldValue | String;
-    id?: string;
-    language?: string;
-    links?: InterfaceUserLinks;
-    name?: string;
-    firstName?: string;
-    abbr?: string;
-    lastName?: string;
-    path?: string;
-    referrer?: string;
-    updated?: Date | FieldValue | String;
-    url?: string;
-    username?: string;
-    phone?: string;
-    email?: string;
-    role?: string;
-    group?: string;
-    groups?: {
-        [key: string]: string | number;
-    };
-    ping?: any;
-    fcm?: string;
-    /**
-     * Billing Customer ID
-     */
-    bcId?: string;
-    /**
-     * Billing Subscription ID
-     */
-    bsId?: string;
-    /**
-     * Billing Subscription Item ID to track events
-     */
-    bsiId?: string;
-    /**
-     * Billing Subscription Time
-     */
-    bst?: any;
-    /**
-     * Billing usage time
-     */
-    but?: any;
-    /**
-     * Billing usage quantity
-     */
-    buq?: number;
-    [key: string]: any;
-}
 export type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' | 'vimeo' | string;
 export interface InterfaceFormatLink {
     active?: boolean;
@@ -96,18 +22,6 @@ export interface InterfaceFormatLink {
     url?: string;
     user?: string;
 }
-export interface InterfaceImageResize {
-    crop?: string;
-    dpr?: number;
-    fileName?: string;
-    format?: 'jpeg' | 'png' | 'gif';
-    input?: Buffer | Uint8Array | string | any;
-    maxHeight?: number;
-    maxWidth?: number;
-    quality?: number;
-    contentType?: string;
-}
-export type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
 export type fetchResponse = null | 'json' | 'text' | 'raw' | 'arrayBuffer' | 'formData' | 'blob';
 export interface InterfaceAPIRequest {
     body?: any;

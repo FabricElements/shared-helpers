@@ -45,9 +45,6 @@ Basic and reusable helpers
 ### [hashId](src/hash-id.ts)
 Generate randomDomain hash id with 4 characters or more
 
-### [linkDomain](src/link-domain.ts)
-Return Domain and Url
-
 ### [pubSubEvent](src/pubsub-event.ts)
 Google cloud Pub/Sub event
 
