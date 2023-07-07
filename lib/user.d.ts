@@ -45,6 +45,7 @@ export declare namespace User {
         username?: string;
         phone?: string;
         email?: string;
+        password?: string;
         role?: string;
         group?: string;
         groups?: {
@@ -163,6 +164,12 @@ export declare namespace User {
          * @param {any} data
          */
         static remove: (data: InterfaceUser) => Promise<void>;
+        /**
+         * Format User Names
+         * @param {InterfaceUser} data
+         * @return {InterfaceUser} data
+         */
+        static formatUserNames: (data: InterfaceUser) => InterfaceUser;
         /**
          * Update User account data
          * @param {InterfaceUser} data

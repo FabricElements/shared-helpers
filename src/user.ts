@@ -52,6 +52,7 @@ export namespace User {
     username?: string;
     phone?: string;
     email?: string;
+    password?: string;
     role?: string;
     // Use [group] to create / update user group
     group?: string;
@@ -371,13 +372,48 @@ export namespace User {
     };
 
     /**
+     * Format User Names
+     * @param {InterfaceUser} data
+     * @return {InterfaceUser} data
+     */
+    static formatUserNames = (data: InterfaceUser): InterfaceUser => {
+      const {firstName, lastName} = data;
+      const validNameFirst = firstName && firstName.length > 0;
+      const validNameLast = lastName && lastName.length > 0;
+      let correctNameFirst: string = validNameFirst ? firstName : undefined;
+      let correctNameLast: string = validNameLast ? lastName : undefined;
+      if (firstName && !validNameFirst) {
+        throw new Error('First Name must be at least 3 characters');
+      }
+      if (lastName && !validNameLast) {
+        throw new Error('Last Name must be at least 3 characters');
+      }
+      /**
+       * Format User Name
+       */
+      const initialNameFirst = correctNameFirst.charAt(0).toUpperCase();
+      correctNameFirst = initialNameFirst + correctNameFirst.slice(1);
+      const initialNameLast = correctNameLast.charAt(0).toUpperCase();
+      correctNameLast = initialNameLast + correctNameLast.slice(1);
+      const name = `${correctNameFirst} ${correctNameLast}`;
+      const abbr = initialNameFirst + initialNameLast;
+      return {
+        ...data,
+        firstName: correctNameFirst,
+        lastName: correctNameLast,
+        name: name,
+        abbr: abbr,
+      };
+    };
+
+    /**
      * Update User account data
      * @param {InterfaceUser} data
      * @param {string} mainUrl
      */
     public static update = async (data: InterfaceUser, mainUrl: string) => {
       const timestamp = FieldValue.serverTimestamp();
-      const {id, phone, email, firstName, lastName, avatar, language} = data;
+      const {id, phone, email, avatar, language} = data;
       const db = getFirestore();
       const ref = db.collection('user').doc(id);
       let updateDataFirestore: InterfaceUser = {};
@@ -393,35 +429,17 @@ export namespace User {
         updateDataFirestore.email = email;
       }
       if (language) updateDataFirestore.language = language;
-      const validNameFirst = firstName && firstName.length > 0;
-      const validNameLast = lastName && lastName.length > 0;
-      let correctNameFirst: string = validNameFirst ? firstName : undefined;
-      let correctNameLast: string = validNameLast ? lastName : undefined;
-      const updateName = correctNameFirst && correctNameLast;
-      if (firstName && !validNameFirst) {
-        throw new Error('First Name must be at least 3 characters');
-      }
-      if (lastName && !validNameLast) {
-        throw new Error('Last Name must be at least 3 characters');
-      }
+      const formatNames = this.formatUserNames(data);
+      const updateName = formatNames.name !== currentUser.displayName;
       const onboarding: any = {};
       if (updateName) {
-        /**
-         * Format User Name
-         */
-        const initialNameFirst = correctNameFirst.charAt(0).toUpperCase();
-        correctNameFirst = initialNameFirst + correctNameFirst.slice(1);
-        const initialNameLast = correctNameLast.charAt(0).toUpperCase();
-        correctNameLast = initialNameLast + correctNameLast.slice(1);
-        const name = `${correctNameFirst} ${correctNameLast}`;
-        const abbr = initialNameFirst + initialNameLast;
-        updateDataUser.displayName = name;
-        updateDataFirestore.name = name;
-        updateDataFirestore.firstName = correctNameFirst;
-        updateDataFirestore.lastName = correctNameLast;
-        updateDataFirestore.abbr = abbr;
-        onboarding.name = true;
+        updateDataUser.displayName = formatNames.name;
+        updateDataFirestore.name = formatNames.name;
+        updateDataFirestore.firstName = formatNames.firstName;
+        updateDataFirestore.lastName = formatNames.lastName;
+        updateDataFirestore.abbr = formatNames.abbr;
       }
+      if (formatNames.name) onboarding.name = true;
       if (avatar) {
         try {
           const imgBuffer = Buffer.from(avatar, 'base64');
@@ -507,24 +525,22 @@ export namespace User {
       let userData: any = {};
       if (data.email) userData.email = data.email;
       if (data.phone) userData.phoneNumber = data.phone;
-      if (!data.name || !data.name.length) {
-        data.name = '';
-        if (data.firstName) data.name += data.firstName;
-        if (data.lastName) data.name += ` ${data.lastName}`;
-        if (!data.name.length) data.name = 'unknown';
-      }
-      userData.displayName = data.name;
-      if (data.password != null && data.password.length > 0) {
-        userData.password = data.password;
-      }
-      const created = await getAuth().createUser(userData);
-      const user: InterfaceUser = {
-        ...data,
-        id: created.uid,
+      const formatNames = this.formatUserNames(data);
+      let user: InterfaceUser = {
+        ...formatNames,
         role: 'user',
         group: undefined,
         password: undefined,
       };
+      if (!user.name || !user.name.length) {
+        throw new Error('First Name and Last Name are required');
+      }
+      userData.displayName = user.name;
+      if (data.password != null && data.password.length > 0) {
+        userData.password = data.password;
+      }
+      const created = await getAuth().createUser(userData);
+      user.id = created.uid;
       await this.createDocument(user);
       return user;
     };
