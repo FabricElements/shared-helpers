@@ -13,7 +13,6 @@ import {FirestoreHelper} from './firestore-helper.js';
 import * as global from './global.js';
 import hashId from './hash-id.js';
 import * as interfaces from './interfaces.js';
-import {Media} from './media.js';
 import messageQueueSpeed from './message-queue-speed.js';
 import pubSubEvent from './pubsub-event.js';
 import * as regex from './regex.js';
@@ -41,6 +40,4 @@ export {
   status,
   validateUrl,
   regex,
-  // User,
-  Media,
 };

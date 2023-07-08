@@ -69,7 +69,7 @@ export declare class FirestoreHelper {
      * @param {InterfaceFirestoreQuery} options
      * @return {Promise<string>[]}
      */
-    static count: (options: InterfaceFirestoreQuery) => Promise<any>;
+    static count: (options: InterfaceFirestoreQuery) => Promise<number>;
     /**
      * Get document instance from firestore
      *
