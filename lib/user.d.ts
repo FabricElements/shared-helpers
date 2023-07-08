@@ -11,6 +11,9 @@ export declare namespace User {
             slot: string;
         };
     }
+    /**
+     * User links
+     */
     interface InterfaceLinks {
         behance?: string;
         dribbble?: string;
@@ -22,6 +25,9 @@ export declare namespace User {
         website?: string;
         youtube?: string;
     }
+    /**
+     * User interface
+     */
     interface Interface {
         backup?: boolean;
         ads?: InterfaceAds;

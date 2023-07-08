@@ -21,6 +21,9 @@ export namespace User {
     },
   }
 
+  /**
+   * User links
+   */
   export interface InterfaceLinks {
     behance?: string;
     dribbble?: string;
@@ -33,6 +36,9 @@ export namespace User {
     youtube?: string;
   }
 
+  /**
+   * User interface
+   */
   export interface Interface {
     backup?: boolean;
     ads?: InterfaceAds;
