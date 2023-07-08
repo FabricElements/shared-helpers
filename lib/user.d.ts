@@ -9,13 +9,13 @@ import type { CallableRequest } from 'firebase-functions/v2/https';
  * User namespace
  */
 export declare namespace User {
-    interface InterfaceUserAds {
+    interface InterfaceAds {
         adsense?: {
             client: string;
             slot: string;
         };
     }
-    interface InterfaceUserLinks {
+    interface InterfaceLinks {
         behance?: string;
         dribbble?: string;
         facebook?: string;
@@ -26,14 +26,14 @@ export declare namespace User {
         website?: string;
         youtube?: string;
     }
-    interface InterfaceUser {
+    interface Interface {
         backup?: boolean;
-        ads?: InterfaceUserAds;
+        ads?: InterfaceAds;
         avatar?: boolean | string | any;
         created?: Date | FieldValue | String;
         id?: string;
         language?: string;
-        links?: InterfaceUserLinks;
+        links?: InterfaceLinks;
         name?: string;
         firstName?: string;
         abbr?: string;
@@ -112,22 +112,22 @@ export declare namespace User {
         /**
          * Gets the user object with email or phone number or create the user if not exists
          * @param {any} data
-         * @return {Promise<InterfaceUser>}
+         * @return {Promise<Interface>}
          */
-        static create: (data: InterfaceUser) => Promise<InterfaceUser>;
+        static create: (data: Interface) => Promise<Interface>;
         /**
          * Create User Document from UserRecord
          * @param {any} user
-         * @return {Promise<InterfaceUser>}
+         * @return {Promise<Interface>}
          */
-        static createDocument: (user: InterfaceUser) => Promise<InterfaceUser>;
+        static createDocument: (user: Interface) => Promise<Interface>;
         /**
          * On Create User format data and create document
          * @param {UserRecord} user
          * @param {string} mainUrl
-         * @return {Promise<InterfaceUser>}
+         * @return {Promise<Interface>}
          */
-        static onCreate: (user: UserRecord, mainUrl: string) => Promise<InterfaceUser>;
+        static onCreate: (user: UserRecord, mainUrl: string) => Promise<Interface>;
         /**
          * Validate if user exist
          * @param {any} data
@@ -148,7 +148,7 @@ export declare namespace User {
          * User invitation function, it listens for a new connection-invite document creation, and creates the user
          * @param {any} data
          */
-        static add: (data: InterfaceUser) => Promise<void>;
+        static add: (data: Interface) => Promise<void>;
         /**
          * Validates if user is and admin from role
          * @param {any} options
@@ -163,19 +163,19 @@ export declare namespace User {
          * Remove a user
          * @param {any} data
          */
-        static remove: (data: InterfaceUser) => Promise<void>;
+        static remove: (data: Interface) => Promise<void>;
         /**
          * Format User Names
-         * @param {InterfaceUser} data
-         * @return {InterfaceUser} data
+         * @param {Interface} data
+         * @return {Interface} data
          */
-        static formatUserNames: (data: InterfaceUser) => InterfaceUser;
+        static formatUserNames: (data: Interface) => Interface;
         /**
          * Update User account data
-         * @param {InterfaceUser} data
+         * @param {Interface} data
          * @param {string} mainUrl
          */
-        static update: (data: InterfaceUser, mainUrl: string) => Promise<void>;
+        static update: (data: Interface, mainUrl: string) => Promise<void>;
         /**
          * Update user role
          * @param {any} data
@@ -189,8 +189,8 @@ export declare namespace User {
         }, mainUrl: string) => Promise<void>;
         /**
          * Creates the user
-         * @param {InterfaceUser} data
-         * @return {Promise<InterfaceUser>}
+         * @param {Interface} data
+         * @return {Promise<Interface>}
          */
         private static createUser;
         /**

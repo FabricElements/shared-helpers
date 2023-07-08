@@ -14,14 +14,14 @@ import {Media} from './media.js';
  * User namespace
  */
 export namespace User {
-  export interface InterfaceUserAds {
+  export interface InterfaceAds {
     adsense?: {
       client: string;
       slot: string;
     },
   }
 
-  export interface InterfaceUserLinks {
+  export interface InterfaceLinks {
     behance?: string;
     dribbble?: string;
     facebook?: string;
@@ -33,14 +33,14 @@ export namespace User {
     youtube?: string;
   }
 
-  export interface InterfaceUser {
+  export interface Interface {
     backup?: boolean;
-    ads?: InterfaceUserAds;
+    ads?: InterfaceAds;
     avatar?: boolean | string | any;
     created?: Date | FieldValue | String;
     id?: string;
     language?: string;
-    links?: InterfaceUserLinks,
+    links?: InterfaceLinks,
     name?: string;
     firstName?: string;
     abbr?: string;
@@ -151,13 +151,13 @@ export namespace User {
     /**
      * Gets the user object with email or phone number or create the user if not exists
      * @param {any} data
-     * @return {Promise<InterfaceUser>}
+     * @return {Promise<Interface>}
      */
-    public static create = async (data: InterfaceUser): Promise<InterfaceUser> => {
+    public static create = async (data: Interface): Promise<Interface> => {
       Helper.hasData(data);
       Helper.hasPhoneOrEmail(data);
       let userObject = await this.get(data);
-      let user: InterfaceUser = data;
+      let user: Interface = data;
       if (userObject) {
         user.id = userObject.uid;
       } else {
@@ -169,12 +169,12 @@ export namespace User {
     /**
      * Create User Document from UserRecord
      * @param {any} user
-     * @return {Promise<InterfaceUser>}
+     * @return {Promise<Interface>}
      */
-    public static createDocument = async (user: InterfaceUser): Promise<InterfaceUser> => {
+    public static createDocument = async (user: Interface): Promise<Interface> => {
       const timestamp = FieldValue.serverTimestamp();
       Helper.hasData(user);
-      const baseData: InterfaceUser = {
+      const baseData: Interface = {
         ...user,
         backup: false,
         created: timestamp,
@@ -194,20 +194,21 @@ export namespace User {
      * On Create User format data and create document
      * @param {UserRecord} user
      * @param {string} mainUrl
-     * @return {Promise<InterfaceUser>}
+     * @return {Promise<Interface>}
      */
     public static onCreate = async (user: UserRecord, mainUrl: string) => {
-      let userDoc: InterfaceUser = {
+      let userDoc: Interface = {
         email: user.email ?? undefined,
         phone: user.phoneNumber ?? undefined,
         name: user.displayName ?? undefined,
+        language: 'en',
         role: 'user',
       };
       try {
         const ref = getFirestore().collection('user').doc(user.uid);
         const doc = await ref.get();
         if (doc.exists) {
-          userDoc = doc.data() as InterfaceUser;
+          userDoc = {...userDoc, ...doc.data() as Interface};
         }
       } catch (e) {
         logger.error(e.toString());
@@ -276,7 +277,7 @@ export namespace User {
       const userRecord = await getAuth().getUser(uid);
       const userClaims: any = userRecord.customClaims ?? {};
       let role = userClaims.role ?? null;
-      const userDoc: InterfaceUser = await FirestoreHelper.getDocument({
+      const userDoc: Interface = await FirestoreHelper.getDocument({
         collection: 'user',
         document: uid,
       });
@@ -299,7 +300,7 @@ export namespace User {
      * User invitation function, it listens for a new connection-invite document creation, and creates the user
      * @param {any} data
      */
-    public static add = async (data: InterfaceUser) => {
+    public static add = async (data: Interface) => {
       Helper.hasData(data);
       try {
         const userObject = await this.create(data);
@@ -342,7 +343,7 @@ export namespace User {
      * Remove a user
      * @param {any} data
      */
-    public static remove = async (data: InterfaceUser) => {
+    public static remove = async (data: Interface) => {
       Helper.hasData(data);
       // Data id needs to exist
       if (!data?.id) {
@@ -373,10 +374,10 @@ export namespace User {
 
     /**
      * Format User Names
-     * @param {InterfaceUser} data
-     * @return {InterfaceUser} data
+     * @param {Interface} data
+     * @return {Interface} data
      */
-    static formatUserNames = (data: InterfaceUser): InterfaceUser => {
+    static formatUserNames = (data: Interface): Interface => {
       const {firstName, lastName} = data;
       const validNameFirst = firstName && firstName.length > 1;
       const validNameLast = lastName && lastName.length > 1;
@@ -395,7 +396,7 @@ export namespace User {
       if ((validNameFirst || validNameLast) && !validName) {
         throw new Error('Please add a valid First and Last Name');
       }
-      let userData: InterfaceUser = {
+      let userData: Interface = {
         ...data,
         // Reset User Name
         firstName: undefined,
@@ -421,15 +422,15 @@ export namespace User {
 
     /**
      * Update User account data
-     * @param {InterfaceUser} data
+     * @param {Interface} data
      * @param {string} mainUrl
      */
-    public static update = async (data: InterfaceUser, mainUrl: string) => {
+    public static update = async (data: Interface, mainUrl: string) => {
       const timestamp = FieldValue.serverTimestamp();
       const {id, phone, email, avatar, language} = data;
       const db = getFirestore();
       const ref = db.collection('user').doc(id);
-      let updateDataFirestore: InterfaceUser = {};
+      let updateDataFirestore: Interface = {};
       let updateDataUser: any = {};
       const currentUser = await getAuth().getUser(id);
       if (phone && phone !== currentUser.phoneNumber) {
@@ -529,17 +530,17 @@ export namespace User {
 
     /**
      * Creates the user
-     * @param {InterfaceUser} data
-     * @return {Promise<InterfaceUser>}
+     * @param {Interface} data
+     * @return {Promise<Interface>}
      */
-    private static createUser = async (data: InterfaceUser): Promise<InterfaceUser> => {
+    private static createUser = async (data: Interface): Promise<Interface> => {
       Helper.hasData(data);
       Helper.hasPhoneOrEmail(data);
       let userData: any = {};
       if (data.email) userData.email = data.email;
       if (data.phone) userData.phoneNumber = data.phone;
       const formatNames = this.formatUserNames(data);
-      let user: InterfaceUser = {
+      let user: Interface = {
         ...formatNames,
         role: 'user',
         group: undefined,

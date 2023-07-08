@@ -13,7 +13,7 @@ export const exists = https.onCall({
   memory: '512MiB',
   timeoutSeconds: 60,
 }, async (request) => {
-  const data: User.InterfaceUser = request.data;
+  const data: User.Interface = request.data;
   try {
     const _exists = await User.Helper.get(data);
     if (!_exists) {
@@ -34,7 +34,7 @@ export const add = https.onCall({
   timeoutSeconds: 30,
 }, async (request) => {
   User.Helper.authenticated(request.auth);
-  const data: User.InterfaceUser = request.data;
+  const data: User.Interface = request.data;
   try {
     const role = await User.Helper.getRole(request.auth.uid, data?.role);
     User.Helper.isAdmin({role, fail: true, group: data?.group});
@@ -54,7 +54,7 @@ export const remove = https.onCall({
   timeoutSeconds: 30,
 }, async (request) => {
   User.Helper.authenticated(request.auth);
-  const data: User.InterfaceUser = request.data;
+  const data: User.Interface = request.data;
   try {
     const role = await User.Helper.getRole(request.auth.uid, data?.role);
     User.Helper.isAdmin({role, fail: true, group: data?.group});
@@ -74,7 +74,7 @@ export const update = https.onCall({
   timeoutSeconds: 30,
 }, async (request) => {
   User.Helper.authenticated(request.auth);
-  const data: User.InterfaceUser = request.data;
+  const data: User.Interface = request.data;
   try {
     await User.Helper.update({...data, id: request.auth.uid}, mainUrl);
   } catch (error) {
@@ -94,7 +94,7 @@ export const role = https.onCall({
   timeoutSeconds: 30,
 }, async (request) => {
   User.Helper.authenticated(request.auth);
-  const data: User.InterfaceUser = request.data;
+  const data: User.Interface = request.data;
   try {
     const _role = await User.Helper.getRole(request.auth.uid, data?.role);
     User.Helper.isAdmin({role: _role, fail: true, group: data?.group});

@@ -3,8 +3,6 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import type {Response} from 'express';
-
-import admin from 'firebase-admin';
 import {getStorage} from 'firebase-admin/storage';
 import {logger} from 'firebase-functions/v2';
 import fetch from 'node-fetch';
@@ -52,7 +50,7 @@ export namespace Media {
         compress: true,
       });
       if (!fileResponse.ok) throw Error(`Can't fetch file`);
-      const fileRef = admin.storage().bucket().file(options.path);
+      const fileRef = getStorage().bucket().file(options.path);
       let blob = await fileResponse.arrayBuffer();
       const uint8Array = new Uint8Array(blob);
       const buffer = Buffer.from(uint8Array);
