@@ -1,8 +1,4 @@
-/**
- * @license
- * Copyright FabricElements. All Rights Reserved.
- */
-import type { UserRecord } from 'firebase-admin/auth';
+import { UserRecord } from 'firebase-admin/auth';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { CallableRequest } from 'firebase-functions/v2/https';
 /**

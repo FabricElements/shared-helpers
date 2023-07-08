@@ -2,8 +2,8 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type {UserIdentifier, UserRecord} from 'firebase-admin/auth';
-import {getAuth} from 'firebase-admin/auth';
+import type {UserIdentifier} from 'firebase-admin/auth';
+import {getAuth, UserRecord} from 'firebase-admin/auth';
 import {FieldValue, getFirestore} from 'firebase-admin/firestore';
 import {https, logger} from 'firebase-functions/v2';
 import type {CallableRequest} from 'firebase-functions/v2/https';

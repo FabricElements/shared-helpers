@@ -79,7 +79,7 @@ export class FirestoreHelper {
    * @param {InterfaceFirestoreQuery} options
    * @return {Query}
    */
-  public static getListReference = (options: InterfaceFirestoreQuery) => {
+  public static getListReference = (options: InterfaceFirestoreQuery): Query => {
     if (!(options.collection || options.collectionGroup)) {
       throw new Error('collection or collectionGroup is required');
     }
@@ -144,6 +144,7 @@ export class FirestoreHelper {
    */
   public static count = async (options: InterfaceFirestoreQuery) => {
     const ref = this.getListReference(options);
+    // @ts-ignore
     const snapshot = await ref.count().get();
     if (!snapshot) return 0;
     return snapshot.data().count;

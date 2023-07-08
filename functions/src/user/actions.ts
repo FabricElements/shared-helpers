@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import {User} from '@fabricelements/shared-helpers';
+import {User} from '@fabricelements/shared-helpers/user';
 import {https} from 'firebase-functions/v2';
 import {mainUrl} from '../helpers/variables.js';
 

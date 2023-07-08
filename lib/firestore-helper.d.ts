@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type { DocumentReference, FieldPath, OrderByDirection, WhereFilterOp } from 'firebase-admin/firestore';
+import type { DocumentData, DocumentReference, FieldPath, OrderByDirection, Query, WhereFilterOp } from 'firebase-admin/firestore';
 export interface InterfaceFirestoreQueryOrderBy {
     direction: OrderByDirection;
     key: string;
@@ -33,7 +33,7 @@ export declare class FirestoreHelper {
      *
      * @param {InterfaceFirestoreDocument} options
      */
-    static exists: (options: InterfaceFirestoreDocument) => Promise<any>;
+    static exists: (options: InterfaceFirestoreDocument) => Promise<boolean>;
     /**
      * Get Document
      * @param {InterfaceFirestoreDocument} options
@@ -57,13 +57,13 @@ export declare class FirestoreHelper {
      * @param {InterfaceFirestoreQuery} options
      * @return {Promise<string>[]}
      */
-    static getListIds: (options: InterfaceFirestoreQuery) => Promise<any>;
+    static getListIds: (options: InterfaceFirestoreQuery) => Promise<string[]>;
     /**
      * Get list
      * @param {InterfaceFirestoreQuery} options
      * @return {Promise<DocumentReference>[]}
      */
-    static getListRef: (options: InterfaceFirestoreQuery) => Promise<any>;
+    static getListRef: (options: InterfaceFirestoreQuery) => Promise<DocumentReference<DocumentData>[]>;
     /**
      * Count documents on a query
      * @param {InterfaceFirestoreQuery} options

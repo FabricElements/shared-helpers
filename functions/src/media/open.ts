@@ -2,7 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import {Media} from '@fabricelements/shared-helpers';
+import {Media} from '@fabricelements/shared-helpers/media';
 import express from 'express';
 import {https} from 'firebase-functions/v2';
 

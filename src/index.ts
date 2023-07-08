@@ -21,7 +21,7 @@ import replaceMessageText from './replace-message-text.js';
 import specialCharToRegular from './special-char-to-regular.js';
 import * as status from './status.js';
 import * as strings from './strings.js';
-import {User} from './user.js';
+// import {User} from './user/index.js';
 import validateUrl from './validate-url.js';
 
 export {
@@ -41,6 +41,6 @@ export {
   status,
   validateUrl,
   regex,
-  User,
+  // User,
   Media,
 };

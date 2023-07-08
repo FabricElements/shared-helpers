@@ -21,6 +21,5 @@ import replaceMessageText from './replace-message-text.js';
 import specialCharToRegular from './special-char-to-regular.js';
 import * as status from './status.js';
 import * as strings from './strings.js';
-import { User } from './user.js';
 import validateUrl from './validate-url.js';
-export { apiRequest, backup, checkNumber, cleaner, interfaces, FirestoreHelper, global, hashId, messageQueueSpeed, pubSubEvent, replaceMessageText, specialCharToRegular, strings, status, validateUrl, regex, User, Media, };
+export { apiRequest, backup, checkNumber, cleaner, interfaces, FirestoreHelper, global, hashId, messageQueueSpeed, pubSubEvent, replaceMessageText, specialCharToRegular, strings, status, validateUrl, regex, Media, };

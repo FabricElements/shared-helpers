@@ -56,7 +56,10 @@ export namespace Media {
       const buffer = Buffer.from(uint8Array);
       const contentType = fileResponse.headers.get('content-type');
       await fileRef.save(buffer, {contentType: contentType});
+      // TODO: check if uri is valid
+      // @ts-ignore
       const uri = fileRef.cloudStorageURI.href;
+      logger.log(`Saved file from url ${options.url} to ${uri}`);
       return {
         contentType: contentType,
         uri: uri,
