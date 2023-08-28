@@ -7,7 +7,7 @@
   "types": "./lib/index.d.ts",
   "author": "Erny Sans",
   "license": "BSD-3-Clause",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "repository": {
     "type": "git",
     "url": "https://github.com/FabricElements/shared-helpers.git"
@@ -24,29 +24,29 @@
     "./media": "./lib/media.js"
   },
   "dependencies": {
-    "@google-cloud/bigquery": "^6.2.0",
-    "firebase-admin": "^11.9.0",
+    "@google-cloud/bigquery": "^7.2.0",
+    "firebase-admin": "^11.10.1",
     "firebase-functions": "^4.4.1",
-    "libphonenumber-js": "^1.10.37",
+    "libphonenumber-js": "^1.10.43",
     "lodash": "^4.17.21",
-    "node-fetch": "^3.3.1",
-    "sharp": "^0.32.1"
+    "node-fetch": "^3.3.2",
+    "sharp": "^0.32.5"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.195",
+    "@types/lodash": "^4.14.197",
     "@types/node-fetch": "^3.0.3",
     "@types/sharp": "^0.31.1",
-    "@typescript-eslint/eslint-plugin": "^5.61.0",
-    "@typescript-eslint/parser": "^5.61.0",
-    "eslint": "^8.44.0",
+    "@typescript-eslint/eslint-plugin": "^6.5.0",
+    "@typescript-eslint/parser": "^6.5.0",
+    "eslint": "^8.48.0",
     "eslint-config-google": "^0.14.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsdoc": "^46.4.3",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-jsdoc": "^46.5.0",
     "eslint-plugin-no-explicit-type-exports": "^0.12.1",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-promise": "^6.1.1",
-    "firebase-functions-test": "^2.1.0",
-    "typescript": "^5.1.6"
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.2.2"
   },
   "overrides": {},
   "scripts": {

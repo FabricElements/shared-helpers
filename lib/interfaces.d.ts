@@ -1,5 +1,5 @@
 import type { FieldValue } from 'firebase-admin/firestore';
-export type linkType = 'instagram' | 'link' | 'youtube' | 'twitter' | 'tiktok' | 'vimeo' | string;
+export type linkType = 'instagram' | 'link' | 'youtube' | 'x' | 'tiktok' | 'vimeo' | string;
 export interface InterfaceFormatLink {
     active?: boolean;
     category?: string;

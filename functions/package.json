@@ -25,25 +25,25 @@
   },
   "dependencies": {
     "@fabricelements/shared-helpers": "file:..",
-    "@google-cloud/functions-framework": "^1.8.0",
+    "@google-cloud/functions-framework": "^3.3.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "firebase-admin": "^11.9.0",
+    "firebase-admin": "^11.10.1",
     "firebase-functions": "^4.4.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
-    "@typescript-eslint/eslint-plugin": "^5.61.0",
-    "@typescript-eslint/parser": "^5.61.0",
-    "eslint": "^8.44.0",
+    "@typescript-eslint/eslint-plugin": "^6.5.0",
+    "@typescript-eslint/parser": "^6.5.0",
+    "eslint": "^8.48.0",
     "eslint-config-google": "^0.14.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsdoc": "^46.4.3",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-jsdoc": "^46.5.0",
     "eslint-plugin-no-explicit-type-exports": "^0.12.1",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-promise": "^6.1.1",
-    "firebase-functions-test": "^2.1.0",
-    "typescript": "^5.1.6"
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.2.2"
   },
   "overrides": {},
   "private": true

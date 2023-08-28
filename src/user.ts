@@ -31,9 +31,9 @@ export namespace User {
     instagram?: string;
     linkedin?: string;
     tiktok?: string;
-    twitter?: string;
-    website?: string;
+    x?: string;
     youtube?: string;
+    website?: string;
   }
 
   /**
