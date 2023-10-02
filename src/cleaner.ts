@@ -3,6 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {BigQuery} from '@google-cloud/bigquery';
+import {logger} from 'firebase-functions/v2';
 
 const bigquery = new BigQuery();
 
@@ -58,8 +59,8 @@ export default async (filter: {
       query: sqlQuery,
     });
     const [list] = await job.getQueryResults();
-    console.info(`Result delete duplicates ${list}`);
+    logger.info(`Result delete duplicates ${list}`);
   } catch (error) {
-    console.warn(`Fail delete duplicates. Dataset: ${filter.dataset}, table: ${filter.table}`, error);
+    logger.warn(`Fail delete duplicates. Dataset: ${filter.dataset}, table: ${filter.table}`, error);
   }
 };

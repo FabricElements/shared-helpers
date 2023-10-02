@@ -201,7 +201,7 @@ export namespace Media {
          * End request for messages to prevent the provider sending messages with invalid media files
          */
         if (size === 'message') {
-          console.warn('Can\'t find media file');
+          logger.warn(`Can't find media file`);
           response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
           response.status(404);
           response.end();

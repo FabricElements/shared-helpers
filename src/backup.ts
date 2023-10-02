@@ -22,6 +22,7 @@ export default async (data: {
   delete?: boolean,
   items: any[],
   table: string,
+  update?: boolean,
 }) => {
   if (!data.collection) throw new Error('collection is required');
   if (!data.dataset) throw new Error('dataset is required');
@@ -49,6 +50,10 @@ export default async (data: {
     if (errorMessage) logger.error(errorMessage);
     throw error;
   }
+  if (!data.update) {
+    logger.info(`${total} items backup for collection "${data.collection}" to BigQuery but not update Firestore. To update Firestore pass the parameter "update" as true`);
+    return;
+  }
   // Update firestore documents
   const db = getFirestore();
   let batch = db.batch();
@@ -67,7 +72,7 @@ export default async (data: {
     }
     pending++;
     if (pending === 500) {
-      // console.info("Backup..", i + 1);
+      // logger.info("Backup..", i + 1);
       await batch.commit();
       backup += pending;
       batch = db.batch();
@@ -79,5 +84,5 @@ export default async (data: {
     backup += pending;
     await batch.commit();
   }
-  console.info(`${backup} items backup for collection "${data.collection}"`);
+  logger.info(`${backup} items backup for collection "${data.collection}" to Firestore`);
 };

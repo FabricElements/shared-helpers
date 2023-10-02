@@ -11,5 +11,6 @@ declare const _default: (data: {
     delete?: boolean;
     items: any[];
     table: string;
+    update?: boolean;
 }) => Promise<void>;
 export default _default;

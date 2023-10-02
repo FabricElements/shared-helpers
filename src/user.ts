@@ -263,7 +263,7 @@ export namespace User {
         if (users.users.length > 0) _user = users.users[0];
       } catch (error) {
         // @ts-ignore
-        console.info(error.message);
+        logger.info(error.message);
       }
       return _user;
     };
