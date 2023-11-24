@@ -1,4 +1,4 @@
-/// <reference types="node" resolution-mode="require"/>
+/// <reference types="node" />
 /**
  * @license
  * Copyright FabricElements. All Rights Reserved.
