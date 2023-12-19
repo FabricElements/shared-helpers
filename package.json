@@ -7,7 +7,7 @@
   "types": "./lib/index.d.ts",
   "author": "Erny Sans",
   "license": "BSD-3-Clause",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "repository": {
     "type": "git",
     "url": "https://github.com/FabricElements/shared-helpers.git"
@@ -30,15 +30,15 @@
     "libphonenumber-js": "^1.10.51",
     "lodash": "^4.17.21",
     "node-fetch": "^3.3.2",
-    "sharp": "^0.32.6"
+    "sharp": "^0.33.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.202",
     "@types/node-fetch": "^3.0.3",
     "@types/sharp": "^0.31.1",
-    "@typescript-eslint/eslint-plugin": "^6.12.0",
-    "@typescript-eslint/parser": "^6.12.0",
-    "eslint": "^8.54.0",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "eslint": "^8.55.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-jsdoc": "^46.9.0",
@@ -46,7 +46,7 @@
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-promise": "^6.1.1",
     "firebase-functions-test": "^3.1.0",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.3"
   },
   "overrides": {},
   "scripts": {

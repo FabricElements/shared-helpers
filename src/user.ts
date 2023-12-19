@@ -305,14 +305,13 @@ export namespace User {
     /**
      * User invitation function, it listens for a new connection-invite document creation, and creates the user
      * @param {any} data
+     * @return {Promise<Interface>}
      */
-    public static add = async (data: Interface) => {
+    public static add = async (data: Interface): Promise<Interface> => {
       Helper.hasData(data);
       try {
         const userObject = await this.create(data);
-        if (!userObject) {
-          return;
-        }
+        if (!userObject) throw new Error('Error creating user');
         // Update data in necessary documents to reflect user creation
         await this.roleUpdateCall({
           type: 'add',
@@ -320,6 +319,7 @@ export namespace User {
           group: data.group || undefined,
           role: data.role,
         });
+        return userObject;
       } catch (error) {
         // @ts-ignore
         throw new Error(error.message);

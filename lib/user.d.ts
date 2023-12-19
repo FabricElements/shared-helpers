@@ -149,8 +149,9 @@ export declare namespace User {
         /**
          * User invitation function, it listens for a new connection-invite document creation, and creates the user
          * @param {any} data
+         * @return {Promise<Interface>}
          */
-        static add: (data: Interface) => Promise<void>;
+        static add: (data: Interface) => Promise<Interface>;
         /**
          * Validates if user is and admin from role
          * @param {any} options
