@@ -133,6 +133,7 @@ export declare namespace User {
         /**
          * Validate if user exist
          * @param {any} data
+         * @return {Promise<UserRecord | null>}
          */
         static get: (data: {
             email?: string;

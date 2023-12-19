@@ -163,9 +163,12 @@ export namespace User {
       Helper.hasData(data);
       Helper.hasPhoneOrEmail(data);
       let userObject = await this.get(data);
-      let user: Interface = data;
+      let user: Interface;
       if (userObject) {
-        user.id = userObject.uid;
+        user = await FirestoreHelper.getDocument({
+          collection: 'user',
+          document: userObject.uid,
+        }) as Interface;
       } else {
         user = await Helper.createUser(data);
       }
@@ -242,6 +245,7 @@ export namespace User {
     /**
      * Validate if user exist
      * @param {any} data
+     * @return {Promise<UserRecord | null>}
      */
     public static get = async (data: {
       email?: string;
@@ -264,6 +268,15 @@ export namespace User {
       } catch (error) {
         // @ts-ignore
         logger.info(error.message);
+      }
+      // Recreate document with updated email and phone number
+      if (_user) {
+        await this.createDocument({
+          id: _user.uid,
+          name: _user.displayName ?? undefined,
+          email: _user.email ?? FieldValue.delete(),
+          phone: _user.phoneNumber ?? FieldValue.delete(),
+        });
       }
       return _user;
     };
