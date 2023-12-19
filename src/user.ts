@@ -452,9 +452,11 @@ export namespace User {
       let updateDataFirestore: Interface = {};
       let updateDataUser: any = {};
       const currentUser = await getAuth().getUser(id);
+      updateDataFirestore.phone = currentUser.phoneNumber ?? null;
+      updateDataFirestore.email = currentUser.email ?? null;
       if (phone && phone !== currentUser.phoneNumber) {
         updateDataUser.phoneNumber = phone;
-        updateDataFirestore.phoneNumber = phone;
+        updateDataFirestore.phone = phone;
       }
       if (email && email !== currentUser.email) {
         updateDataUser.email = email;
@@ -602,6 +604,9 @@ export namespace User {
         backup: false,
         updated: timestamp,
         created: timestamp,
+        name: userRecord.displayName ?? undefined,
+        email: userRecord.email ?? FieldValue.delete(),
+        phone: userRecord.phoneNumber ?? FieldValue.delete(),
       };
       const userDoc = await FirestoreHelper.getDocument({
         collection: 'user',
