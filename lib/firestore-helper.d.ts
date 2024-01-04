@@ -63,7 +63,7 @@ export declare class FirestoreHelper {
      * @param {InterfaceFirestoreQuery} options
      * @return {Promise<DocumentReference>[]}
      */
-    static getListRef: (options: InterfaceFirestoreQuery) => Promise<DocumentReference<DocumentData>[]>;
+    static getListRef: (options: InterfaceFirestoreQuery) => Promise<DocumentReference<DocumentData, DocumentData>[]>;
     /**
      * Count documents on a query
      * @param {InterfaceFirestoreQuery} options
