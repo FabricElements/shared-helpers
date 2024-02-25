@@ -402,6 +402,9 @@ export namespace User {
       const validNameLast = lastName && lastName.length > 1;
       let correctNameFirst: string = validNameFirst ? firstName : undefined;
       let correctNameLast: string = validNameLast ? lastName : undefined;
+      // Remove with spaces beginning and end
+      correctNameFirst = correctNameFirst?.trim();
+      correctNameLast = correctNameLast?.trim();
       // Validate First Name
       if (firstName && !validNameFirst) {
         throw new Error('First Name must be at least 2 characters');
@@ -412,31 +415,24 @@ export namespace User {
       }
       const validName = validNameFirst && validNameLast;
       // Validate First and Last Name
-      if ((validNameFirst || validNameLast) && !validName) {
-        throw new Error('Please add a valid First and Last Name');
-      }
-      let userData: Interface = {
+      if (!validName) throw new Error('Please add a valid First and Last Name');
+
+      // Format User Name
+      const initialNameFirst = correctNameFirst.charAt(0).toUpperCase();
+      correctNameFirst = initialNameFirst + correctNameFirst.slice(1);
+      const initialNameLast = correctNameLast.charAt(0).toUpperCase();
+      correctNameLast = initialNameLast + correctNameLast.slice(1);
+      const name = `${correctNameFirst} ${correctNameLast}`;
+      const abbr = initialNameFirst + initialNameLast;
+      // Create User Data
+      return {
         ...data,
         // Reset User Name
-        firstName: undefined,
-        lastName: undefined,
-        name: undefined,
-        abbr: undefined,
-      };
-      if (validName) {
-        // Format User Name
-        const initialNameFirst = correctNameFirst.charAt(0).toUpperCase();
-        correctNameFirst = initialNameFirst + correctNameFirst.slice(1);
-        const initialNameLast = correctNameLast.charAt(0).toUpperCase();
-        correctNameLast = initialNameLast + correctNameLast.slice(1);
-        const name = `${correctNameFirst} ${correctNameLast}`;
-        const abbr = initialNameFirst + initialNameLast;
-        userData.firstName = correctNameFirst;
-        userData.lastName = correctNameLast;
-        userData.name = name;
-        userData.abbr = abbr;
-      }
-      return userData;
+        firstName: correctNameFirst,
+        lastName: correctNameLast,
+        name: name,
+        abbr: abbr,
+      } as Interface;
     };
 
     /**
@@ -532,7 +528,7 @@ export namespace User {
         throw new Error('User id is required');
       }
       try {
-        // Update the necessary documents to delete the user
+        // Update the necessary documents to reflect user role update
         await this.roleUpdateCall({
           type: 'add',
           id: data.id,
