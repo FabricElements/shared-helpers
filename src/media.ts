@@ -301,7 +301,7 @@ export namespace Media {
       let finalFormat = options.contentType.split('/').pop();
       if (options.input.format != null) finalFormat = options.input.format;
       const animated = finalFormat === 'gif';
-      const optionsImage: any = {};
+      let optionsImage: any = {};
       let dpr = Number(options.dpr ?? 1);
       if (dpr > 3) {
         dpr = 3;
@@ -330,7 +330,6 @@ export namespace Media {
       const resultOptions: any = {
         quality: options.quality || 90,
       };
-
       switch (finalFormat) {
         case 'jpeg':
           final = final.jpeg(resultOptions);
