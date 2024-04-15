@@ -165,7 +165,7 @@ export namespace User {
       let userObject = await this.get(data);
       let user: Interface;
       if (userObject) {
-        user = await FirestoreHelper.getDocument({
+        user = await FirestoreHelper.Helper.getDocument({
           collection: 'user',
           document: userObject.uid,
         }) as Interface;
@@ -296,7 +296,7 @@ export namespace User {
       const userRecord = await getAuth().getUser(uid);
       const userClaims: any = userRecord.customClaims ?? {};
       let role = userClaims.role ?? null;
-      const userDoc: Interface = await FirestoreHelper.getDocument({
+      const userDoc: Interface = await FirestoreHelper.Helper.getDocument({
         collection: 'user',
         document: uid,
       });
@@ -604,7 +604,7 @@ export namespace User {
         email: userRecord.email ?? FieldValue.delete(),
         phone: userRecord.phoneNumber ?? FieldValue.delete(),
       };
-      const userDoc = await FirestoreHelper.getDocument({
+      const userDoc = await FirestoreHelper.Helper.getDocument({
         collection: 'user',
         document: data.id,
       });
