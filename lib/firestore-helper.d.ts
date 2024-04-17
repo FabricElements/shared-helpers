@@ -40,13 +40,13 @@ export declare namespace FirestoreHelper {
          * @param {InterfaceFirestoreDocument} options
          * @return {Promise<DocumentData>}
          */
-        static getDocument: (options: InterfaceFirestoreDocument) => Promise<FirebaseFirestore.DocumentData>;
+        static getDocument: (options: InterfaceFirestoreDocument) => Promise<DocumentData>;
         /**
          * Get list
          * @param {InterfaceFirestoreQuery} options
          * @return {Promise<DocumentData[]>}
          */
-        static getList: (options: InterfaceFirestoreQuery) => Promise<FirebaseFirestore.DocumentData[]>;
+        static getList: (options: InterfaceFirestoreQuery) => Promise<DocumentData[]>;
         /**
          * Get List reference for later use
          * @param {InterfaceFirestoreQuery} options

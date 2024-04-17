@@ -1,3 +1,5 @@
+// noinspection ExceptionCaughtLocallyJS
+
 /**
  * @license
  * Copyright FabricElements. All Rights Reserved.
@@ -9,9 +11,9 @@ import {formatNumber, getNumberType, isValidNumber, parseNumber} from 'libphonen
  *
  * @param {string} phoneNumber
  * @param {boolean} isMobile
- * @return {string}
+ * @return {Promise<string>}
  */
-export default async (phoneNumber: string | number, isMobile: boolean = false) => {
+export default async (phoneNumber: string | number, isMobile: boolean = false): Promise<string> => {
   try {
     let originalNumber = phoneNumber.toString();
     originalNumber = originalNumber.replace(/[^+0-9]/g, '');

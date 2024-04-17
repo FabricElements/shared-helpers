@@ -86,18 +86,6 @@ export declare namespace User {
      */
     class Helper {
         /**
-         *
-         * @param {any} data
-         * @private
-         */
-        private static hasData;
-        /**
-         * Validate if data object has Phone Or Email
-         * @param {any} data
-         * @private
-         */
-        private static hasPhoneOrEmail;
-        /**
          * Fail if user is unauthenticated
          *
          * @param {any} auth
@@ -191,6 +179,18 @@ export declare namespace User {
             role?: string;
             id?: string;
         }, mainUrl: string) => Promise<void>;
+        /**
+         *
+         * @param {any} data
+         * @private
+         */
+        private static hasData;
+        /**
+         * Validate if data object has Phone Or Email
+         * @param {any} data
+         * @private
+         */
+        private static hasPhoneOrEmail;
         /**
          * Creates the user
          * @param {Interface} data

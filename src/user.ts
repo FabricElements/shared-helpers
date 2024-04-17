@@ -1,3 +1,5 @@
+// noinspection Annotator
+
 /**
  * @license
  * Copyright FabricElements. All Rights Reserved.
@@ -101,28 +103,6 @@ export namespace User {
    */
   export class Helper {
     /**
-     *
-     * @param {any} data
-     * @private
-     */
-    private static hasData(data: any) {
-      if (!(data && !data.isEmpty)) {
-        throw new Error('Request is empty');
-      }
-    }
-
-    /**
-     * Validate if data object has Phone Or Email
-     * @param {any} data
-     * @private
-     */
-    private static hasPhoneOrEmail(data: any) {
-      if (!(data && (data.phone || data.email))) {
-        throw new Error('Incomplete message data');
-      }
-    }
-
-    /**
      * Fail if user is unauthenticated
      *
      * @param {any} auth
@@ -205,7 +185,7 @@ export namespace User {
      * @param {string} mainUrl
      * @return {Promise<Interface>}
      */
-    public static onCreate = async (user: UserRecord, mainUrl: string) => {
+    public static onCreate = async (user: UserRecord, mainUrl: string): Promise<Interface> => {
       let userDoc: Interface = {
         email: user.email ?? undefined,
         phone: user.phoneNumber ?? undefined,
@@ -322,21 +302,16 @@ export namespace User {
      */
     public static add = async (data: Interface): Promise<Interface> => {
       Helper.hasData(data);
-      try {
-        const userObject = await this.create(data);
-        if (!userObject) throw new Error('Error creating user');
-        // Update data in necessary documents to reflect user creation
-        await this.roleUpdateCall({
-          type: 'add',
-          id: userObject.id,
-          group: data.group || undefined,
-          role: data.role,
-        });
-        return userObject;
-      } catch (error) {
-        // @ts-ignore
-        throw new Error(error.message);
-      }
+      const userObject = await this.create(data);
+      if (!userObject) throw new Error('Error creating user');
+      // Update data in necessary documents to reflect user creation
+      await this.roleUpdateCall({
+        type: 'add',
+        id: userObject.id,
+        group: data.group || undefined,
+        role: data.role,
+      });
+      return userObject;
     };
 
     /**
@@ -546,6 +521,28 @@ export namespace User {
     };
 
     /**
+     *
+     * @param {any} data
+     * @private
+     */
+    private static hasData(data: any) {
+      if (!(data && !data.isEmpty)) {
+        throw new Error('Request is empty');
+      }
+    }
+
+    /**
+     * Validate if data object has Phone Or Email
+     * @param {any} data
+     * @private
+     */
+    private static hasPhoneOrEmail(data: any) {
+      if (!(data && (data.phone || data.email))) {
+        throw new Error('Incomplete message data');
+      }
+    }
+
+    /**
      * Creates the user
      * @param {Interface} data
      * @return {Promise<Interface>}
@@ -670,7 +667,6 @@ export namespace User {
         await getAuth().setCustomUserClaims(data.id, userClaims);
         await getAuth().revokeRefreshTokens(data.id);
       }
-      return;
     };
   }
 }

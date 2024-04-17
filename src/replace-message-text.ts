@@ -66,7 +66,7 @@ export default (options: {
   domains?: string[],
   language?: string,
   text: string,
-}) => {
+}): string => {
   let final = options.text ? options.text.replace(/ +(?= )/g, '') : '';
   const matches = final.match(/{.*?}/g);
   const length = matches ? matches.length : 0;

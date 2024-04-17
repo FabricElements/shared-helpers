@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 /**
  * @license
  * Copyright FabricElements. All Rights Reserved.
@@ -9,6 +11,7 @@ import type {
   OrderByDirection,
   Query,
   WhereFilterOp,
+  DocumentSnapshot,
 } from 'firebase-admin/firestore';
 import {getFirestore} from 'firebase-admin/firestore';
 
@@ -58,14 +61,14 @@ export namespace FirestoreHelper {
      * @param {InterfaceFirestoreDocument} options
      * @return {Promise<DocumentData>}
      */
-    public static getDocument = async (options: InterfaceFirestoreDocument): Promise<FirebaseFirestore.DocumentData> => this._getDocumentSnap(options);
+    public static getDocument = async (options: InterfaceFirestoreDocument): Promise<DocumentData> => this._getDocumentSnap(options);
 
     /**
      * Get list
      * @param {InterfaceFirestoreQuery} options
      * @return {Promise<DocumentData[]>}
      */
-    public static getList = async (options: InterfaceFirestoreQuery): Promise<FirebaseFirestore.DocumentData[]> => {
+    public static getList = async (options: InterfaceFirestoreQuery): Promise<DocumentData[]> => {
       const references = await this.getListRef(options);
       let data: DocumentData[] = [];
       for (let i = 0; i < references.length; i++) {
@@ -159,7 +162,7 @@ export namespace FirestoreHelper {
      * @return {Promise<FirebaseFirestore.DocumentSnapshot>}
      * @private
      */
-    private static _getDocument = (options: InterfaceFirestoreDocument): Promise<FirebaseFirestore.DocumentSnapshot> => {
+    private static _getDocument = (options: InterfaceFirestoreDocument): Promise<DocumentSnapshot> => {
       // Get from Reference
       if (options.reference) return options.reference.get();
       // Get From collection and document

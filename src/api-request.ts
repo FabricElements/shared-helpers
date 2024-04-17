@@ -75,7 +75,7 @@ export default async (options: InterfaceAPIRequest) => {
             responseData = await response.json();
             break;
           default:
-            responseData = await response.body;
+            responseData = response.body;
         }
     }
     return responseData;

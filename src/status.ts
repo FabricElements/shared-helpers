@@ -25,5 +25,6 @@ export const update = async (data: any) => {
     status: data.status,
     timestamp,
   };
+  // noinspection Annotator
   await ref.set(status, {merge: true});
 };

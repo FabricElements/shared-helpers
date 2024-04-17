@@ -8,6 +8,7 @@ import {logger} from 'firebase-functions/v2';
 import fetch from 'node-fetch';
 import sharp from 'sharp';
 import {contentTypeIsImageForSharp} from './regex.js';
+import {Buffer} from 'buffer';
 
 export namespace Media {
   /**
@@ -42,7 +43,7 @@ export namespace Media {
      * Returns storage uri (`gs://my-bucket/path`)
      * @return {Promise<SaveFromUrl>}
      */
-    public static async saveFromUrl(options: { url: string, path: string }) {
+    public static async saveFromUrl(options: { url: string, path: string }): Promise<Media.SaveFromUrl> {
       const fileResponse = await fetch(options.url, {
         method: 'GET',
         redirect: 'follow',
@@ -54,7 +55,8 @@ export namespace Media {
       let blob = await fileResponse.arrayBuffer();
       const uint8Array = new Uint8Array(blob);
       const buffer = Buffer.from(uint8Array);
-      const contentType = fileResponse.headers.get('content-type');
+      const contentType: string = fileResponse.headers.get('content-type');
+      // noinspection Annotator
       await fileRef.save(buffer, {contentType: contentType});
       // TODO: check if uri is valid
       // @ts-ignore
@@ -145,10 +147,12 @@ export namespace Media {
           contentType = metadata.contentType || null;
           const fileSize = metadata.size || 0;
           if (!contentType) {
+            // noinspection ExceptionCaughtLocallyJS
             throw new Error('contentType is missing');
           }
           imageResizeOptions.contentType = contentType;
           if (fileSize === 0) {
+            // noinspection ExceptionCaughtLocallyJS
             throw new Error('Media file is empty');
           }
           if (contentTypeIsImageForSharp.test(contentType) && fileSize !== 'max') {
@@ -286,7 +290,7 @@ export namespace Media {
    * sizesOptionsArray
    * @type {string[]} sizesOptionsArray
    */
-  export const sizesOptionsArray = Object.keys(sizesObject);
+  export const sizesOptionsArray: string[] = Object.keys(sizesObject);
 
   /**
    * Image Helper
@@ -296,10 +300,11 @@ export namespace Media {
     /**
      * bufferImage
      * @param {InterfaceImageResize} options
+     * @return {Promise<Buffer>}
      */
-    public static bufferImage = async (options: InterfaceImageResize) => {
+    public static bufferImage = async (options: InterfaceImageResize): Promise<Buffer> => {
       let finalFormat = options.contentType.split('/').pop();
-      if (options.input.format != null) finalFormat = options.input.format;
+      if (options.format != null) finalFormat = options.format;
       const animated = finalFormat === 'gif';
       let optionsImage: any = {};
       let dpr = Number(options.dpr ?? 1);
@@ -349,7 +354,7 @@ export namespace Media {
      * @param {InterfaceImageResize} options
      * @return {Promise<Buffer>}
      */
-    public static resize = async (options: InterfaceImageResize) => {
+    public static resize = async (options: InterfaceImageResize): Promise<Buffer> => {
       if (!options.fileName) {
         throw new Error('Google Cloud Storage path not found or invalid');
       }
@@ -361,9 +366,9 @@ export namespace Media {
     /**
      * Get default image size
      * @param {imageSizesType} inputSize
-     * @return {object}
+     * @return {any}
      */
-    public static size = (inputSize: imageSizesType) => {
+    public static size = (inputSize: imageSizesType): { height: number, width: number, size: string } => {
       const sizeBase = inputSize && sizesOptionsArray.indexOf(inputSize) >= 0 ? inputSize : 'standard';
       return {
         height: sizesObject[sizeBase].height,

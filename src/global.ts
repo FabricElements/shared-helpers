@@ -2,13 +2,14 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
+import {Buffer} from 'buffer';
 
 /**
  * Timeout
  * @param {number} ms
- * @return {Promise<any>}
+ * @return {Promise<void>}
  */
-export const timeout = (ms: number) => new Promise((res) => setTimeout(res, ms));
+export const timeout = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));
 
 /**
  * Get file public url
@@ -16,7 +17,7 @@ export const timeout = (ms: number) => new Promise((res) => setTimeout(res, ms))
  * @param {string} filename
  * @return {string}
  */
-export const getPublicUrl = (filename: string) => {
+export const getPublicUrl = (filename: string): string => {
   const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
   const uri = encodeURIComponent(filename);
   return `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${uri}?alt=media`;
@@ -26,9 +27,9 @@ export const getPublicUrl = (filename: string) => {
  * Get file public url
  *
  * @param {string} filename
- * @return {string}
+ * @return {{gs: string, url: string}}
  */
-export const getUrlAndGs = (filename: string) => {
+export const getUrlAndGs = (filename: string): { gs: string, url: string } => {
   const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
   const uri = encodeURIComponent(filename);
   const bucketName = firebaseConfig.storageBucket;
@@ -42,14 +43,14 @@ export const getUrlAndGs = (filename: string) => {
 /**
  * Stream to buffer
  * Use on buffer media files and pipe functions
- * @param {Stream} stream
- * @return {Promise}
+ * @param {any} stream
+ * @return {Promise<Buffer>}
  */
-export const streamToBuffer = (stream) => {
+export const streamToBuffer = (stream: any): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
     const buffers = [];
     stream.on('error', reject);
-    stream.on('data', (data) => buffers.push(data));
+    stream.on('data', (data: any) => buffers.push(data));
     stream.on('end', () => resolve(Buffer.concat(buffers)));
   });
 };

@@ -1,6 +1,7 @@
 /**
  * Big Query Clean Database
  * @param {any} filter
+ * @return {Promise<void>}
  */
 declare const _default: (filter: {
     column?: string;

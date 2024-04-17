@@ -4,6 +4,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import type { Response } from 'express';
+import { Buffer } from 'buffer';
 export declare namespace Media {
     /**
      * Save From URL Interface
@@ -37,7 +38,7 @@ export declare namespace Media {
         static saveFromUrl(options: {
             url: string;
             path: string;
-        }): Promise<SaveFromUrl>;
+        }): Promise<Media.SaveFromUrl>;
         /**
          * Preview media file
          * @param {any} options
@@ -92,6 +93,7 @@ export declare namespace Media {
         /**
          * bufferImage
          * @param {InterfaceImageResize} options
+         * @return {Promise<Buffer>}
          */
         static bufferImage: (options: InterfaceImageResize) => Promise<Buffer>;
         /**
@@ -103,7 +105,7 @@ export declare namespace Media {
         /**
          * Get default image size
          * @param {imageSizesType} inputSize
-         * @return {object}
+         * @return {any}
          */
         static size: (inputSize: imageSizesType) => {
             height: number;

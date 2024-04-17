@@ -24,8 +24,9 @@
     "./media": "./lib/media.js"
   },
   "dependencies": {
-    "@google-cloud/bigquery": "^7.5.2",
-    "firebase-admin": "^12.0.0",
+    "@google-cloud/bigquery": "^7.6.0",
+    "@google-cloud/pubsub": "^4.3.3",
+    "firebase-admin": "^12.1.0",
     "firebase-functions": "^4.9.0",
     "libphonenumber-js": "^1.10.60",
     "lodash": "^4.17.21",
@@ -36,8 +37,8 @@
     "@types/lodash": "^4.17.0",
     "@types/node-fetch": "^3.0.3",
     "@types/sharp": "^0.31.1",
-    "@typescript-eslint/eslint-plugin": "^7.6.0",
-    "@typescript-eslint/parser": "^7.6.0",
+    "@typescript-eslint/eslint-plugin": "^7.7.0",
+    "@typescript-eslint/parser": "^7.7.0",
     "eslint": "^8.57.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.29.1",

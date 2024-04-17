@@ -17,7 +17,7 @@ const query = (filter: {
   dataset: string,
   table: string,
   timestamp: string,
-}) => {
+}): string => {
   if (!filter.dataset) {
     throw new Error('Dataset or Table not defined');
   }
@@ -46,13 +46,14 @@ WHERE
 /**
  * Big Query Clean Database
  * @param {any} filter
+ * @return {Promise<void>}
  */
 export default async (filter: {
   column?: string,
   dataset: string,
   table: string,
   timestamp: string,
-}) => {
+}): Promise<void> => {
   const sqlQuery = query(filter);
   try {
     const [job] = await bigquery.createQueryJob({

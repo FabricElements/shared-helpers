@@ -1,13 +1,15 @@
+/// <reference types="node" resolution-mode="require"/>
 /**
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
+import { Buffer } from 'buffer';
 /**
  * Timeout
  * @param {number} ms
- * @return {Promise<any>}
+ * @return {Promise<void>}
  */
-export declare const timeout: (ms: number) => Promise<unknown>;
+export declare const timeout: (ms: number) => Promise<void>;
 /**
  * Get file public url
  *
@@ -19,7 +21,7 @@ export declare const getPublicUrl: (filename: string) => string;
  * Get file public url
  *
  * @param {string} filename
- * @return {string}
+ * @return {{gs: string, url: string}}
  */
 export declare const getUrlAndGs: (filename: string) => {
     gs: string;
@@ -28,7 +30,7 @@ export declare const getUrlAndGs: (filename: string) => {
 /**
  * Stream to buffer
  * Use on buffer media files and pipe functions
- * @param {Stream} stream
- * @return {Promise}
+ * @param {any} stream
+ * @return {Promise<Buffer>}
  */
-export declare const streamToBuffer: (stream: any) => Promise<unknown>;
+export declare const streamToBuffer: (stream: any) => Promise<Buffer>;
