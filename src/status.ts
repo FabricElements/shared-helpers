@@ -5,14 +5,23 @@
 
 import {FieldValue, getFirestore} from 'firebase-admin/firestore';
 
+interface Data {
+  id?: string;
+  status?: string;
+  description?: string;
+  name?: string;
+
+  [x: string]: any,
+}
+
 /**
  * Update Status Collection with Errors
- * @param {any} data
+ * @param {Data} data
+ * @deprecated Not in use
  */
-export const update = async (data: any) => {
+export const update = async (data: Data): Promise<void> => {
   if (!data.id || !data.status) {
-    console.log('Missing input data');
-    return;
+    throw new Error('Missing input data');
   }
   const db = getFirestore();
   const timestamp = FieldValue.serverTimestamp();
@@ -25,6 +34,5 @@ export const update = async (data: any) => {
     status: data.status,
     timestamp,
   };
-  // noinspection Annotator
   await ref.set(status, {merge: true});
 };

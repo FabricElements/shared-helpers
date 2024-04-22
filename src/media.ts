@@ -2,13 +2,13 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
+import {Buffer} from 'buffer';
 import type {Response} from 'express';
 import {getStorage} from 'firebase-admin/storage';
 import {logger} from 'firebase-functions/v2';
 import fetch from 'node-fetch';
 import sharp from 'sharp';
 import {contentTypeIsImageForSharp} from './regex.js';
-import {Buffer} from 'buffer';
 
 export namespace Media {
   /**
@@ -56,10 +56,9 @@ export namespace Media {
       const uint8Array = new Uint8Array(blob);
       const buffer = Buffer.from(uint8Array);
       const contentType: string = fileResponse.headers.get('content-type');
-      // noinspection Annotator
+
       await fileRef.save(buffer, {contentType: contentType});
       // TODO: check if uri is valid
-      // @ts-ignore
       const uri = fileRef.cloudStorageURI.href;
       logger.log(`Saved file from url ${options.url} to ${uri}`);
       return {
@@ -131,15 +130,15 @@ export namespace Media {
         case 'max':
           imageResizeOptions.quality = 100;
           break;
-        // case 'thumbnail':
-        // case 'small':
-        // case 'medium':
-        // case 'standard':
+          // case 'thumbnail':
+          // case 'small':
+          // case 'medium':
+          // case 'standard':
         default:
           imageResizeOptions.quality = 80;
           break;
       }
-      let indexRobots: boolean = !!robots;
+      let indexRobots = !!robots;
       if (path) {
         try {
           const fileRef = getStorage().bucket().file(path);
@@ -260,7 +259,7 @@ export namespace Media {
    * @type {object}
    * @return { [field: string]: { height: number; width: number; } }
    */
-  export const sizesObject: { [field: string]: { height: number; width: number; } } = {
+  export const sizesObject: Record<string, { height: number; width: number; }> = {
     thumbnail: {
       height: 200,
       width: 400,

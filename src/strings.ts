@@ -8,7 +8,7 @@
  * @param {string} str
  * @return {string}
  */
-export const toCamelCase = (str: string) => {
+export const toCamelCase = (str: string): string => {
   return str.replace(/_([a-z])/g, (g) => {
     return g[1].toUpperCase();
   });

@@ -36,51 +36,46 @@ export default async (options: InterfaceAPIRequest) => {
   if (options.scheme && options.credentials) {
     requestOptions.headers.Authorization = `${options.scheme} ${options.credentials}`;
   }
-  try {
-    const response = await fetch(options.path, requestOptions);
-    let responseData = null;
-    if (!response.ok) {
-      const BodyJsonError = await response.json();
-      // noinspection ExceptionCaughtLocallyJS
-      throw new Error(Object.prototype.hasOwnProperty.call(BodyJsonError, 'message') ? BodyJsonError['message'] : 'unknown error');
-    }
-    console.log('content-type', response.headers.get('content-type'));
-    switch (options.as) {
-      case 'arrayBuffer':
-        responseData = await response.arrayBuffer();
-        break;
-      case 'formData':
-        responseData = await response.formData();
-        break;
-      case 'blob':
-        responseData = await response.blob();
-        break;
-      case 'json':
-        responseData = await response.json();
-        break;
-      case 'text':
-        responseData = await response.text();
-        break;
-      case 'raw':
-        responseData = await response.body;
-        break;
-      default:
-        // Return response depending on the content-type
-        switch (response.headers.get('content-type')?.toString().toLowerCase()) {
-          case 'text/plain':
-          case 'text/html':
-            responseData = await response.text();
-            break;
-          case 'application/json':
-            responseData = await response.json();
-            break;
-          default:
-            responseData = response.body;
-        }
-    }
-    return responseData;
-  } catch (error) {
-    // @ts-ignore
-    throw new Error(error.message);
+  const response = await fetch(options.path, requestOptions);
+  let responseData = null;
+  if (!response.ok) {
+    const BodyJsonError = await response.json();
+    // noinspection ExceptionCaughtLocallyJS
+    throw new Error(Object.prototype.hasOwnProperty.call(BodyJsonError, 'message') ? BodyJsonError['message'] : 'unknown error');
   }
+  console.log('content-type', response.headers.get('content-type'));
+  switch (options.as) {
+    case 'arrayBuffer':
+      responseData = await response.arrayBuffer();
+      break;
+    case 'formData':
+      responseData = await response.formData();
+      break;
+    case 'blob':
+      responseData = await response.blob();
+      break;
+    case 'json':
+      responseData = await response.json();
+      break;
+    case 'text':
+      responseData = await response.text();
+      break;
+    case 'raw':
+      responseData = response.body;
+      break;
+    default:
+      // Return response depending on the content-type
+      switch (response.headers.get('content-type')?.toString().toLowerCase()) {
+        case 'text/plain':
+        case 'text/html':
+          responseData = await response.text();
+          break;
+        case 'application/json':
+          responseData = await response.json();
+          break;
+        default:
+          responseData = response.body;
+      }
+  }
+  return responseData;
 };

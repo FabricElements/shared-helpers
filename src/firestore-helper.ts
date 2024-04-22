@@ -4,15 +4,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type {
-  DocumentData,
-  DocumentReference,
-  FieldPath,
-  OrderByDirection,
-  Query,
-  WhereFilterOp,
-  DocumentSnapshot,
-} from 'firebase-admin/firestore';
+import type {DocumentData, DocumentReference, DocumentSnapshot, FieldPath, OrderByDirection, Query, WhereFilterOp} from 'firebase-admin/firestore';
 import {getFirestore} from 'firebase-admin/firestore';
 
 
@@ -33,7 +25,7 @@ export namespace FirestoreHelper {
     collectionGroup?: string;
     limit?: number;
     orderBy?: InterfaceFirestoreQueryOrderBy[];
-    where?: InterfaceFirestoreQueryWhere[]
+    where?: InterfaceFirestoreQueryWhere[];
   }
 
   export interface InterfaceFirestoreDocument {
@@ -71,8 +63,7 @@ export namespace FirestoreHelper {
     public static getList = async (options: InterfaceFirestoreQuery): Promise<DocumentData[]> => {
       const references = await this.getListRef(options);
       let data: DocumentData[] = [];
-      for (let i = 0; i < references.length; i++) {
-        const ref = references[i];
+      for (const ref of references) {
         const docData = await this._getDocumentSnap({reference: ref});
         data.push(docData);
       }
@@ -94,15 +85,13 @@ export namespace FirestoreHelper {
       if (options.collectionGroup) ref = db.collectionGroup(options.collectionGroup);
       const orderBy = options.orderBy;
       if (orderBy && orderBy.length > 0) {
-        for (let i = 0; i < orderBy.length; i++) {
-          const item = orderBy[i];
+        for (const item of orderBy) {
           ref = ref.orderBy(item.key, item.direction);
         }
       }
       const where = options.where;
       if (where && where.length > 0) {
-        for (let i = 0; i < where.length; i++) {
-          const item = where[i];
+        for (const item of where) {
           ref = ref.where(item.field, item.operator, item.value);
         }
       }
@@ -149,7 +138,6 @@ export namespace FirestoreHelper {
      */
     public static count = async (options: InterfaceFirestoreQuery): Promise<number> => {
       const ref = this.getListReference(options);
-      // @ts-ignore
       const snapshot = await ref.count().get();
       if (!snapshot) return 0;
       return snapshot.data().count;

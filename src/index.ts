@@ -18,7 +18,6 @@ import pubSubEvent from './pubsub-event.js';
 import * as regex from './regex.js';
 import replaceMessageText from './replace-message-text.js';
 import specialCharToRegular from './special-char-to-regular.js';
-import * as status from './status.js';
 import * as strings from './strings.js';
 // import {User} from './user/index.js';
 import validateUrl from './validate-url.js';
@@ -37,7 +36,6 @@ export {
   replaceMessageText,
   specialCharToRegular,
   strings,
-  status,
   validateUrl,
   regex,
 };

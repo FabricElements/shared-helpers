@@ -3,8 +3,8 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import type { Response } from 'express';
 import { Buffer } from 'buffer';
+import type { Response } from 'express';
 export declare namespace Media {
     /**
      * Save From URL Interface
@@ -74,12 +74,10 @@ export declare namespace Media {
      * @type {object}
      * @return { [field: string]: { height: number; width: number; } }
      */
-    const sizesObject: {
-        [field: string]: {
-            height: number;
-            width: number;
-        };
-    };
+    const sizesObject: Record<string, {
+        height: number;
+        width: number;
+    }>;
     /**
      * sizesOptionsArray
      * @type {string[]} sizesOptionsArray

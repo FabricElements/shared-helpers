@@ -1,5 +1,3 @@
-// noinspection Annotator
-
 /**
  * @license
  * Copyright FabricElements. All Rights Reserved.
@@ -44,8 +42,8 @@ export namespace User {
   export interface Interface {
     backup?: boolean;
     ads?: InterfaceAds;
-    avatar?: boolean | string | any;
-    created?: Date | FieldValue | String;
+    avatar?: string | boolean | undefined | null;
+    created?: Date | FieldValue | string;
     id?: string;
     language?: string;
     links?: InterfaceLinks,
@@ -55,7 +53,7 @@ export namespace User {
     lastName?: string;
     path?: string;
     referrer?: string;
-    updated?: Date | FieldValue | String;
+    updated?: Date | FieldValue | string;
     url?: string;
     username?: string;
     phone?: string;
@@ -64,9 +62,7 @@ export namespace User {
     role?: string;
     // Use [group] to create / update user group
     group?: string;
-    groups?: {
-      [key: string]: string | number;
-    };
+    groups?: Record<string, string | number>;
     ping?: any;
     fcm?: string;
     /**
@@ -200,7 +196,7 @@ export namespace User {
           userDoc = {...userDoc, ...doc.data() as Interface};
         }
       } catch (e) {
-        logger.error(e.toString());
+        logger.error(e);
       }
       if (user.photoURL) {
         try {
@@ -246,7 +242,7 @@ export namespace User {
         const users = await getAuth().getUsers(identifiers);
         if (users.users.length > 0) _user = users.users[0];
       } catch (error) {
-        // @ts-ignore
+        // @ts-expect-error Error requires description
         logger.info(error.message);
       }
       // Recreate document with updated email and phone number
@@ -266,23 +262,21 @@ export namespace User {
      *
      * @param {string} uid
      * @param {string?} group
+     * @return {Promise<string>}
      */
-    public static getRole = async (uid: string, group?: string) => {
+    public static getRole = async (uid: string, group?: string): Promise<string> => {
       // const errorMessage = 'You don\'t have access to request this action';
       const grouped = group && group.length > 0;
       /**
        * Verify admin access on top level
        */
       const userRecord = await getAuth().getUser(uid);
-      const userClaims: any = userRecord.customClaims ?? {};
-      let role = userClaims.role ?? null;
+      const userClaims: Record<string, any> = userRecord.customClaims ?? {};
       const userDoc: Interface = await FirestoreHelper.Helper.getDocument({
         collection: 'user',
         document: uid,
       });
-      if (!role) {
-        role = userDoc.role;
-      }
+      let role: string | null = userClaims.role ?? userDoc.role;
       if (grouped && (!role || role === 'user')) {
         /**
          * Verify admin access on collection level
@@ -325,8 +319,8 @@ export namespace User {
       role: string,
     }): boolean => {
       const _isAdmin = typeof options.role === 'string' &&
-        (options.group ? (options.role.endsWith('admin') || options.role.endsWith('owner')) :
-          options.role === 'admin');
+          (options.group ? (options.role.endsWith('admin') || options.role.endsWith('owner')) :
+              options.role === 'admin');
       if (!_isAdmin && options.fail) {
         throw new Error('You are not an Admin');
       }
@@ -361,7 +355,7 @@ export namespace User {
           await refUser.delete();
         }
       } catch (error) {
-        // @ts-ignore
+        // @ts-expect-error Error requires description
         throw new Error(`Error removing user access: ${error.message}`);
       }
     };
@@ -421,7 +415,13 @@ export namespace User {
       const db = getFirestore();
       const ref = db.collection('user').doc(id);
       let updateDataFirestore: Interface = {};
-      let updateDataUser: any = {};
+      let updateDataUser: {
+        phoneNumber?: string;
+        email?: string;
+        emailVerified?: boolean;
+        displayName?: string;
+        photoURL?: string;
+      } = {};
       const currentUser = await getAuth().getUser(id);
       updateDataFirestore.phone = currentUser.phoneNumber ?? null;
       updateDataFirestore.email = currentUser.email ?? null;
@@ -437,7 +437,10 @@ export namespace User {
       if (language) updateDataFirestore.language = language;
       const formatNames = this.formatUserNames(data);
       const updateName = formatNames.name !== currentUser.displayName;
-      const onboarding: any = {};
+      const onboarding: {
+        name?: boolean,
+        avatar?: boolean,
+      } = {};
       if (updateName) {
         updateDataUser.displayName = formatNames.name;
         updateDataFirestore.name = formatNames.name;
@@ -448,7 +451,7 @@ export namespace User {
       if (formatNames.name) onboarding.name = true;
       if (avatar) {
         try {
-          const imgBuffer = Buffer.from(avatar, 'base64');
+          const imgBuffer = Buffer.from(avatar.toString(), 'base64');
           const imageSize = Media.Image.size('standard');
           const imageResizeOptions: Media.InterfaceImageResize = {
             maxHeight: imageSize.height,
@@ -511,7 +514,7 @@ export namespace User {
           role: data.role,
         });
       } catch (error) {
-        // @ts-ignore
+        // @ts-expect-error Error requires description
         throw new Error(`Error updating user access: ${error.message}`);
       }
       // Remove avatar first
@@ -522,11 +525,11 @@ export namespace User {
 
     /**
      *
-     * @param {any} data
+     * @param {object | null} data
      * @private
      */
-    private static hasData(data: any) {
-      if (!(data && !data.isEmpty)) {
+    private static hasData(data: object | null) {
+      if (!(data && Object.keys(data).length > 0)) {
         throw new Error('Request is empty');
       }
     }
@@ -560,7 +563,7 @@ export namespace User {
         group: undefined,
         password: undefined,
       };
-      if (!user.name || !user.name.length) {
+      if (!user.name?.length) {
         throw new Error('First Name and Last Name are required');
       }
       userData.displayName = user.name;
@@ -655,7 +658,7 @@ export namespace User {
       let collectionClaims: any = null;
       if (grouped) {
         if (Object.prototype.hasOwnProperty.call(userDoc, 'groups')) {
-          collectionClaims = userDoc['groups'];
+          collectionClaims = userDoc.groups;
           userClaims = {
             ...userClaims,
             'groups': collectionClaims,

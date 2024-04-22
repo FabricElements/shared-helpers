@@ -40,10 +40,9 @@ export default async (data: {
       ignoreUnknownValues: true,
       skipInvalidRows: true,
     });
-  } catch (error) {
+  } catch (error: any) {
     let errorMessage = error['message'] ?? null;
     if (Object.prototype.hasOwnProperty.call(error, 'response') && Object.prototype.hasOwnProperty.call(error, 'insertErrors')) {
-      // @ts-ignore
       const finalError = _.flatten(error.response.insertErrors);
       errorMessage = JSON.stringify(finalError);
     }

@@ -13,9 +13,7 @@ import {toCamelCase} from './strings.js';
  * @return {string}
  */
 const replyStop = (language: string): string => {
-  const messages: {
-    [key: string]: string[]
-  } = {
+  const messages: Record<string, string[]> = {
     // Max length: 26 characters
     'en': [
       'Reply STOP to end',
@@ -62,7 +60,7 @@ const replyStop = (language: string): string => {
  * @return {string}
  */
 export default (options: {
-  data?: {},
+  data?: object,
   domains?: string[],
   language?: string,
   text: string,
@@ -77,7 +75,7 @@ export default (options: {
     const key = toCamelCase(clean);
     let replaceValue = options.data[key] ? options.data[key] : '';
     switch (key) {
-      case 'r': // Replaces random hash Id
+      case 'r': // Replaces random hash id
         replaceValue = hashId();
         break;
       case 'replyStopUnsubscribe': // Replaces random unsubscribe message

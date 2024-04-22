@@ -5,7 +5,7 @@
  * @return {string}
  */
 declare const _default: (options: {
-    data?: {};
+    data?: object;
     domains?: string[];
     language?: string;
     text: string;

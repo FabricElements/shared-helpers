@@ -5,5 +5,5 @@
  * @param {boolean} isMobile
  * @return {Promise<string>}
  */
-declare const _default: (phoneNumber: string | number, isMobile?: boolean) => Promise<string>;
+declare const _default: (phoneNumber: string | number, isMobile: boolean) => Promise<string>;
 export default _default;

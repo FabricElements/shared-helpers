@@ -61,7 +61,7 @@ export const remove = https.onCall({
     await User.Helper.remove(data);
     return {message: 'User Removed'};
   } catch (error) {
-    // @ts-ignore
+    // @ts-expect-error
     throw new https.HttpsError('unknown', error.message);
   }
 });
@@ -99,7 +99,7 @@ export const role = https.onCall({
     const _role = await User.Helper.getRole(request.auth.uid, data?.role);
     User.Helper.isAdmin({role: _role, fail: true, group: data?.group});
   } catch (error) {
-    // @ts-ignore
+    // @ts-expect-error
     throw new https.HttpsError('permission-denied', error.message);
   }
   try {

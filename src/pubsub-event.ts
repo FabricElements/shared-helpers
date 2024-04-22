@@ -4,8 +4,8 @@
  */
 import {PubSub} from '@google-cloud/pubsub';
 import {Attributes, PublishOptions} from '@google-cloud/pubsub/build/src/publisher/index.js';
-import {emulator} from './variables.js';
 import {logger} from 'firebase-functions/v2';
+import {emulator} from './variables.js';
 
 /**
  * PubSub basic event

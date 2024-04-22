@@ -31,8 +31,8 @@ export declare namespace User {
     interface Interface {
         backup?: boolean;
         ads?: InterfaceAds;
-        avatar?: boolean | string | any;
-        created?: Date | FieldValue | String;
+        avatar?: string | boolean | undefined | null;
+        created?: Date | FieldValue | string;
         id?: string;
         language?: string;
         links?: InterfaceLinks;
@@ -42,7 +42,7 @@ export declare namespace User {
         lastName?: string;
         path?: string;
         referrer?: string;
-        updated?: Date | FieldValue | String;
+        updated?: Date | FieldValue | string;
         url?: string;
         username?: string;
         phone?: string;
@@ -50,9 +50,7 @@ export declare namespace User {
         password?: string;
         role?: string;
         group?: string;
-        groups?: {
-            [key: string]: string | number;
-        };
+        groups?: Record<string, string | number>;
         ping?: any;
         fcm?: string;
         /**
@@ -133,8 +131,9 @@ export declare namespace User {
          *
          * @param {string} uid
          * @param {string?} group
+         * @return {Promise<string>}
          */
-        static getRole: (uid: string, group?: string) => Promise<any>;
+        static getRole: (uid: string, group?: string) => Promise<string>;
         /**
          * User invitation function, it listens for a new connection-invite document creation, and creates the user
          * @param {any} data
@@ -181,7 +180,7 @@ export declare namespace User {
         }, mainUrl: string) => Promise<void>;
         /**
          *
-         * @param {any} data
+         * @param {object | null} data
          * @private
          */
         private static hasData;

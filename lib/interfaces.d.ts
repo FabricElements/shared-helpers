@@ -3,7 +3,7 @@ export type linkType = 'instagram' | 'link' | 'youtube' | 'x' | 'tiktok' | 'vime
 export interface InterfaceFormatLink {
     active?: boolean;
     category?: string;
-    created?: Date | FieldValue | String;
+    created?: Date | FieldValue | string;
     description?: string;
     featured?: boolean;
     hashtags?: string;
@@ -18,7 +18,7 @@ export interface InterfaceFormatLink {
     source?: string;
     title?: string;
     type?: linkType;
-    updated?: Date | FieldValue | String;
+    updated?: Date | FieldValue | string;
     url?: string;
     user?: string;
 }
