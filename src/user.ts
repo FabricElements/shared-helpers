@@ -42,7 +42,7 @@ export namespace User {
   export interface Interface {
     backup?: boolean;
     ads?: InterfaceAds;
-    avatar?: string | boolean | undefined | null;
+    avatar?: string;
     created?: Date | FieldValue | string;
     id?: string;
     language?: string;
@@ -451,7 +451,7 @@ export namespace User {
       if (formatNames.name) onboarding.name = true;
       if (avatar) {
         try {
-          const imgBuffer = Buffer.from(avatar.toString(), 'base64');
+          const imgBuffer = Buffer.from(avatar, 'base64');
           const imageSize = Media.Image.size('standard');
           const imageResizeOptions: Media.InterfaceImageResize = {
             maxHeight: imageSize.height,

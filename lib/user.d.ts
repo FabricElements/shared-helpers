@@ -31,7 +31,7 @@ export declare namespace User {
     interface Interface {
         backup?: boolean;
         ads?: InterfaceAds;
-        avatar?: string | boolean | undefined | null;
+        avatar?: string;
         created?: Date | FieldValue | string;
         id?: string;
         language?: string;
