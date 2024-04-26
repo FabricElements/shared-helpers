@@ -53,7 +53,7 @@ export namespace Media {
     crop?: string;
     dpr?: number;
     file?: Uint8Array | ArrayBuffer;
-    format?: Media.AvailableOutputFormats;
+    format?: AvailableOutputFormats;
     height?: number;
     log?: boolean;
     // The minimum size in bytes to resize the image
@@ -67,7 +67,7 @@ export namespace Media {
     // Index headers for robots, default is false
     robots?: boolean;
     // Set of size options
-    size?: Media.ImageSize;
+    size?: ImageSize;
     // Image resize max width
     width?: number;
     // Show default image if media file is not found, default is false
@@ -84,7 +84,7 @@ export namespace Media {
      * Returns storage uri (`gs://my-bucket/path`)
      * @return {Promise<SaveFromUrl>}
      */
-    public static async saveFromUrl(options: { url: string, path: string }): Promise<Media.SaveFromUrl> {
+    public static async saveFromUrl(options: { url: string, path: string }): Promise<SaveFromUrl> {
       const fileResponse = await fetch(options.url, {
         method: 'GET',
         redirect: 'follow',

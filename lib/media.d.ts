@@ -44,7 +44,7 @@ export declare namespace Media {
         crop?: string;
         dpr?: number;
         file?: Uint8Array | ArrayBuffer;
-        format?: Media.AvailableOutputFormats;
+        format?: AvailableOutputFormats;
         height?: number;
         log?: boolean;
         minSize?: number;
@@ -52,7 +52,7 @@ export declare namespace Media {
         quality?: number;
         response: Response;
         robots?: boolean;
-        size?: Media.ImageSize;
+        size?: ImageSize;
         width?: number;
         showImageOnError?: boolean;
     }
@@ -69,7 +69,7 @@ export declare namespace Media {
         static saveFromUrl(options: {
             url: string;
             path: string;
-        }): Promise<Media.SaveFromUrl>;
+        }): Promise<SaveFromUrl>;
         /**
          * Preview media file
          * @param {PreviewParams} options
