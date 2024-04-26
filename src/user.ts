@@ -452,7 +452,7 @@ export namespace User {
       if (avatar) {
         try {
           const imgBuffer = Buffer.from(avatar, 'base64');
-          const imageSize = Media.Image.size('standard');
+          const imageSize = Media.Image.sizeObjectFromImageSize(Media.ImageSize.standard);
           const imageResizeOptions: Media.InterfaceImageResize = {
             maxHeight: imageSize.height,
             maxWidth: imageSize.width,

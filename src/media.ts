@@ -33,9 +33,16 @@ export namespace Media {
   }
 
   /**
-   * imageSizesType
+   * Set of predefined image sizes
    */
-  export type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
+  export enum ImageSize {
+    thumbnail = 'thumbnail',
+    small = 'small',
+    medium = 'medium',
+    standard = 'standard',
+    high = 'high',
+    max = 'max',
+  }
 
   /**
    * PreviewParams
@@ -49,13 +56,21 @@ export namespace Media {
     format?: Media.AvailableOutputFormats;
     height?: number;
     log?: boolean;
+    // The minimum size in bytes to resize the image
     minSize?: number;
+    // The path to the media file
     path?: string;
+    // The image quality
     quality?: number;
+    // The request object
     response: Response;
+    // Index headers for robots, default is false
     robots?: boolean;
-    size?: Media.imageSizesType;
+    // Set of size options
+    size?: Media.ImageSize;
+    // Image resize max width
     width?: number;
+    // Show default image if media file is not found, default is false
     showImageOnError?: boolean;
   }
 
@@ -113,7 +128,7 @@ export namespace Media {
       /**
        * Define image size
        */
-      const imageSize = Image.size(options.size);
+      const imageSize = Image.sizeObjectFromImageSize(options.size);
       if (options.height) imageResizeOptions.maxHeight = options.height;
       if (options.width) imageResizeOptions.maxWidth = options.width;
       // Override size parameters if size is set
@@ -273,7 +288,7 @@ export namespace Media {
    * @type {object}
    * @return { [field: string]: { height: number; width: number; } }
    */
-  export const sizesObject: Record<string, { height: number; width: number; }> = {
+  export const sizesObject: Record<ImageSize, { height: number; width: number; }> = {
     thumbnail: {
       height: 200,
       width: 400,
@@ -410,12 +425,12 @@ export namespace Media {
     };
 
     /**
-     * Get default image size
+     * Get default image size object when size is not set
      * @param {imageSizesType} inputSize
-     * @return {any}
+     * @return {{height: number, width: number, size: ImageSize}}
      */
-    public static size = (inputSize: imageSizesType): { height: number, width: number, size: string } => {
-      const sizeBase = inputSize && sizesOptionsArray.indexOf(inputSize) >= 0 ? inputSize : 'standard';
+    static sizeObjectFromImageSize = (inputSize: ImageSize): { height: number, width: number, size: ImageSize } => {
+      const sizeBase: ImageSize = inputSize && sizesOptionsArray.indexOf(inputSize) >= 0 ? inputSize : ImageSize.standard;
       return {
         height: sizesObject[sizeBase].height,
         width: sizesObject[sizeBase].width,

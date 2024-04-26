@@ -25,9 +25,16 @@ export declare namespace Media {
         contentType?: string;
     }
     /**
-     * imageSizesType
+     * Set of predefined image sizes
      */
-    export type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
+    export enum ImageSize {
+        thumbnail = "thumbnail",
+        small = "small",
+        medium = "medium",
+        standard = "standard",
+        high = "high",
+        max = "max"
+    }
     /**
      * PreviewParams
      */
@@ -45,7 +52,7 @@ export declare namespace Media {
         quality?: number;
         response: Response;
         robots?: boolean;
-        size?: Media.imageSizesType;
+        size?: Media.ImageSize;
         width?: number;
         showImageOnError?: boolean;
     }
@@ -84,7 +91,7 @@ export declare namespace Media {
      * @type {object}
      * @return { [field: string]: { height: number; width: number; } }
      */
-    export const sizesObject: Record<string, {
+    export const sizesObject: Record<ImageSize, {
         height: number;
         width: number;
     }>;
@@ -142,14 +149,14 @@ export declare namespace Media {
             buffer: Buffer;
         }>;
         /**
-         * Get default image size
+         * Get default image size object when size is not set
          * @param {imageSizesType} inputSize
-         * @return {any}
+         * @return {{height: number, width: number, size: ImageSize}}
          */
-        static size: (inputSize: imageSizesType) => {
+        static sizeObjectFromImageSize: (inputSize: ImageSize) => {
             height: number;
             width: number;
-            size: string;
+            size: ImageSize;
         };
     }
     export {};
