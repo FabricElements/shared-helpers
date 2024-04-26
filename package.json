@@ -26,6 +26,7 @@
   "dependencies": {
     "@google-cloud/bigquery": "^7.6.0",
     "@google-cloud/pubsub": "^4.3.3",
+    "@types/express": "^4.17.21",
     "firebase-admin": "^12.1.0",
     "firebase-functions": "^4.9.0",
     "libphonenumber-js": "^1.10.61",
@@ -36,12 +37,10 @@
   "devDependencies": {
     "@eslint/js": "^9.1.1",
     "@types/lodash": "^4.17.0",
+    "@types/node": "^20.12.7",
     "@types/node-fetch": "^3.0.3",
     "@types/sharp": "^0.31.1",
     "eslint": "^9.1.1",
-    "eslint-plugin-no-explicit-type-exports": "^0.12.1",
-    "eslint-plugin-prefer-arrow": "^1.2.3",
-    "eslint-plugin-promise": "^6.1.1",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.7.1"
   },
