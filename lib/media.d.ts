@@ -9,26 +9,49 @@ export declare namespace Media {
     /**
      * Save From URL Interface
      */
-    interface SaveFromUrl {
+    export interface SaveFromUrl {
         contentType: string;
         uri: string;
     }
-    interface InterfaceImageResize {
+    export interface InterfaceImageResize {
         crop?: string;
         dpr?: number;
         fileName?: string;
-        format?: 'jpeg' | 'png' | 'gif';
+        format?: AvailableOutputFormats;
         input?: Buffer | Uint8Array | string | any;
         maxHeight?: number;
         maxWidth?: number;
         quality?: number;
         contentType?: string;
     }
-    type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
+    /**
+     * imageSizesType
+     */
+    export type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
+    /**
+     * PreviewParams
+     */
+    interface PreviewParams {
+        cacheTime?: number;
+        contentType?: string;
+        crop?: string;
+        dpr?: number;
+        file?: Uint8Array | ArrayBuffer;
+        format?: Media.AvailableOutputFormats;
+        height?: number;
+        log?: boolean;
+        minSize?: number;
+        path?: string;
+        quality?: number;
+        response: Response;
+        robots?: boolean;
+        size?: Media.imageSizesType;
+        width?: number;
+    }
     /**
      * Media Helper
      */
-    class Helper {
+    export class Helper {
         /**
          * Save From URL and return local path
          * @param {object} options
@@ -41,25 +64,9 @@ export declare namespace Media {
         }): Promise<Media.SaveFromUrl>;
         /**
          * Preview media file
-         * @param {any} options
+         * @param {PreviewParams} options
          */
-        static preview: (options: {
-            crop?: string;
-            dpr?: number;
-            height?: number;
-            path?: string;
-            file?: Uint8Array | ArrayBuffer;
-            response: Response;
-            robots?: boolean;
-            size?: imageSizesType;
-            width?: number;
-            contentType?: string;
-            cacheTime?: number;
-            log?: boolean;
-            quality?: number;
-            minSize?: number;
-            [key: string]: any;
-        }) => Promise<void>;
+        static preview: (options: PreviewParams) => Promise<void>;
         /**
          * Save media file
          * @param {any} options
@@ -76,7 +83,7 @@ export declare namespace Media {
      * @type {object}
      * @return { [field: string]: { height: number; width: number; } }
      */
-    const sizesObject: Record<string, {
+    export const sizesObject: Record<string, {
         height: number;
         width: number;
     }>;
@@ -84,12 +91,37 @@ export declare namespace Media {
      * sizesOptionsArray
      * @type {string[]} sizesOptionsArray
      */
-    const sizesOptionsArray: string[];
+    export const sizesOptionsArray: string[];
+    /**
+     * Available Output Formats
+     * @enum {string}
+     */
+    export enum AvailableOutputFormats {
+        avif = "avif",
+        dz = "dz",
+        fits = "fits",
+        gif = "gif",
+        heif = "heif",
+        input = "input",
+        jpeg = "jpeg",
+        jp2 = "jp2",
+        jxl = "jxl",
+        magick = "magick",
+        openslide = "openslide",
+        pdf = "pdf",
+        png = "png",
+        ppm = "ppm",
+        raw = "raw",
+        svg = "svg",
+        tiff = "tiff",
+        v = "v",
+        webp = "webp"
+    }
     /**
      * Image Helper
      * @param {any} options
      */
-    class Image {
+    export class Image {
         /**
          * bufferImage
          * @param {InterfaceImageResize} options
@@ -113,4 +145,5 @@ export declare namespace Media {
             size: string;
         };
     }
+    export {};
 }

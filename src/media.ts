@@ -7,7 +7,7 @@ import type {Response} from 'express';
 import {getStorage} from 'firebase-admin/storage';
 import {logger} from 'firebase-functions/v2';
 import fetch from 'node-fetch';
-import sharp, {AvailableFormatInfo, ResizeOptions} from 'sharp';
+import sharp, {ResizeOptions} from 'sharp';
 import {contentTypeIsImageForSharp} from './regex.js';
 
 export namespace Media {
@@ -23,7 +23,7 @@ export namespace Media {
     crop?: string; // force proportions and cut
     dpr?: number;
     fileName?: string;
-    format?: 'jpeg' | 'png' | 'gif';
+    format?: AvailableOutputFormats;
     input?: Buffer | Uint8Array | string | any;
     maxHeight?: number;
     maxWidth?: number;
@@ -31,7 +31,31 @@ export namespace Media {
     contentType?: string; // Only for internal use, it will be returned from storage
   }
 
+  /**
+   * imageSizesType
+   */
   export type imageSizesType = null | string | 'thumbnail' | 'small' | 'medium' | 'standard' | 'high' | 'max';
+
+  /**
+   * PreviewParams
+   */
+  interface PreviewParams {
+    cacheTime?: number;
+    contentType?: string;
+    crop?: string;
+    dpr?: number;
+    file?: Uint8Array | ArrayBuffer;
+    format?: Media.AvailableOutputFormats;
+    height?: number;
+    log?: boolean;
+    minSize?: number;
+    path?: string;
+    quality?: number;
+    response: Response;
+    robots?: boolean;
+    size?: Media.imageSizesType;
+    width?: number;
+  }
 
   /**
    * Media Helper
@@ -69,50 +93,18 @@ export namespace Media {
 
     /**
      * Preview media file
-     * @param {any} options
+     * @param {PreviewParams} options
      */
-    public static preview = async (options: {
-      crop?: string;
-      dpr?: number;
-      height?: number;
-      path?: string;
-      file?: Uint8Array | ArrayBuffer;
-      response: Response;
-      robots?: boolean;
-      size?: imageSizesType;
-      width?: number;
-      contentType?: string;
-      cacheTime?: number;
-      log?: boolean;
-      quality?: number;
-      // Minimum size in bytes to prevent small images from being resized
-      minSize?: number;
-      [key: string]: any,
-    }): Promise<void> => {
-      let {
-        crop,
-        height,
-        path,
-        dpr,
-        response,
-        robots,
-        size,
-        width,
-        file,
-        format,
-        minSize,
-        quality,
-        log,
-      } = options;
-      if (file && path) throw new Error('You can only use file or path, not both');
+    public static preview = async (options: PreviewParams): Promise<void> => {
+      if (options.file && options.path) throw new Error('You can only use file or path, not both');
       let cacheTime = options.cacheTime ?? 60;
       let mediaBuffer: any = null;
       let contentType = options.contentType ?? 'text/html';
-      let minSizeBytes = minSize ?? 1000;
-      response.set('Content-Type', contentType);
+      let minSizeBytes = options.minSize ?? 1000;
+      options.response.set('Content-Type', contentType);
       // Don't use "/" at the start or end of your path
-      if (path && path.startsWith('/')) {
-        path = path.substring(1);
+      if (options.path && options.path.startsWith('/')) {
+        options.path = options.path.substring(1);
       }
       // const publicUrl = global.getUrlAndGs(mediaPath).url;
       let ok = true;
@@ -120,19 +112,19 @@ export namespace Media {
       /**
        * Define image size
        */
-      const imageSize = Image.size(size);
-      if (height) imageResizeOptions.maxHeight = height;
-      if (width) imageResizeOptions.maxWidth = width;
+      const imageSize = Image.size(options.size);
+      if (options.height) imageResizeOptions.maxHeight = options.height;
+      if (options.width) imageResizeOptions.maxWidth = options.width;
       // Override size parameters if size is set
-      if (size) {
+      if (options.size) {
         imageResizeOptions.maxHeight = imageSize.height;
         imageResizeOptions.maxWidth = imageSize.width;
       }
-      if (crop || imageSize.size === 'thumbnail') {
-        imageResizeOptions.crop = crop ?? 'entropy';
+      if (options.crop || imageSize.size === 'thumbnail') {
+        imageResizeOptions.crop = options.crop ?? 'entropy';
       }
-      if (dpr) imageResizeOptions.dpr = dpr;
-      if (format) imageResizeOptions.format = format;
+      if (options.dpr) imageResizeOptions.dpr = options.dpr;
+      if (options.format) imageResizeOptions.format = options.format;
       switch (imageSize.size) {
         case 'high':
           imageResizeOptions.quality = 90;
@@ -148,13 +140,13 @@ export namespace Media {
           imageResizeOptions.quality = 80;
           break;
       }
-      if (quality) imageResizeOptions.quality = quality;
+      if (options.quality) imageResizeOptions.quality = options.quality;
       /// Check if image needs to be resized
       let needToResize = Object.values(imageResizeOptions).length > 0;
-      let indexRobots = !!robots;
-      if (path) {
+      let indexRobots = !!options.robots;
+      if (options.path) {
         try {
-          const fileRef = getStorage().bucket().file(path);
+          const fileRef = getStorage().bucket().file(options.path);
           const [exists] = await fileRef.exists();
           if (!exists) throw new Error('File not found');
           const [metadata]: any = await fileRef.getMetadata();
@@ -174,18 +166,18 @@ export namespace Media {
           if (fileSize < minSizeBytes) {
             needToResize = false;
           }
-          if (size === 'max') needToResize = false;
+          if (options.size === 'max') needToResize = false;
           if (needToResize && contentTypeIsImageForSharp.test(contentType)) {
-            if (log) logger.info(`Resizing Image from path: ${path}`);
+            if (options.log) logger.info(`Resizing Image from path: ${options.path}`);
             /**
              * Handle images
              */
             mediaBuffer = await Image.resize({
               ...imageResizeOptions,
-              fileName: path,
+              fileName: options.path,
             });
             indexRobots = true;
-            if (log) logger.info(`Image was resized from path: ${path}`);
+            if (options.log) logger.info(`Image was resized from path: ${options.path}`);
           } else {
             /**
              * Handle all media file types
@@ -194,40 +186,40 @@ export namespace Media {
           }
         } catch (error) {
           ok = false;
-          if (log) {
-            logger.warn(`${path}:`, error.toString());
+          if (options.log) {
+            logger.warn(`${options.path}:`, error.toString());
           }
         }
       }
-      if (file && needToResize) {
+      if (options.file && needToResize) {
         try {
           if (contentTypeIsImageForSharp.test(contentType)) {
-            if (log) logger.info('Resizing image file');
+            if (options.log) logger.info('Resizing image file');
             /**
              * Handle images
              */
-            mediaBuffer = await Image.bufferImage({...imageResizeOptions, input: file});
+            mediaBuffer = await Image.bufferImage({...imageResizeOptions, input: options.file});
             indexRobots = true;
-            if (log) logger.info('Image File was resized');
+            if (options.log) logger.info('Image File was resized');
           }
         } catch (e) {
-          if (log) logger.error('Image File was not resized');
+          if (options.log) logger.error('Image File was not resized');
           //
           ok = false;
         }
       }
       if (!indexRobots) {
-        response.set('X-Robots-Tag', 'none'); // Prevent robots from indexing
+        options.response.set('X-Robots-Tag', 'none'); // Prevent robots from indexing
       }
       if (!ok) {
         /**
          * End request for messages to prevent the provider sending messages with invalid media files
          */
-        if (size === 'message') {
+        if (options.size === 'message') {
           logger.warn(`Can't find media file`);
-          response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
-          response.status(404);
-          response.end();
+          options.response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
+          options.response.status(404);
+          options.response.end();
           return;
         }
         mediaBuffer = await Image.resize({
@@ -242,13 +234,13 @@ export namespace Media {
           ...imageResizeOptions,
         });
         contentType = 'image/jpeg';
-        response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
+        options.response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
       } else {
-        response.status(200);
-        response.set('Cache-Control', `immutable, public, max-age=${cacheTime}, s-maxage=${cacheTime * 2}, min-fresh=${cacheTime}`); // only cache if method changes to get
+        options.response.status(200);
+        options.response.set('Cache-Control', `immutable, public, max-age=${cacheTime}, s-maxage=${cacheTime * 2}, min-fresh=${cacheTime}`); // only cache if method changes to get
       }
-      response.set('Content-Type', contentType);
-      response.send(mediaBuffer);
+      options.response.set('Content-Type', contentType);
+      options.response.send(mediaBuffer);
     };
     /**
      * Save media file
@@ -311,6 +303,32 @@ export namespace Media {
   export const sizesOptionsArray: string[] = Object.keys(sizesObject);
 
   /**
+   * Available Output Formats
+   * @enum {string}
+   */
+  export enum AvailableOutputFormats {
+    avif = 'avif',
+    dz = 'dz',
+    fits = 'fits',
+    gif = 'gif',
+    heif = 'heif',
+    input = 'input',
+    jpeg = 'jpeg',
+    jp2 = 'jp2',
+    jxl = 'jxl',
+    magick = 'magick',
+    openslide = 'openslide',
+    pdf = 'pdf',
+    png = 'png',
+    ppm = 'ppm',
+    raw = 'raw',
+    svg = 'svg',
+    tiff = 'tiff',
+    v = 'v',
+    webp = 'webp',
+  }
+
+  /**
    * Image Helper
    * @param {any} options
    */
@@ -321,43 +339,20 @@ export namespace Media {
      * @return {Promise<Buffer>}
      */
     public static bufferImage = async (options: InterfaceImageResize): Promise<Buffer> => {
-      // Set default values
-      let outputFormat: AvailableFormatInfo;
-      const formats = {
-        avif: sharp.format.avif,
-        dz: sharp.format.dz,
-        fits: sharp.format.fits,
-        gif: sharp.format.gif,
-        heif: sharp.format.heif,
-        input: sharp.format.input,
-        jpeg: sharp.format.jpeg,
-        jpg: sharp.format.jpeg,
-        jp2: sharp.format.jp2,
-        jxl: sharp.format.jxl,
-        magick: sharp.format.magick,
-        openslide: sharp.format.openslide,
-        pdf: sharp.format.pdf,
-        png: sharp.format.png,
-        ppm: sharp.format.ppm,
-        raw: sharp.format.raw,
-        svg: sharp.format.svg,
-        tiff: sharp.format.tiff,
-        tif: sharp.format.tiff,
-        v: sharp.format.v,
-        webp: sharp.format.webp,
+      let outputFormat: AvailableOutputFormats;
+      const convertToFormatsEnum = (str: string): AvailableOutputFormats | undefined => {
+        const colorValue = AvailableOutputFormats[str as keyof typeof AvailableOutputFormats];
+        return colorValue;
       };
-      const formatsAsStings = Object.keys(formats);
       if (options.contentType) {
         const formatFromContentType = options.contentType.split('/').pop();
-        if (formatsAsStings.includes(formatFromContentType)) {
-          outputFormat = formats[formatFromContentType];
-        }
+        outputFormat = convertToFormatsEnum(formatFromContentType);
       }
-      if (options.format && formatsAsStings.includes(options.format)) {
-        outputFormat = formats[options.format];
+      if (options.format) {
+        outputFormat = convertToFormatsEnum(options.format);
       }
-      outputFormat ??= formats.jpeg;
-      const animated = outputFormat === formats.gif;
+      outputFormat ??= AvailableOutputFormats.jpeg;
+      const animated = outputFormat === AvailableOutputFormats.gif;
       let optionsImage: ResizeOptions = {};
       let dpr = Number(options.dpr ?? 1);
       if (dpr > 3) {

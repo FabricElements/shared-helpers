@@ -14,7 +14,7 @@ const cacheTime = 86400000 * 7; // 7 days
  */
 app.get('/media/**', async (request, response) => {
   const query = request.query ?? {};
-  await Media.Helper.preview({request, response, ...query, path: request.path, cacheTime: cacheTime});
+  await Media.Helper.preview({response, ...query, path: request.path, cacheTime: cacheTime});
   return null;
 });
 

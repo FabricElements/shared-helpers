@@ -459,7 +459,7 @@ export namespace User {
             crop: 'entropy',
             input: imgBuffer,
             quality: 90,
-            format: 'jpeg',
+            format: Media.AvailableOutputFormats.jpeg,
             contentType: 'image/jpeg',
           };
           const media = await Media.Image.bufferImage(imageResizeOptions);
