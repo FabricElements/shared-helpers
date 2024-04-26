@@ -44,7 +44,6 @@ export declare namespace Media {
          * @param {any} options
          */
         static preview: (options: {
-            [key: string]: any;
             crop?: string;
             dpr?: number;
             height?: number;
@@ -59,6 +58,7 @@ export declare namespace Media {
             log?: boolean;
             quality?: number;
             minSize?: number;
+            [key: string]: any;
         }) => Promise<any>;
         /**
          * Save media file

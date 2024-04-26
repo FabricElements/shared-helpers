@@ -72,7 +72,6 @@ export namespace Media {
      * @param {any} options
      */
     public static preview = async (options: {
-      [key: string]: any,
       crop?: string;
       dpr?: number;
       height?: number;
@@ -88,6 +87,7 @@ export namespace Media {
       quality?: number;
       // Minimum size in bytes to prevent small images from being resized
       minSize?: number;
+      [key: string]: any,
     }) => {
       let {
         crop,
@@ -102,6 +102,7 @@ export namespace Media {
         format,
         minSize,
         quality,
+        log,
       } = options;
       if (file && path) throw new Error('You can only use file or path, not both');
       let cacheTime = options.cacheTime ?? 60;
@@ -115,6 +116,7 @@ export namespace Media {
       }
       // const publicUrl = global.getUrlAndGs(mediaPath).url;
       let ok = true;
+      let resized = false;
       const imageResizeOptions: InterfaceImageResize = {};
       /**
        * Define image size
@@ -174,6 +176,7 @@ export namespace Media {
             needToResize = false;
           }
           if (needToResize && contentTypeIsImageForSharp.test(contentType) && fileSize !== 'max') {
+            if (log) logger.info(`Resizing ${path}`);
             /**
              * Handle images
              */
@@ -183,6 +186,7 @@ export namespace Media {
               ...imageResizeOptions,
               fileName: path,
             });
+            resized = true;
             // contentType = `image/${format}`;
             indexRobots = true;
           } else {
@@ -201,12 +205,14 @@ export namespace Media {
       if (file && needToResize) {
         try {
           if (contentTypeIsImageForSharp.test(contentType)) {
+            if (log) logger.info(`Resizing ${path}`);
             /**
              * Handle images
              */
             mediaBuffer = await Image.bufferImage({...imageResizeOptions, input: file});
             // contentType = `image/${format}`;
             indexRobots = true;
+            resized = true;
           }
         } catch (e) {
           //
