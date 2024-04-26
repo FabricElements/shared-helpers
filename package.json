@@ -7,7 +7,7 @@
   "types": "./lib/index.d.ts",
   "author": "Erny Sans",
   "license": "BSD-3-Clause",
-  "version": "0.2.25",
+  "version": "0.2.26",
   "repository": {
     "type": "git",
     "url": "https://github.com/FabricElements/shared-helpers.git"

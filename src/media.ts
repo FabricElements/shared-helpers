@@ -85,6 +85,9 @@ export namespace Media {
       contentType?: string;
       cacheTime?: number;
       log?: boolean;
+      quality?: number;
+      // Minimum size in bytes to prevent small images from being resized
+      minSize?: number;
     }) => {
       let {
         crop,
@@ -96,10 +99,15 @@ export namespace Media {
         size,
         width,
         file,
+        format,
+        minSize,
+        quality,
       } = options;
+      if (file && path) throw new Error('You can only use file or path, not both');
       let cacheTime = options.cacheTime ?? 60;
       let mediaBuffer: any = null;
       let contentType = options.contentType ?? 'text/html';
+      let minSizeBytes = minSize ?? 1000;
       response.set('Content-Type', contentType);
       // Don't use "/" at the start or end of your path
       if (path && path.startsWith('/')) {
@@ -123,6 +131,7 @@ export namespace Media {
         imageResizeOptions.crop = crop ?? 'entropy';
       }
       if (dpr) imageResizeOptions.dpr = dpr;
+      if (format) imageResizeOptions.format = format;
       switch (imageSize.size) {
         case 'high':
           imageResizeOptions.quality = 90;
@@ -138,6 +147,9 @@ export namespace Media {
           imageResizeOptions.quality = 80;
           break;
       }
+      if (quality) imageResizeOptions.quality = quality;
+      /// Check if image needs to be resized
+      let needToResize = Object.values(imageResizeOptions).length > 0;
       let indexRobots = !!robots;
       if (path) {
         try {
@@ -157,7 +169,11 @@ export namespace Media {
             // noinspection ExceptionCaughtLocallyJS
             throw new Error('Media file is empty');
           }
-          if (contentTypeIsImageForSharp.test(contentType) && fileSize !== 'max') {
+          /// Check if file is too small to resize
+          if (fileSize < minSizeBytes) {
+            needToResize = false;
+          }
+          if (needToResize && contentTypeIsImageForSharp.test(contentType) && fileSize !== 'max') {
             /**
              * Handle images
              */
@@ -182,14 +198,12 @@ export namespace Media {
           }
         }
       }
-      if (file) {
+      if (file && needToResize) {
         try {
           if (contentTypeIsImageForSharp.test(contentType)) {
             /**
              * Handle images
              */
-            // const isJPEG = contentTypeIsJPEG.test(contentType);
-            // const format = isJPEG ? 'jpeg' : 'png';
             mediaBuffer = await Image.bufferImage({...imageResizeOptions, input: file});
             // contentType = `image/${format}`;
             indexRobots = true;
@@ -306,7 +320,6 @@ export namespace Media {
      */
     public static bufferImage = async (options: InterfaceImageResize): Promise<Buffer> => {
       // Set default values
-      let inputFormat: AvailableFormatInfo;
       let outputFormat: AvailableFormatInfo;
       const formats = {
         avif: sharp.format.avif,
@@ -335,14 +348,12 @@ export namespace Media {
       if (options.contentType) {
         const formatFromContentType = options.contentType.split('/').pop();
         if (formatsAsStings.includes(formatFromContentType)) {
-          inputFormat = formats[formatFromContentType];
           outputFormat = formats[formatFromContentType];
         }
       }
       if (options.format && formatsAsStings.includes(options.format)) {
         outputFormat = formats[options.format];
       }
-      inputFormat ??= formats.jpeg;
       outputFormat ??= formats.jpeg;
       const animated = outputFormat === formats.gif;
       let optionsImage: ResizeOptions = {};

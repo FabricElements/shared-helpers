@@ -57,6 +57,8 @@ export declare namespace Media {
             contentType?: string;
             cacheTime?: number;
             log?: boolean;
+            quality?: number;
+            minSize?: number;
         }) => Promise<any>;
         /**
          * Save media file
