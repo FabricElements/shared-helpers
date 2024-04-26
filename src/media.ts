@@ -88,7 +88,7 @@ export namespace Media {
       // Minimum size in bytes to prevent small images from being resized
       minSize?: number;
       [key: string]: any,
-    }) => {
+    }): Promise<void> => {
       let {
         crop,
         height,
@@ -116,7 +116,6 @@ export namespace Media {
       }
       // const publicUrl = global.getUrlAndGs(mediaPath).url;
       let ok = true;
-      let resized = false;
       const imageResizeOptions: InterfaceImageResize = {};
       /**
        * Define image size
@@ -160,12 +159,12 @@ export namespace Media {
           if (!exists) throw new Error('File not found');
           const [metadata]: any = await fileRef.getMetadata();
           contentType = metadata.contentType || null;
-          const fileSize = metadata.size || 0;
           if (!contentType) {
             indexRobots = false;
             // noinspection ExceptionCaughtLocallyJS
             throw new Error('contentType is missing');
           }
+          const fileSize = metadata.size ?? 0;
           imageResizeOptions.contentType = contentType;
           if (fileSize === 0) {
             // noinspection ExceptionCaughtLocallyJS
@@ -175,20 +174,18 @@ export namespace Media {
           if (fileSize < minSizeBytes) {
             needToResize = false;
           }
-          if (needToResize && contentTypeIsImageForSharp.test(contentType) && fileSize !== 'max') {
-            if (log) logger.info(`Resizing ${path}`);
+          if (size === 'max') needToResize = false;
+          if (needToResize && contentTypeIsImageForSharp.test(contentType)) {
+            if (log) logger.info(`Resizing Image from path: ${path}`);
             /**
              * Handle images
              */
-            // const isJPEG = contentTypeIsJPEG.test(contentType);
-            // const format = isJPEG ? 'jpeg' : 'png';
             mediaBuffer = await Image.resize({
               ...imageResizeOptions,
               fileName: path,
             });
-            resized = true;
-            // contentType = `image/${format}`;
             indexRobots = true;
+            if (log) logger.info(`Image was resized from path: ${path}`);
           } else {
             /**
              * Handle all media file types
@@ -197,7 +194,7 @@ export namespace Media {
           }
         } catch (error) {
           ok = false;
-          if (options.log) {
+          if (log) {
             logger.warn(`${path}:`, error.toString());
           }
         }
@@ -205,16 +202,17 @@ export namespace Media {
       if (file && needToResize) {
         try {
           if (contentTypeIsImageForSharp.test(contentType)) {
-            if (log) logger.info(`Resizing ${path}`);
+            if (log) logger.info('Resizing image file');
             /**
              * Handle images
              */
             mediaBuffer = await Image.bufferImage({...imageResizeOptions, input: file});
             // contentType = `image/${format}`;
             indexRobots = true;
-            resized = true;
+            if (log) logger.info('Image File was resized');
           }
         } catch (e) {
+          if (log) logger.error('Image File was not resized');
           //
           ok = false;
         }
@@ -252,7 +250,6 @@ export namespace Media {
       }
       response.set('Content-Type', contentType);
       response.send(mediaBuffer);
-      return null;
     };
     /**
      * Save media file

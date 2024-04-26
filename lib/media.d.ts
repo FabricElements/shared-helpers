@@ -59,7 +59,7 @@ export declare namespace Media {
             quality?: number;
             minSize?: number;
             [key: string]: any;
-        }) => Promise<any>;
+        }) => Promise<void>;
         /**
          * Save media file
          * @param {any} options
