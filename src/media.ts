@@ -7,7 +7,7 @@ import type {Response} from 'express';
 import {getStorage} from 'firebase-admin/storage';
 import {logger} from 'firebase-functions/v2';
 import fetch from 'node-fetch';
-import sharp from 'sharp';
+import sharp, {AvailableFormatInfo, ResizeOptions} from 'sharp';
 import {contentTypeIsImageForSharp} from './regex.js';
 
 export namespace Media {
@@ -142,10 +142,13 @@ export namespace Media {
       if (path) {
         try {
           const fileRef = getStorage().bucket().file(path);
+          const [exists] = await fileRef.exists();
+          if (!exists) throw new Error('File not found');
           const [metadata]: any = await fileRef.getMetadata();
           contentType = metadata.contentType || null;
           const fileSize = metadata.size || 0;
           if (!contentType) {
+            indexRobots = false;
             // noinspection ExceptionCaughtLocallyJS
             throw new Error('contentType is missing');
           }
@@ -302,10 +305,47 @@ export namespace Media {
      * @return {Promise<Buffer>}
      */
     public static bufferImage = async (options: InterfaceImageResize): Promise<Buffer> => {
-      let finalFormat = options.contentType.split('/').pop();
-      if (options.format != null) finalFormat = options.format;
-      const animated = finalFormat === 'gif';
-      let optionsImage: any = {};
+      // Set default values
+      let inputFormat: AvailableFormatInfo;
+      let outputFormat: AvailableFormatInfo;
+      const formats = {
+        avif: sharp.format.avif,
+        dz: sharp.format.dz,
+        fits: sharp.format.fits,
+        gif: sharp.format.gif,
+        heif: sharp.format.heif,
+        input: sharp.format.input,
+        jpeg: sharp.format.jpeg,
+        jpg: sharp.format.jpeg,
+        jp2: sharp.format.jp2,
+        jxl: sharp.format.jxl,
+        magick: sharp.format.magick,
+        openslide: sharp.format.openslide,
+        pdf: sharp.format.pdf,
+        png: sharp.format.png,
+        ppm: sharp.format.ppm,
+        raw: sharp.format.raw,
+        svg: sharp.format.svg,
+        tiff: sharp.format.tiff,
+        tif: sharp.format.tiff,
+        v: sharp.format.v,
+        webp: sharp.format.webp,
+      };
+      const formatsAsStings = Object.keys(formats);
+      if (options.contentType) {
+        const formatFromContentType = options.contentType.split('/').pop();
+        if (formatsAsStings.includes(formatFromContentType)) {
+          inputFormat = formats[formatFromContentType];
+          outputFormat = formats[formatFromContentType];
+        }
+      }
+      if (options.format && formatsAsStings.includes(options.format)) {
+        outputFormat = formats[options.format];
+      }
+      inputFormat ??= formats.jpeg;
+      outputFormat ??= formats.jpeg;
+      const animated = outputFormat === formats.gif;
+      let optionsImage: ResizeOptions = {};
       let dpr = Number(options.dpr ?? 1);
       if (dpr > 3) {
         dpr = 3;
@@ -331,21 +371,9 @@ export namespace Media {
       if (crop) {
         final = base.extract({left: 0, top: 0, width: optionsImage.width, height: optionsImage.height});
       }
-      const resultOptions: any = {
+      return final.toFormat(outputFormat, {
         quality: options.quality || 90,
-      };
-      switch (finalFormat) {
-        case 'jpeg':
-          final = final.jpeg(resultOptions);
-          break;
-        case 'png':
-          final = final.png(resultOptions);
-          break;
-        case 'gif':
-          final = final.gif(resultOptions);
-          break;
-      }
-      return final.toBuffer();
+      }).toBuffer();
     };
 
     /**
