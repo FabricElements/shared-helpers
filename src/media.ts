@@ -9,6 +9,7 @@ import {logger} from 'firebase-functions/v2';
 import fetch from 'node-fetch';
 import sharp, {ResizeOptions} from 'sharp';
 import {contentTypeIsImageForSharp} from './regex.js';
+import {emulator} from './variables.js';
 
 export namespace Media {
   /**
@@ -55,6 +56,7 @@ export namespace Media {
     robots?: boolean;
     size?: Media.imageSizesType;
     width?: number;
+    showImageOnError?: boolean;
   }
 
   /**
@@ -84,7 +86,7 @@ export namespace Media {
       await fileRef.save(buffer, {contentType: contentType});
       // TODO: check if uri is valid
       const uri = fileRef.cloudStorageURI.href;
-      logger.log(`Saved file from url ${options.url} to ${uri}`);
+      if (emulator) logger.log(`Saved file from url ${options.url} to ${uri}`);
       return {
         contentType: contentType,
         uri: uri,
@@ -98,7 +100,7 @@ export namespace Media {
     public static preview = async (options: PreviewParams): Promise<void> => {
       if (options.file && options.path) throw new Error('You can only use file or path, not both');
       let cacheTime = options.cacheTime ?? 60;
-      let mediaBuffer: any = null;
+      let mediaBuffer: Buffer = null;
       let contentType = options.contentType ?? 'text/html';
       let minSizeBytes = options.minSize ?? 1000;
       options.response.set('Content-Type', contentType);
@@ -106,7 +108,6 @@ export namespace Media {
       if (options.path && options.path.startsWith('/')) {
         options.path = options.path.substring(1);
       }
-      // const publicUrl = global.getUrlAndGs(mediaPath).url;
       let ok = true;
       const imageResizeOptions: InterfaceImageResize = {};
       /**
@@ -172,10 +173,12 @@ export namespace Media {
             /**
              * Handle images
              */
-            mediaBuffer = await Image.resize({
+            const media = await Image.resize({
               ...imageResizeOptions,
               fileName: options.path,
             });
+            mediaBuffer = media.buffer;
+            contentType = media.contentType;
             indexRobots = true;
             if (options.log) logger.info(`Image was resized from path: ${options.path}`);
           } else {
@@ -186,9 +189,7 @@ export namespace Media {
           }
         } catch (error) {
           ok = false;
-          if (options.log) {
-            logger.warn(`${options.path}:`, error.toString());
-          }
+          if (options.log) logger.warn(`${options.path}:`, error.toString());
         }
       }
       if (options.file && needToResize) {
@@ -198,48 +199,50 @@ export namespace Media {
             /**
              * Handle images
              */
-            mediaBuffer = await Image.bufferImage({...imageResizeOptions, input: options.file});
+            const resizedImage = await Image.bufferImage({...imageResizeOptions, input: options.file});
+            mediaBuffer = resizedImage.buffer;
+            contentType = resizedImage.contentType;
             indexRobots = true;
             if (options.log) logger.info('Image File was resized');
           }
         } catch (e) {
           if (options.log) logger.error('Image File was not resized');
-          //
           ok = false;
         }
+      }
+      if (!ok) {
+        // End response if media file is not found
+        if (!options.showImageOnError) {
+          if (options.log) logger.warn(`Can't find media file`);
+          options.response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
+          options.response.status(404);
+          options.response.set('X-Robots-Tag', 'none'); // Prevent robots from indexing
+          options.response.end();
+          return;
+        }
+        // Show default image if media file is not found
+        const media = await Image.resize({
+          fileName: 'default/error.jpg',
+          format: AvailableOutputFormats.jpeg,
+          ...imageResizeOptions,
+        });
+        mediaBuffer = media.buffer;
+        contentType = media.contentType;
+        indexRobots = false;
+      }
+      /// Set response headers
+      if (ok) {
+        options.response.status(200);
+        options.response.set('Cache-Control', `immutable, public, max-age=${cacheTime}, s-maxage=${cacheTime * 2}, min-fresh=${cacheTime}`); // only cache if method changes to get
+      } else {
+        options.response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
+        indexRobots = false;
       }
       if (!indexRobots) {
         options.response.set('X-Robots-Tag', 'none'); // Prevent robots from indexing
       }
-      if (!ok) {
-        /**
-         * End request for messages to prevent the provider sending messages with invalid media files
-         */
-        if (options.size === 'message') {
-          logger.warn(`Can't find media file`);
-          options.response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
-          options.response.status(404);
-          options.response.end();
-          return;
-        }
-        mediaBuffer = await Image.resize({
-          fileName: 'default/error.jpg',
-          ...imageResizeOptions,
-        });
-        contentType = 'image/jpeg';
-      }
-      if (!mediaBuffer) {
-        mediaBuffer = await Image.resize({
-          fileName: 'default/default.jpg',
-          ...imageResizeOptions,
-        });
-        contentType = 'image/jpeg';
-        options.response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
-      } else {
-        options.response.status(200);
-        options.response.set('Cache-Control', `immutable, public, max-age=${cacheTime}, s-maxage=${cacheTime * 2}, min-fresh=${cacheTime}`); // only cache if method changes to get
-      }
       options.response.set('Content-Type', contentType);
+      /// Send media file
       options.response.send(mediaBuffer);
     };
     /**
@@ -336,9 +339,12 @@ export namespace Media {
     /**
      * bufferImage
      * @param {InterfaceImageResize} options
-     * @return {Promise<Buffer>}
+     * @return {Promise<{contentType: string; buffer: Buffer}>}
      */
-    public static bufferImage = async (options: InterfaceImageResize): Promise<Buffer> => {
+    public static bufferImage = async (options: InterfaceImageResize): Promise<{
+      contentType: string;
+      buffer: Buffer;
+    }> => {
       let outputFormat: AvailableOutputFormats;
       const convertToFormatsEnum = (str: string): AvailableOutputFormats | undefined => {
         const colorValue = AvailableOutputFormats[str as keyof typeof AvailableOutputFormats];
@@ -379,18 +385,22 @@ export namespace Media {
       if (crop) {
         final = base.extract({left: 0, top: 0, width: optionsImage.width, height: optionsImage.height});
       }
-      return final.toFormat(outputFormat, {
+      const result = final.toFormat(outputFormat, {
         quality: options.quality || 90,
         force: true,
       }).toBuffer();
+      return {
+        buffer: await result,
+        contentType: `image/${outputFormat}`,
+      };
     };
 
     /**
      * Resize Images
      * @param {InterfaceImageResize} options
-     * @return {Promise<Buffer>}
+     * @return {Promise<{contentType: string; buffer: Buffer}>}
      */
-    public static resize = async (options: InterfaceImageResize): Promise<Buffer> => {
+    public static resize = async (options: InterfaceImageResize): Promise<{ contentType: string; buffer: Buffer }> => {
       if (!options.fileName) {
         throw new Error('Google Cloud Storage path not found or invalid');
       }

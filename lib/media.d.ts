@@ -47,6 +47,7 @@ export declare namespace Media {
         robots?: boolean;
         size?: Media.imageSizesType;
         width?: number;
+        showImageOnError?: boolean;
     }
     /**
      * Media Helper
@@ -125,15 +126,21 @@ export declare namespace Media {
         /**
          * bufferImage
          * @param {InterfaceImageResize} options
-         * @return {Promise<Buffer>}
+         * @return {Promise<{contentType: string; buffer: Buffer}>}
          */
-        static bufferImage: (options: InterfaceImageResize) => Promise<Buffer>;
+        static bufferImage: (options: InterfaceImageResize) => Promise<{
+            contentType: string;
+            buffer: Buffer;
+        }>;
         /**
          * Resize Images
          * @param {InterfaceImageResize} options
-         * @return {Promise<Buffer>}
+         * @return {Promise<{contentType: string; buffer: Buffer}>}
          */
-        static resize: (options: InterfaceImageResize) => Promise<Buffer>;
+        static resize: (options: InterfaceImageResize) => Promise<{
+            contentType: string;
+            buffer: Buffer;
+        }>;
         /**
          * Get default image size
          * @param {imageSizesType} inputSize

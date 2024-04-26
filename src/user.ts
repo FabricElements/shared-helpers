@@ -466,9 +466,9 @@ export namespace User {
           const avatarPath = `media/user/${id}/avatar`;
           const avatarUrl = `${mainUrl}/${avatarPath}`;
           await Media.Helper.save({
-            media,
+            media: media.buffer,
             path: avatarPath,
-            contentType: 'image/jpeg',
+            contentType: media.contentType,
           });
           updateDataFirestore.avatar = avatarPath;
           updateDataUser.photoURL = avatarUrl;
