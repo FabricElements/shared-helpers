@@ -207,7 +207,6 @@ export namespace Media {
              * Handle images
              */
             mediaBuffer = await Image.bufferImage({...imageResizeOptions, input: file});
-            // contentType = `image/${format}`;
             indexRobots = true;
             if (log) logger.info('Image File was resized');
           }
@@ -387,6 +386,7 @@ export namespace Media {
       }
       return final.toFormat(outputFormat, {
         quality: options.quality || 90,
+        force: true,
       }).toBuffer();
     };
 
