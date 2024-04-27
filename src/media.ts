@@ -380,11 +380,17 @@ export namespace Media {
         dpr = 3;
       }
       const crop = options.maxHeight && options.maxWidth || options.crop;
+      // if (options.maxHeight || crop) {
+      //   optionsImage.height = options.maxHeight * dpr ?? 800;
+      // }
+      // if (options.maxWidth || crop) {
+      //   optionsImage.width = options.maxWidth * dpr ?? 800;
+      // }
       if (options.maxHeight || crop) {
-        optionsImage.height = options.maxHeight * dpr || 800;
+        optionsImage.height = options.maxHeight ?? 800;
       }
       if (options.maxWidth || crop) {
-        optionsImage.width = options.maxWidth * dpr || 800;
+        optionsImage.width = options.maxWidth ?? 800;
       }
       if (crop) {
         optionsImage.position = options.crop === 'attention' ? sharp.strategy.attention : sharp.strategy.entropy;
@@ -399,6 +405,10 @@ export namespace Media {
       let final = base;
       if (crop) {
         final = base.extract({left: 0, top: 0, width: optionsImage.width, height: optionsImage.height});
+      }
+      // add density
+      if (dpr > 1) {
+        final = final.withMetadata({density: dpr * 72});
       }
       const result = final.toFormat(outputFormat, {
         quality: options.quality || 90,
