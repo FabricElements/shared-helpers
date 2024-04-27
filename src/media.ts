@@ -114,10 +114,10 @@ export namespace Media {
      */
     public static preview = async (options: PreviewParams): Promise<void> => {
       if (options.file && options.path) throw new Error('You can only use file or path, not both');
-      let cacheTime = options.cacheTime ?? 60;
+      let cacheTime = Number(options.cacheTime ?? 60);
       let mediaBuffer: Buffer = null;
       let contentType = options.contentType ?? 'text/html';
-      let minSizeBytes = options.minSize ?? 1000;
+      let minSizeBytes = Number(options.minSize ?? 1000);
       options.response.set('Content-Type', contentType);
       // Don't use "/" at the start or end of your path
       if (options.path && options.path.startsWith('/')) {
@@ -129,8 +129,8 @@ export namespace Media {
        * Define image size
        */
       const imageSize = Image.sizeObjectFromImageSize(options.size);
-      if (options.height) imageResizeOptions.maxHeight = options.height;
-      if (options.width) imageResizeOptions.maxWidth = options.width;
+      if (options.height) imageResizeOptions.maxHeight = Number(options.height);
+      if (options.width) imageResizeOptions.maxWidth = Number(options.width);
       // Override size parameters if size is set
       if (options.size) {
         imageResizeOptions.maxHeight = imageSize.height;
@@ -139,7 +139,7 @@ export namespace Media {
       if (options.crop || imageSize.size === 'thumbnail') {
         imageResizeOptions.crop = options.crop ?? 'entropy';
       }
-      if (options.dpr) imageResizeOptions.dpr = options.dpr;
+      if (options.dpr) imageResizeOptions.dpr = Number(options.dpr);
       if (options.format) imageResizeOptions.format = options.format;
       switch (imageSize.size) {
         case 'high':
@@ -375,7 +375,7 @@ export namespace Media {
       outputFormat ??= AvailableOutputFormats.jpeg;
       const animated = outputFormat === AvailableOutputFormats.gif;
       let optionsImage: ResizeOptions = {};
-      let dpr = Number(options.dpr ?? 1);
+      let dpr = options.dpr ?? 1;
       if (dpr > 3) {
         dpr = 3;
       }
