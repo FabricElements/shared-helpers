@@ -11,29 +11,47 @@ import sharp, {ResizeOptions} from 'sharp';
 import {contentTypeIsImageForSharp} from './regex.js';
 import {emulator} from './variables.js';
 
+/**
+ * Media Namespace
+ * @namespace Media
+ * @description Media Namespace
+ */
 export namespace Media {
   /**
-   * Save From URL Interface
+   * Available Image Output Formats
+   * @enum {string}
    */
-  export interface SaveFromUrl {
-    contentType: string;
-    uri: string;
-  }
-
-  export interface InterfaceImageResize {
-    crop?: string; // force proportions and cut
-    dpr?: number;
-    fileName?: string;
-    format?: AvailableOutputFormats;
-    input?: Buffer | Uint8Array | string | any;
-    maxHeight?: number;
-    maxWidth?: number;
-    quality?: number;
-    contentType?: string; // Only for internal use, it will be returned from storage
+  export enum AvailableOutputFormats {
+    avif = 'avif',
+    dz = 'dz',
+    fits = 'fits',
+    gif = 'gif',
+    heif = 'heif',
+    input = 'input',
+    jpeg = 'jpeg',
+    jp2 = 'jp2',
+    jxl = 'jxl',
+    magick = 'magick',
+    openslide = 'openslide',
+    pdf = 'pdf',
+    png = 'png',
+    ppm = 'ppm',
+    raw = 'raw',
+    svg = 'svg',
+    tiff = 'tiff',
+    v = 'v',
+    webp = 'webp',
   }
 
   /**
    * Set of predefined image sizes
+   * @enum {string}
+   * @property {string} thumbnail - thumbnail size 200x400
+   * @property {string} small - small size 200x200
+   * @property {string} medium - medium size 600x600
+   * @property {string} standard - standard size 1200x1200
+   * @property {string} high - high size 1400x1400
+   * @property {string} max - max size 1600x1600
    */
   export enum ImageSize {
     thumbnail = 'thumbnail',
@@ -45,9 +63,73 @@ export namespace Media {
   }
 
   /**
-   * PreviewParams
+   * SaveFromUrlOptions
+   * @interface SaveFromUrlOptions
+   * @property {string} url - url
+   * @property {string} path - Storage path to save the media file
    */
-  interface PreviewParams {
+  export interface SaveFromUrlOptions {
+    url: string;
+    path: string;
+  }
+
+  /**
+   * Save From URL Interface
+   * @interface SaveFromUrl
+   * @property {string} contentType - content type
+   * @property {string} uri - uri
+   */
+  export interface SaveFromUrl {
+    contentType: string;
+    uri: string;
+  }
+
+  /**
+   * InterfaceImageResize
+   * @interface InterfaceImageResize
+   * @property {string} [crop] - force proportions and cut
+   * @property {number} [dpr] - device pixel ratio
+   * @property {string} [fileName] - file name
+   * @property {AvailableOutputFormats} [format] - output format
+   * @property {Buffer | Uint8Array | string | any} [input] - input
+   * @property {number} [maxHeight] - max height
+   * @property {number} [maxWidth] - max width
+   * @property {number} [quality] - quality
+   * @property {string} [contentType] - content type
+   */
+  export interface InterfaceImageResize {
+    crop?: string; // force proportions and cut
+    dpr?: number; // device pixel ratio
+    fileName?: string;
+    format?: AvailableOutputFormats;
+    input?: Buffer | Uint8Array | string | any;
+    maxHeight?: number;
+    maxWidth?: number;
+    quality?: number;
+    contentType?: string; // Only for internal use, it will be returned from storage
+  }
+
+  /**
+   * PreviewParams
+   * @interface PreviewParams
+   * @property {number} [cacheTime] - cache time
+   * @property {string} [contentType] - content type
+   * @property {string} [crop] - force proportions and cut
+   * @property {number} [dpr] - device pixel ratio
+   * @property {Uint8Array | ArrayBuffer} [file] - file
+   * @property {AvailableOutputFormats} [format] - output format
+   * @property {number} [height] - Image resize max height
+   * @property {boolean} [log] - log messages
+   * @property {number} [minSize] - The minimum size in bytes to resize the image
+   * @property {string} [path] - The storage path to the media file
+   * @property {number} [quality] - image quality (0-100)
+   * @property {Response} response - Express Response object
+   * @property {boolean} [robots] - Index headers for robots, default is false
+   * @property {ImageSize} [size] - Set of size options
+   * @property {number} [width] - Image resize max width
+   * @property {boolean} [default] - Show default image if media file is not found, default is false
+   */
+  export interface PreviewParams {
     cacheTime?: number;
     contentType?: string;
     crop?: string;
@@ -56,35 +138,78 @@ export namespace Media {
     format?: AvailableOutputFormats;
     height?: number;
     log?: boolean;
-    // The minimum size in bytes to resize the image
     minSize?: number;
-    // The path to the media file
     path?: string;
-    // The image quality
     quality?: number;
-    // The request object
     response: Response;
-    // Index headers for robots, default is false
     robots?: boolean;
-    // Set of size options
     size?: ImageSize;
-    // Image resize max width
     width?: number;
-    // Show default image if media file is not found, default is false
-    showImageOnError?: boolean;
+    default?: boolean;
   }
 
   /**
+   * SaveParams
+   * @interface SaveParams
+   * @property {string} contentType - content type
+   * @property {Buffer} media - media
+   * @property {object} [options] - options
+   * @property {string} [path] - path. Default is root. Example: `path/to/file.jpg`. Don't use "/" at the start or end of your path
+   */
+  export interface SaveParams {
+    contentType: string;
+    media: Buffer;
+    options?: object;
+    path?: string;
+  }
+
+  /**
+   * Set of predefined image sizes. The sizes are used to resize images.
+   * @type {Record<ImageSize, {height: number; width: number;}>}
+   * @property {number} height - Max height
+   * @property {number} width - Max width
+   * @property {ImageSize} size - Image size
+   */
+  export const sizesObject: Record<ImageSize, { height: number; width: number; }> = {
+    thumbnail: {
+      height: 200,
+      width: 400,
+    },
+    small: {
+      height: 200,
+      width: 200,
+    },
+    medium: {
+      height: 600,
+      width: 600,
+    },
+    standard: {
+      height: 1200,
+      width: 1200,
+    },
+    high: {
+      height: 1400,
+      width: 1400,
+    },
+    max: {
+      height: 1600,
+      width: 1600,
+    },
+  };
+
+  /**
    * Media Helper
+   * @class Helper
+   * @classdesc Media Helper
    */
   export class Helper {
     /**
      * Save From URL and return local path
-     * @param {object} options
+     * @param {SaveFromUrlOptions} options
      * Returns storage uri (`gs://my-bucket/path`)
      * @return {Promise<SaveFromUrl>}
      */
-    public static async saveFromUrl(options: { url: string, path: string }): Promise<SaveFromUrl> {
+    public static async saveFromUrl(options: SaveFromUrlOptions): Promise<SaveFromUrl> {
       const fileResponse = await fetch(options.url, {
         method: 'GET',
         redirect: 'follow',
@@ -97,7 +222,6 @@ export namespace Media {
       const uint8Array = new Uint8Array(blob);
       const buffer = Buffer.from(uint8Array);
       const contentType: string = fileResponse.headers.get('content-type');
-
       await fileRef.save(buffer, {contentType: contentType});
       // TODO: check if uri is valid
       const uri = fileRef.cloudStorageURI.href;
@@ -111,6 +235,7 @@ export namespace Media {
     /**
      * Preview media file
      * @param {PreviewParams} options
+     * @return {Promise<void>}
      */
     public static preview = async (options: PreviewParams): Promise<void> => {
       if (options.file && options.path) throw new Error('You can only use file or path, not both');
@@ -225,13 +350,21 @@ export namespace Media {
           ok = false;
         }
       }
+      /// Set response headers
+      if (ok) {
+        options.response.status(200);
+        options.response.set('Cache-Control', `immutable, public, max-age=${cacheTime}, s-maxage=${cacheTime * 2}, min-fresh=${cacheTime}`); // only cache if method changes to get
+      } else {
+        options.response.status(404);
+        options.response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
+        indexRobots = false;
+      }
+      if (!indexRobots) {
+        options.response.set('X-Robots-Tag', 'none'); // Prevent robots from indexing
+      }
       if (!ok) {
         // End response if media file is not found
-        if (!options.showImageOnError) {
-          if (options.log) logger.warn(`Can't find media file`);
-          options.response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
-          options.response.status(404);
-          options.response.set('X-Robots-Tag', 'none'); // Prevent robots from indexing
+        if (!options.default) {
           options.response.end();
           return;
         }
@@ -243,33 +376,19 @@ export namespace Media {
         });
         mediaBuffer = media.buffer;
         contentType = media.contentType;
-        indexRobots = false;
       }
+
       /// Set response headers
-      if (ok) {
-        options.response.status(200);
-        options.response.set('Cache-Control', `immutable, public, max-age=${cacheTime}, s-maxage=${cacheTime * 2}, min-fresh=${cacheTime}`); // only cache if method changes to get
-      } else {
-        options.response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
-        indexRobots = false;
-      }
-      if (!indexRobots) {
-        options.response.set('X-Robots-Tag', 'none'); // Prevent robots from indexing
-      }
       options.response.set('Content-Type', contentType);
       /// Send media file
       options.response.send(mediaBuffer);
     };
     /**
      * Save media file
-     * @param {any} options
+     * @param {SaveParams} options
+     * @return {Promise<void>}
      */
-    public static save = async (options: {
-      contentType: string;
-      media: Buffer,
-      options?: object;
-      path?: string; // yourPath = yourPath/id. Don't use "/" at the start or end of your path
-    }) => {
+    public static save = async (options: SaveParams): Promise<void> => {
       const bucketRef = getStorage().bucket();
       const fileRef = bucketRef.file(options.path);
       const fileOptions: any = {
@@ -278,77 +397,14 @@ export namespace Media {
         validation: true,
         ...options.options,
       };
-      // await fileRef.createWriteStream(fileOptions);
       await fileRef.save(options.media, fileOptions);
     };
   }
 
   /**
-   * sizesObject
-   * @type {object}
-   * @return { [field: string]: { height: number; width: number; } }
-   */
-  export const sizesObject: Record<ImageSize, { height: number; width: number; }> = {
-    thumbnail: {
-      height: 200,
-      width: 400,
-    },
-    small: {
-      height: 200,
-      width: 200,
-    },
-    medium: {
-      height: 600,
-      width: 600,
-    },
-    standard: {
-      height: 1200,
-      width: 1200,
-    },
-    high: {
-      height: 1400,
-      width: 1400,
-    },
-    max: {
-      height: 1600,
-      width: 1600,
-    },
-  };
-  /**
-   * sizesOptionsArray
-   * @type {string[]} sizesOptionsArray
-   */
-  export const sizesOptionsArray: string[] = Object.keys(sizesObject);
-
-  /**
-   * Available Output Formats
-   * @enum {string}
-   */
-  export enum AvailableOutputFormats {
-    avif = 'avif',
-    dz = 'dz',
-    fits = 'fits',
-    gif = 'gif',
-    heif = 'heif',
-    input = 'input',
-    jpeg = 'jpeg',
-    jp2 = 'jp2',
-    jxl = 'jxl',
-    magick = 'magick',
-    openslide = 'openslide',
-    pdf = 'pdf',
-    png = 'png',
-    ppm = 'ppm',
-    raw = 'raw',
-    svg = 'svg',
-    tiff = 'tiff',
-    v = 'v',
-    webp = 'webp',
-  }
-
-  /**
    * Image Helper
-   * @param {any} options
+   * @class Image
+   * @classdesc Image Helper
    */
   export class Image {
     /**
@@ -431,7 +487,7 @@ export namespace Media {
      * @return {{height: number, width: number, size: ImageSize}}
      */
     static sizeObjectFromImageSize = (inputSize: ImageSize): { height: number, width: number, size: ImageSize } => {
-      const sizeBase: ImageSize = inputSize && sizesOptionsArray.indexOf(inputSize) >= 0 ? inputSize : ImageSize.standard;
+      const sizeBase: ImageSize = ImageSize[inputSize] ?? ImageSize.standard;
       return {
         height: sizesObject[sizeBase].height,
         width: sizesObject[sizeBase].width,
