@@ -281,7 +281,7 @@ export namespace Media {
           imageResizeOptions.quality = 80;
           break;
       }
-      if (options.quality) imageResizeOptions.quality = options.quality;
+      if (options.quality) imageResizeOptions.quality = Number(options.quality);
       /// Check if image needs to be resized
       let needToResize = Object.values(imageResizeOptions).length > 0;
       let indexRobots = !!options.robots;
