@@ -432,7 +432,7 @@ export namespace Media {
       const animated = outputFormat === AvailableOutputFormats.gif;
       let optionsImage: ResizeOptions = {};
       let dpr = options.dpr ?? 1;
-      if (dpr > 3) dpr = 3;
+      if (dpr > 6) dpr = 6;
       const crop = options.crop || options.maxHeight && options.maxWidth;
       // Set image size
       if (options.maxHeight || crop) {
