@@ -435,20 +435,24 @@ export namespace User {
         updateDataFirestore.email = email;
       }
       if (language) updateDataFirestore.language = language;
-      const formatNames = this.formatUserNames(data);
-      const updateName = formatNames.name !== currentUser.displayName;
-      const onboarding: {
+      let onboarding: {
         name?: boolean,
         avatar?: boolean,
       } = {};
-      if (updateName) {
-        updateDataUser.displayName = formatNames.name;
-        updateDataFirestore.name = formatNames.name;
-        updateDataFirestore.firstName = formatNames.firstName;
-        updateDataFirestore.lastName = formatNames.lastName;
-        updateDataFirestore.abbr = formatNames.abbr;
+      // Update User Name
+      if (data.firstName || data.lastName) {
+        const formatNames = this.formatUserNames(data);
+        const updateName = formatNames.name !== currentUser.displayName;
+        if (updateName) {
+          updateDataUser.displayName = formatNames.name;
+          updateDataFirestore.name = formatNames.name;
+          updateDataFirestore.firstName = formatNames.firstName;
+          updateDataFirestore.lastName = formatNames.lastName;
+          updateDataFirestore.abbr = formatNames.abbr;
+          onboarding.name = true;
+        }
       }
-      if (formatNames.name) onboarding.name = true;
+      // Update Avatar
       if (avatar) {
         try {
           const imgBuffer = Buffer.from(avatar, 'base64');
