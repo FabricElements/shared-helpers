@@ -672,7 +672,7 @@ export namespace User {
       }
       if (updateClaims) {
         await getAuth().setCustomUserClaims(data.id, userClaims);
-        await getAuth().revokeRefreshTokens(data.id);
+        // await getAuth().revokeRefreshTokens(data.id);
       }
     };
   }
