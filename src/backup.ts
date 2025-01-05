@@ -39,6 +39,15 @@ export default async (data: {
     await bigquery.dataset(data.dataset).table(data.table).insert(data.items, {
       ignoreUnknownValues: true,
       skipInvalidRows: true,
+    }).catch((error: any) => {
+      if (error && error.name === 'PartialFailureError') {
+        const insertErrors = error.errors;
+        insertErrors.forEach((err: any) => {
+          logger.error(`Error inserting row: ${JSON.stringify(err)}`);
+        });
+      } else {
+        throw error;
+      }
     });
   } catch (error: any) {
     let errorMessage = error['message'] ?? null;
@@ -46,8 +55,8 @@ export default async (data: {
       const finalError = _.flatten(error.response.insertErrors);
       errorMessage = JSON.stringify(finalError);
     }
-    if (errorMessage) logger.error(errorMessage);
-    throw error;
+    if (errorMessage) logger.error(`BigQuery Backup: Error inserting rows: ${errorMessage}`);
+    return;
   }
   if (!data.update) {
     logger.info(`${total} items backup for collection "${data.collection}" to BigQuery but not update Firestore. To update Firestore pass the parameter "update" as true`);
