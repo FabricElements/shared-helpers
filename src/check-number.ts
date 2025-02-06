@@ -4,38 +4,32 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import {formatNumber, getNumberType, isValidNumber, parseNumber} from 'libphonenumber-js';
+import {parsePhoneNumberWithError} from 'libphonenumber-js';
 
 /**
  * Check if number is valid and format
- *
- * @param {string} phoneNumber
- * @param {boolean} isMobile
- * @return {Promise<string>}
+ * @param {string|number} phoneNumber
+ * @return {string|null}
  */
-export default async (phoneNumber: string | number, isMobile: boolean): Promise<string> => {
-  let originalNumber = phoneNumber.toString();
-  originalNumber = originalNumber.replace(/[^+0-9]/g, '');
-  const hasFormat = originalNumber.match(/^\+[1-9]{1,3}\d{5,14}$/g);
-  if (!hasFormat) {
-    throw new Error('Number is not in E.164 format');
-  }
-  const baseNumber: any = parseNumber(originalNumber);
-  const numberParsed: boolean = Object.keys(baseNumber).length > 0;
-  const isValid = numberParsed ? isValidNumber(baseNumber) : false;
-  if (!isValid) {
-    throw new Error('Invalid number');
-  }
-  const numberType = getNumberType(baseNumber);
-  if (isMobile) {
-    const isMobileOrOk = numberType === 'MOBILE' || numberType === 'FIXED_LINE_OR_MOBILE' || numberType === undefined;
-    if (!isMobileOrOk) {
-      throw new Error('Is not a mobile number');
+export default (phoneNumber: string | number): string | null => {
+  try {
+    let originalNumber = phoneNumber.toString();
+    originalNumber = originalNumber.replace(/[^+0-9]/g, '');
+    if (!originalNumber.match(/^[+0-9]*$/g)) {
+      throw new Error('Invalid number');
     }
+    const baseNumber = parsePhoneNumberWithError(originalNumber, 'US');
+    const isValid = baseNumber.isValid();
+    const numberType = baseNumber.getType();
+    const isMobileOrOk =
+        numberType === 'MOBILE' ||
+        numberType === 'FIXED_LINE_OR_MOBILE' ||
+        numberType === undefined;
+    if (!isValid && !isMobileOrOk) {
+      throw new Error('Invalid number or not mobile');
+    }
+    return baseNumber.format('E.164');
+  } catch (error) {
+    return null;
   }
-  const finalNumber = formatNumber(baseNumber, 'E.164');
-  if (finalNumber.length < 7) {
-    throw new Error('Number is too short');
-  }
-  return finalNumber;
 };

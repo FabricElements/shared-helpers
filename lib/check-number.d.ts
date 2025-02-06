@@ -1,9 +1,7 @@
 /**
  * Check if number is valid and format
- *
- * @param {string} phoneNumber
- * @param {boolean} isMobile
- * @return {Promise<string>}
+ * @param {string|number} phoneNumber
+ * @return {string|null}
  */
-declare const _default: (phoneNumber: string | number, isMobile: boolean) => Promise<string>;
+declare const _default: (phoneNumber: string | number) => string | null;
 export default _default;
