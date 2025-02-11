@@ -7,7 +7,7 @@
   "types": "./lib/index.d.ts",
   "author": "Erny Sans",
   "license": "BSD-3-Clause",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/FabricElements/shared-helpers.git"
@@ -35,17 +35,17 @@
     "sharp": "^0.33.5"
   },
   "devDependencies": {
-    "@eslint/js": "^9.19.0",
+    "@eslint/js": "^9.20.0",
     "@types/lodash": "^4.17.15",
     "@types/node": "^22.13.1",
     "@types/node-fetch": "^3.0.3",
     "@types/sharp": "^0.32.0",
-    "eslint": "^9.19.0",
+    "eslint": "^9.20.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.23.0"
+    "typescript-eslint": "^8.24.0"
   },
   "overrides": {
-    "eslint": "^9.19.0"
+    "eslint": "^9.20.0"
   },
   "scripts": {
     "build": "npm run clear && npm run lint && npm run compile",

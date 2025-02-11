@@ -162,8 +162,9 @@ export namespace User {
       const baseData: Interface = {
         ...user,
         backup: false,
-        created: timestamp,
-        updated: timestamp,
+        created: user.created ?? timestamp,
+        updated: user.updated ?? timestamp,
+        ping: timestamp,
         id: undefined,
       };
       const db = getFirestore();
