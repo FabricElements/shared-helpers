@@ -442,8 +442,9 @@ export namespace User {
       } = {};
       // Update User Name
       if (data.firstName || data.lastName) {
+        const currentName = this.formatUserNames(currentUser);
         const formatNames = this.formatUserNames(data);
-        const updateName = formatNames.name !== currentUser.displayName;
+        const updateName = formatNames.name !== currentName.name;
         if (updateName) {
           updateDataUser.displayName = formatNames.name;
           updateDataFirestore.name = formatNames.name;
