@@ -189,6 +189,11 @@ export namespace User {
         name: user.displayName ?? undefined,
         language: 'en',
         role: 'user',
+        onboarding: {
+          name: false,
+          avatar: false,
+          main: false,
+        },
       };
       try {
         const ref = getFirestore().collection('user').doc(user.uid);
