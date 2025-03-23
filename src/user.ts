@@ -46,6 +46,7 @@ export namespace User {
     created?: Date | FieldValue | string;
     id?: string;
     language?: string;
+    country?: string;
     links?: InterfaceLinks,
     name?: string;
     firstName?: string;
@@ -187,7 +188,6 @@ export namespace User {
         email: user.email ?? undefined,
         phone: user.phoneNumber ?? undefined,
         name: user.displayName ?? undefined,
-        language: 'en',
         role: 'user',
         onboarding: {
           name: false,
@@ -417,7 +417,7 @@ export namespace User {
      */
     public static update = async (data: Interface, mainUrl: string) => {
       const timestamp = FieldValue.serverTimestamp();
-      const {id, phone, email, avatar, language} = data;
+      const {id, phone, email, avatar, language, country} = data;
       const db = getFirestore();
       const ref = db.collection('user').doc(id);
       let updateDataFirestore: Interface = {};
@@ -441,6 +441,7 @@ export namespace User {
         updateDataFirestore.email = email;
       }
       if (language) updateDataFirestore.language = language;
+      if (country) updateDataFirestore.country = country;
       let onboarding: {
         name?: boolean,
         avatar?: boolean,

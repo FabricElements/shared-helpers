@@ -35,6 +35,7 @@ export declare namespace User {
         created?: Date | FieldValue | string;
         id?: string;
         language?: string;
+        country?: string;
         links?: InterfaceLinks;
         name?: string;
         firstName?: string;
