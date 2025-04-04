@@ -187,7 +187,7 @@ export namespace User {
       let userDoc: Interface = {
         email: user.email ?? undefined,
         phone: user.phoneNumber ?? undefined,
-        name: user.displayName ?? undefined,
+        firstName: user.displayName ?? undefined,
         role: 'user',
         onboarding: {
           name: false,
@@ -255,7 +255,7 @@ export namespace User {
       if (_user) {
         await this.createDocument({
           id: _user.uid,
-          name: _user.displayName ?? undefined,
+          firstName: _user.displayName ?? undefined,
           email: _user.email ?? FieldValue.delete(),
           phone: _user.phoneNumber ?? FieldValue.delete(),
         });
