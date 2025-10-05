@@ -50,7 +50,13 @@ export declare namespace User {
         email?: string;
         password?: string;
         role?: string;
+        /**
+         * The user active account
+         */
         account?: string;
+        /**
+         * Use [group] to create / update user group
+         */
         group?: string;
         groups?: Record<string, string | number>;
         ping?: any;
@@ -79,6 +85,9 @@ export declare namespace User {
          * Billing usage quantity
          */
         buq?: number;
+        /**
+         * Accept other keys
+         */
         [key: string]: any;
     }
     /**

@@ -61,9 +61,13 @@ export namespace User {
     email?: string;
     password?: string;
     role?: string;
-    // The user active account
+    /**
+     * The user active account
+     */
     account?: string;
-    // Use [group] to create / update user group
+    /**
+     * Use [group] to create / update user group
+     */
     group?: string;
     groups?: Record<string, string | number>;
     ping?: any;
@@ -93,7 +97,9 @@ export namespace User {
      */
     buq?: number;
 
-    // Accept other keys
+    /**
+     * Accept other keys
+     */
     [key: string]: any;
   }
 
