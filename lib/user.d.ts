@@ -50,6 +50,7 @@ export declare namespace User {
         email?: string;
         password?: string;
         role?: string;
+        account?: string;
         group?: string;
         groups?: Record<string, string | number>;
         ping?: any;

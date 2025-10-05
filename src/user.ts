@@ -61,6 +61,8 @@ export namespace User {
     email?: string;
     password?: string;
     role?: string;
+    // The user active account
+    account?: string;
     // Use [group] to create / update user group
     group?: string;
     groups?: Record<string, string | number>;
