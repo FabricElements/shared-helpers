@@ -195,7 +195,6 @@ export namespace User {
       let userDoc: Interface = {
         email: user.email ?? undefined,
         phone: user.phoneNumber ?? undefined,
-        firstName: user.displayName ?? undefined,
         role: 'user',
         onboarding: {
           name: false,
