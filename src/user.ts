@@ -262,7 +262,6 @@ export namespace User {
       if (_user) {
         await this.createDocument({
           id: _user.uid,
-          firstName: _user.displayName ?? undefined,
           email: _user.email ?? FieldValue.delete(),
           phone: _user.phoneNumber ?? FieldValue.delete(),
         });
@@ -618,7 +617,6 @@ export namespace User {
         backup: false,
         updated: timestamp,
         created: timestamp,
-        name: userRecord.displayName ?? undefined,
         email: userRecord.email ?? FieldValue.delete(),
         phone: userRecord.phoneNumber ?? FieldValue.delete(),
       };
