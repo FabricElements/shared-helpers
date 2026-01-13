@@ -244,6 +244,7 @@ export namespace Media {
       let contentType = options.contentType ?? 'text/html';
       let minSizeBytes = Number(options.minSize ?? 1000);
       options.response.set('Content-Type', contentType);
+      options.response.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
       // Don't use "/" at the start or end of your path
       if (options.path && options.path.startsWith('/')) {
         options.path = options.path.substring(1);
