@@ -3,7 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import { Buffer } from 'buffer';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 /**
  * Media Namespace
  * @namespace Media

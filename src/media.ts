@@ -3,7 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {Buffer} from 'buffer';
-import type {Response} from 'express';
+import type {Request, Response} from 'express';
 import {getStorage} from 'firebase-admin/storage';
 import {logger} from 'firebase-functions/v2';
 import fetch from 'node-fetch';
