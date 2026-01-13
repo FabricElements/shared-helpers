@@ -141,6 +141,7 @@ export namespace Media {
     minSize?: number;
     path?: string;
     quality?: number;
+    request: Request;
     response: Response;
     robots?: boolean;
     size?: ImageSize;
@@ -243,8 +244,26 @@ export namespace Media {
       let mediaBuffer: Buffer = null;
       let contentType = options.contentType ?? 'text/html';
       let minSizeBytes = Number(options.minSize ?? 1000);
-      options.response.set('Content-Type', contentType);
-      options.response.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      const {request, response} = options;
+      /// Set headers
+      response.set('Content-Type', contentType);
+      response.set('Access-Control-Allow-Methods', 'GET, OPTIONS, HEAD');
+      switch (request.method) {
+        case 'GET':
+          break;
+        case 'HEAD':
+          response.set('Access-Control-Allow-Headers', 'Content-Type, Location, Content-Length');
+          response.set('Access-Control-Max-Age', '3600'); // cache head for 3600s (1 hour)
+          break;
+        case 'OPTIONS':
+          response.set('Access-Control-Allow-Headers', 'Content-Type, Location, Content-Length');
+          response.set('Access-Control-Max-Age', '3600'); // cache preflight for 3600s (1 hour)
+          response.sendStatus(204); // respond with 204 No Content and finish
+          return;
+        default:
+          throw new Error('Method not allowed');
+      }
+
       // Don't use "/" at the start or end of your path
       if (options.path && options.path.startsWith('/')) {
         options.path = options.path.substring(1);
@@ -353,20 +372,20 @@ export namespace Media {
       }
       /// Set response headers
       if (ok) {
-        options.response.status(200);
-        options.response.set('Cache-Control', `immutable, public, max-age=${cacheTime}, s-maxage=${cacheTime * 2}, min-fresh=${cacheTime}`); // only cache if method changes to get
+        response.status(200);
+        response.set('Cache-Control', `immutable, public, max-age=${cacheTime}, s-maxage=${cacheTime * 2}, min-fresh=${cacheTime}`); // only cache if method changes to get
       } else {
-        options.response.status(404);
-        options.response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
+        response.status(404);
+        response.set('Cache-Control', 'no-cache, no-store, s-maxage=10, max-age=10, min-fresh=5, must-revalidate');
         indexRobots = false;
       }
       if (!indexRobots) {
-        options.response.set('X-Robots-Tag', 'none'); // Prevent robots from indexing
+        response.set('X-Robots-Tag', 'none'); // Prevent robots from indexing
       }
       if (!ok) {
         // End response if media file is not found
         if (!options.default) {
-          options.response.end();
+          response.end();
           return;
         }
         // Show default image if media file is not found
@@ -380,9 +399,20 @@ export namespace Media {
       }
 
       /// Set response headers
-      options.response.set('Content-Type', contentType);
+      response.set('Content-Type', contentType);
+      // verify mediaBuffer is not null
+      const bytes = mediaBuffer ? mediaBuffer.length : 0;
+
+      /// Handle empty mediaBuffer
+      if (!bytes || request.method === 'HEAD') {
+        // set Content-Length with mediaBuffer length
+        response.set('Content-Length', bytes.toString());
+        response.sendStatus(204);
+        return;
+      }
+
       /// Send media file
-      options.response.send(mediaBuffer);
+      response.send(mediaBuffer);
     };
     /**
      * Save media file

@@ -129,6 +129,7 @@ export declare namespace Media {
         minSize?: number;
         path?: string;
         quality?: number;
+        request: Request;
         response: Response;
         robots?: boolean;
         size?: ImageSize;
