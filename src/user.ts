@@ -71,7 +71,7 @@ export namespace User {
     group?: string;
     groups?: Record<string, string | number>;
     ping?: any;
-    fcm?: string;
+    fcm?: string | string[];
     /**
      * Billing Customer ID
      */
