@@ -366,9 +366,8 @@ export namespace User {
           const refUser = db.collection('user').doc(data.id);
           await refUser.delete();
         }
-      } catch (error) {
-        // @ts-expect-error Error requires description
-        throw new Error(`Error removing user access: ${error.message}`);
+      } catch (error: any) {
+        throw `Error removing user access: ${error.message ?? error.toString()}`;
       }
     };
 
@@ -530,9 +529,8 @@ export namespace User {
           group: data.group || undefined,
           role: data.role,
         });
-      } catch (error) {
-        // @ts-expect-error Error requires description
-        throw new Error(`Error updating user access: ${error.message}`);
+      } catch (error: any) {
+        throw `Error updating user access: ${error.message}`;
       }
       // Remove avatar first
       delete data.avatar;
@@ -607,7 +605,6 @@ export namespace User {
       if (!data.id) throw new Error('id is required to update user role');
       const timestamp = FieldValue.serverTimestamp();
       const db = getFirestore();
-      let updateGroup = null; // Action for the group
       if (data.group && data.group.length == 0) throw new Error('group can\'t be empty for group roles');
       const grouped = data.group && data.group.length > 0;
       const refUser = db.collection('user').doc(data.id);
@@ -640,6 +637,7 @@ export namespace User {
         }
         updateClaims = true;
       }
+      let updateGroup: any; // Action for the group
       switch (data.type) {
         case 'add':
           updateGroup = {
@@ -671,7 +669,7 @@ export namespace User {
       /**
        * Update custom claims
        */
-      let collectionClaims: any = null;
+      let collectionClaims: any;
       if (grouped) {
         if (Object.prototype.hasOwnProperty.call(userDoc, 'groups')) {
           collectionClaims = userDoc.groups;

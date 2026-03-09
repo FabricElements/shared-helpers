@@ -37,12 +37,12 @@ export default async (options: InterfaceAPIRequest) => {
     requestOptions.headers.Authorization = `${options.scheme} ${options.credentials}`;
   }
   const response = await fetch(options.path, requestOptions);
-  let responseData = null;
   if (!response.ok) {
     const BodyJsonError = await response.json();
     // noinspection ExceptionCaughtLocallyJS
     throw new Error(Object.prototype.hasOwnProperty.call(BodyJsonError, 'message') ? BodyJsonError['message'] : 'unknown error');
   }
+  let responseData: any;
   console.log('content-type', response.headers.get('content-type'));
   switch (options.as) {
     case 'arrayBuffer':
