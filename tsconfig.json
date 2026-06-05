@@ -12,7 +12,6 @@
     "target": "ES2020",
     "noImplicitAny": false,
     "importHelpers": true,
-    "downlevelIteration": true,
     "outDir": "lib",
     "stripInternal": true,
     "inlineSources": false,
@@ -20,7 +19,6 @@
     "forceConsistentCasingInFileNames": true,
     "strictNullChecks": false,
     "skipLibCheck": true,
-    "alwaysStrict": false,
     "allowJs": true,
     "moduleResolution": "Node16",
     "module": "Node16",
@@ -37,7 +35,6 @@
       "node_modules/@types"
     ],
     "rootDir": "src",
-    "baseUrl": "./",
     "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
