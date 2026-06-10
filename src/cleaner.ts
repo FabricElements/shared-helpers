@@ -8,9 +8,21 @@ import {logger} from 'firebase-functions/v2';
 const bigquery = new BigQuery();
 
 /**
- * Create Query for Delete Duplicates.
- * @param {any} filter
- * @return {string}
+ * Constructs a BigQuery DML statement that removes duplicate rows from a table.
+ *
+ * The generated `DELETE` statement keeps only the row with the maximum value
+ * for `timestamp` per `id` (and optionally per `column`), effectively
+ * de-duplicating the table in place.
+ *
+ * @param filter - Descriptor for the target table and de-duplication columns.
+ * @param filter.column - Optional extra grouping column included in the
+ *   `SELECT DISTINCT` and the `WHERE … NOT IN` sub-query.
+ * @param filter.dataset - BigQuery dataset identifier (required).
+ * @param filter.table - BigQuery table name within `dataset`.
+ * @param filter.timestamp - Name of the timestamp column used to pick the
+ *   most-recent row when duplicates are detected.
+ * @returns A BigQuery-compatible SQL `DELETE` statement string.
+ * @throws An `Error` when `filter.dataset` is not provided.
  */
 const query = (filter: {
   column?: string,
@@ -44,9 +56,20 @@ WHERE
 };
 
 /**
- * Big Query Clean Database
- * @param {any} filter
- * @return {Promise<void>}
+ * Submits the de-duplication query to BigQuery as an asynchronous job and
+ * waits for results, logging a warning on failure without re-throwing.
+ *
+ * Reads the `FIREBASE_CONFIG` environment variable to construct the SQL
+ * targeting the specified dataset and table.  Side-effects: creates a
+ * BigQuery query job and waits for it to complete.
+ *
+ * @param filter - Descriptor for the target table and de-duplication columns.
+ * @param filter.column - Optional extra grouping column.
+ * @param filter.dataset - BigQuery dataset identifier.
+ * @param filter.table - BigQuery table name within `dataset`.
+ * @param filter.timestamp - Name of the timestamp column.
+ * @returns A Promise that resolves when the BigQuery job finishes, or
+ *   resolves silently after logging a warning if the job fails.
  */
 export default async (filter: {
   column?: string,

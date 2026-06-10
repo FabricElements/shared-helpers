@@ -10,11 +10,33 @@ import _ from 'lodash';
 import {timeout} from './global.js';
 
 /**
- * Custom backup from FirestoreHelper to BigQuery
+ * Streams Firestore documents into a BigQuery table and optionally updates
+ * or deletes the originating Firestore documents afterwards.
  *
- * @param {any} data
- * if true, deletes document instead of changing backup to true on document
- * 1500/minute --- Recommended memory 500mb
+ * The function inserts all items into BigQuery using `ignoreUnknownValues`
+ * and `skipInvalidRows` to tolerate schema mismatches.  When `update` is
+ * `true` it subsequently iterates the item list in Firestore batch commits
+ * (max 500 per batch) and either marks each document with `backup: true` or
+ * deletes it when `delete` is `true`.  A 100 ms pause is injected between
+ * batches to stay within Firestore write limits (~1 500 writes/minute).
+ *
+ * @param data - Backup job descriptor containing the source collection name,
+ *   target BigQuery dataset and table identifiers, the array of document
+ *   payloads to insert, and optional flags controlling post-insert Firestore
+ *   mutations.
+ * @param data.collection - Name of the Firestore source collection; used for
+ *   log messages and to locate documents when `update` is `true`.
+ * @param data.dataset - BigQuery dataset identifier.
+ * @param data.delete - When `true`, deletes Firestore documents after backup
+ *   instead of setting `backup: true`.  Requires `update: true`.
+ * @param data.items - Array of document payloads to insert into BigQuery.
+ *   Each item should have an `id` field for the Firestore update pass.
+ * @param data.table - BigQuery table identifier within `dataset`.
+ * @param data.update - When `true`, triggers the Firestore post-insert pass
+ *   that marks or deletes each source document.
+ * @returns A Promise that resolves when the BigQuery insert and any Firestore
+ *   updates have completed.
+ * @throws A stringified error if the BigQuery insert job fails.
  */
 export default async (data: {
   collection: string,

@@ -4,10 +4,19 @@
  */
 
 /**
- * Replace special character to regular gsm character.
+ * Normalises non-GSM characters in a string by replacing them with their
+ * closest ASCII or GSM-7 equivalents.
  *
- * @param {string|null} text
- * @return {string}
+ * Iterates over each character in the input, looks up its Unicode code point
+ * in a comprehensive replacement table, and substitutes any matched character
+ * with the mapped GSM-compatible replacement.  Characters not present in the
+ * table are left unchanged.  Useful for preparing SMS message bodies that must
+ * stay within the GSM-7 character set to avoid multi-part encoding overhead.
+ *
+ * @param text - The input string to normalise, or `null`.  When `null`, an
+ *   empty string is returned.
+ * @returns The normalised string with all recognised special characters
+ *   replaced by their GSM-7 counterparts.
  */
 export default (text: string | null): string => { // Definition of function and Input and Output Types.
   let finalText = text && typeof text === 'string' && text.length > 0 ? text : '';

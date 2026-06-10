@@ -2,6 +2,10 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  *
+ * @fileoverview Main entry point for the `@fabricelements/shared-helpers` package.
+ * Re-exports all public utility helpers, Firebase/Google Cloud integrations,
+ * and shared TypeScript interfaces used across FabricElements backend services.
+ *
  * Notes:
  * -------------------------------------------
  */

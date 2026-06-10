@@ -14,9 +14,15 @@ import {Media} from './media.js';
  * User namespace
  */
 export namespace User {
+  /**
+   * Ad network configuration for a user account.
+   * Currently supports Google AdSense client and slot identifiers.
+   */
   export interface InterfaceAds {
     adsense?: {
+      /** Google AdSense publisher client ID (e.g., `'ca-pub-XXXXXXXXXXXXXXXX'`). */
       client: string;
+      /** Google AdSense ad slot ID for the placement unit. */
       slot: string;
     },
   }
@@ -108,10 +114,15 @@ export namespace User {
    */
   export class Helper {
     /**
-     * Fail if user is unauthenticated
+     * Throws a Firebase `HttpsError` with code `'unauthenticated'` when the
+     * caller has no auth context, enforcing authentication on callable functions.
      *
-     * @param {any} auth
-     * context.auth || request.auth
+     * Pass `context.auth` or `request.auth` from the Cloud Function invocation.
+     * This method is a guard — it has no return value; it either succeeds silently
+     * or throws.
+     *
+     * @param auth - The authentication context object from the callable request
+     *   (`context.auth` or `request.auth`).  A falsy value triggers the error.
      */
     public static authenticated = (auth: any) => {
       if (!auth) {
@@ -120,10 +131,16 @@ export namespace User {
     };
 
     /**
-     * Return user token from context
+     * Extracts the ****** from the `Authorization` header of a callable request.
      *
-     * @param {CallableRequest} request
-     * @return {string}
+     * Delegates to `authenticated` first to ensure the request has an auth context,
+     * then parses the `Authorization` header to extract the raw token string.
+     *
+     * @param request - The Firebase callable function request object.
+     * @returns The raw bearer token string extracted from the `Authorization` header.
+     * @throws A Firebase `HttpsError` with code `'unauthenticated'` when the auth
+     *   context is absent, the `Authorization` header is missing, or the token is
+     *   shorter than 5 characters.
      */
     public static token = (request: CallableRequest): string => {
       this.authenticated(request.auth);
@@ -140,9 +157,16 @@ export namespace User {
     };
 
     /**
-     * Gets the user object with email or phone number or create the user if not exists
-     * @param {any} data
-     * @return {Promise<Interface>}
+     * Returns an existing user record or creates a new one when none is found.
+     *
+     * Looks up the user by email or phone number via `Helper.get`.  If a matching
+     * Firebase Auth record exists, the corresponding Firestore `user` document is
+     * fetched and returned.  Otherwise a new Firebase Auth user and Firestore
+     * document are created via `Helper.createUser`.
+     *
+     * @param data - User data containing at least `email` or `phone`, and the
+     *   first/last name fields required by `createUser`.
+     * @returns A Promise resolving to the existing or newly created user data object.
      */
     public static create = async (data: Interface): Promise<Interface> => {
       Helper.hasData(data);
