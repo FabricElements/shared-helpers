@@ -47,6 +47,8 @@
   ],
   "exclude": [
     "node_modules",
-    "lib"
+    "lib",
+    "test",
+    "vitest.config.ts"
   ]
 }
