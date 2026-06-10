@@ -40,12 +40,15 @@
     "@types/node": "^25.9.1",
     "eslint": "^10.4.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.60.0"
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^3.2.6"
   },
   "overrides": {
     "eslint": "^10.4.0"
   },
   "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
     "build": "npm run clear && npm run lint && npm run compile",
     "build:watch": "npm run clear && npm run lint && npm run compile:watch",
     "clear": "rm -rf ./lib",
