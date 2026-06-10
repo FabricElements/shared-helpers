@@ -1,8 +1,4 @@
 /**
- * @license
- * Copyright FabricElements. All Rights Reserved.
- */
-/**
  * Regular expression that matches a valid RFC 5322-compliant email address.
  * Covers standard local-part and domain formats, including quoted strings and
  * IP-literal domain notation.

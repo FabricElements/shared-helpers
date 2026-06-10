@@ -34,25 +34,20 @@ const query = (filter: {
     throw new Error('Dataset or Table not defined');
   }
   return `DELETE
-FROM
-  \`${filter.dataset}.${filter.table}\`
-WHERE
-  STRUCT(id,
-    ${filter.timestamp}
-    ${filter.column ? `,${filter.column}` : ''} ) NOT IN (
-  SELECT
-    AS STRUCT id,
-    ${filter.timestamp}
-    ${filter.column ? `,${filter.column}` : ''}
-  FROM (
-    SELECT
-      DISTINCT id,
-      MAX(${filter.timestamp}) AS ${filter.timestamp}
-      ${filter.column ? `,${filter.column}` : ''}
-    FROM
-      \`${filter.dataset}.${filter.table}\`
-    GROUP BY
-      id ${filter.column ? `,${filter.column}` : ''} ));`;
+          FROM \`${filter.dataset}.${filter.table}\`
+          WHERE STRUCT(id,
+                       ${filter.timestamp}
+    ${filter.column ? `,${filter.column}` : ''}) NOT IN (SELECT
+            AS STRUCT id
+              , ${filter.timestamp} ${filter.column ? `,${filter.column}` : ''}
+          FROM (
+            SELECT
+            DISTINCT id, MAX (${filter.timestamp}) AS ${filter.timestamp}
+            ${filter.column ? `,${filter.column}` : ''}
+            FROM
+              \`${filter.dataset}.${filter.table}\`
+            GROUP BY
+            id ${filter.column ? `,${filter.column}` : ''} ));`;
 };
 
 /**
