@@ -25,6 +25,8 @@ describe('variables', () => {
   });
 
   describe('FUNCTIONS_EMULATOR env-driven boolean', () => {
+    const originalEnv = process.env.FUNCTIONS_EMULATOR;
+
     beforeEach(() => {
       delete process.env.FUNCTIONS_EMULATOR;
     });
@@ -32,8 +34,6 @@ describe('variables', () => {
     afterEach(() => {
       process.env.FUNCTIONS_EMULATOR = originalEnv;
     });
-
-    const originalEnv = process.env.FUNCTIONS_EMULATOR;
 
     it('Boolean(undefined) is false', () => {
       expect(Boolean(process.env.FUNCTIONS_EMULATOR)).toBe(false);
