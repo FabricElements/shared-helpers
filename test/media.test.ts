@@ -22,8 +22,8 @@ vi.mock('sharp', () => {
     toBuffer: vi.fn().mockResolvedValue(Buffer.from('fakeimage')),
   };
   const sharp = vi.fn(() => sharpInstance);
-  (sharp as any).strategy = {attention: 'attention', entropy: 'entropy'};
-  (sharp as any).fit = {cover: 'cover', inside: 'inside'};
+  Object.assign(sharp, {strategy: {attention: 'attention', entropy: 'entropy'}});
+  Object.assign(sharp, {fit: {cover: 'cover', inside: 'inside'}});
   return {default: sharp};
 });
 

@@ -67,7 +67,7 @@ describe('backup', () => {
 
     it('throws when items is missing', async () => {
       await expect(
-        backup({collection: 'col', dataset: 'ds', items: null as any, table: 'tbl'}),
+        backup({collection: 'col', dataset: 'ds', items: null as unknown as string[], table: 'tbl'}),
       ).rejects.toThrow('items is required');
     });
 
