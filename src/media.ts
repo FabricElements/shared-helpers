@@ -205,10 +205,17 @@ export namespace Media {
    */
   export class Helper {
     /**
-     * Save From URL and return local path
-     * @param {SaveFromUrlOptions} options
-     * Returns storage uri (`gs://my-bucket/path`)
-     * @return {Promise<SaveFromUrl>}
+     * Downloads a remote file by URL and saves it to Firebase Cloud Storage.
+     *
+     * Performs a `GET` request (following up to 3 redirects) to `options.url`,
+     * converts the response body to a `Buffer`, and saves it to the storage path
+     * specified by `options.path` using the response's `content-type` header.
+     * Logs the resulting `gs://` URI when running in the emulator.
+     *
+     * @param {SaveFromUrlOptions} options - Download and storage options.
+     * @returns {Promise<SaveFromUrl>} A Promise resolving to an object with `contentType`
+     *   (the MIME type from the response) and `uri` (the `gs://` Cloud Storage URI).
+     * @throws {Error} When the HTTP response status is not `ok`.
      */
     public static async saveFromUrl(options: SaveFromUrlOptions): Promise<SaveFromUrl> {
       const fileResponse = await fetch(options.url, {
@@ -234,9 +241,23 @@ export namespace Media {
     }
 
     /**
-     * Preview media file
-     * @param {PreviewParams} options
-     * @return {Promise<void>}
+     * Serves a media file from Firebase Storage or a raw buffer via an Express response.
+     *
+     * Handles `GET`, `HEAD`, and `OPTIONS` HTTP methods.  When `path` is supplied the
+     * file is retrieved from Firebase Storage; when `file` is supplied a raw buffer is
+     * used instead (mutually exclusive).  Images matching `contentTypeIsImageForSharp`
+     * are resized using the `sharp` pipeline before transmission.  On failure (file not
+     * found, empty file, or resize error) the response status is set to `404`; if
+     * `options.default` is `true` a default error image is served instead of an empty
+     * body.  Appropriate `Cache-Control` and `X-Robots-Tag` headers are set on every
+     * response path.
+     *
+     * @param {PreviewParams} options - Preview configuration including the Express
+     *   request/response pair, storage path or raw file buffer, image sizing options,
+     *   cache duration, and robot indexing preference.
+     * @returns {Promise<void>} A Promise that resolves when the response has been sent.
+     * @throws {Error} When both `file` and `path` are provided simultaneously, or when
+     *   the HTTP method is not `GET`, `HEAD`, or `OPTIONS`.
      */
     public static preview = async (options: PreviewParams): Promise<void> => {
       if (options.file && options.path) throw new Error('You can only use file or path, not both');
@@ -415,9 +436,14 @@ export namespace Media {
       response.send(mediaBuffer);
     };
     /**
-     * Save media file
-     * @param {SaveParams} options
-     * @return {Promise<void>}
+     * Saves a media buffer to Firebase Cloud Storage under the specified path.
+     *
+     * Uploads the buffer non-resumably with MD5 validation enabled.  Extra storage
+     * options (e.g., custom metadata) can be merged via `options.options`.
+     *
+     * @param {SaveParams} options - Save parameters including the target path,
+     *   MIME content type, media buffer, and optional storage save options.
+     * @returns {Promise<void>} A Promise that resolves when the upload completes.
      */
     public static save = async (options: SaveParams): Promise<void> => {
       const bucketRef = getStorage().bucket();
@@ -439,9 +465,19 @@ export namespace Media {
    */
   export class Image {
     /**
-     * bufferImage
-     * @param {InterfaceImageResize} options
-     * @return {Promise<{contentType: string; buffer: Buffer}>}
+     * Resizes, converts, and returns a media buffer and its resulting MIME type.
+     *
+     * Determines the output format from `options.contentType` (falling back to
+     * `options.format`, then `jpeg`), constructs `sharp` resize options based on
+     * `maxWidth`, `maxHeight`, DPR scaling, and the `crop` strategy, then converts
+     * the input to the target format at the requested quality.  Animated GIF
+     * processing is enabled automatically when the output format is `gif`.
+     *
+     * @param {InterfaceImageResize} options - Resize and conversion options including
+     *   the input buffer or path, target dimensions, crop mode, DPR, output format,
+     *   and quality.
+     * @returns {Promise<{contentType: string; buffer: Buffer}>} A Promise resolving to an
+     *   object with the output `buffer` and the corresponding `contentType` string.
      */
     public static bufferImage = async (options: InterfaceImageResize): Promise<{
       contentType: string;
@@ -499,9 +535,16 @@ export namespace Media {
     };
 
     /**
-     * Resize Images
-     * @param {InterfaceImageResize} options
-     * @return {Promise<{contentType: string; buffer: Buffer}>}
+     * Downloads an image from Firebase Storage and returns a resized buffer.
+     *
+     * Retrieves the file at `options.fileName` from the default storage bucket,
+     * then delegates to `bufferImage` for the resize and format conversion.
+     *
+     * @param {InterfaceImageResize} options - Resize options; `fileName` must be a
+     *   valid Cloud Storage object path.
+     * @returns {Promise<{contentType: string; buffer: Buffer}>} A Promise resolving to the
+     *   resized image buffer and its MIME content type.
+     * @throws {Error} When `options.fileName` is absent or the file cannot be downloaded.
      */
     public static resize = async (options: InterfaceImageResize): Promise<{ contentType: string; buffer: Buffer }> => {
       if (!options.fileName) {
@@ -513,9 +556,14 @@ export namespace Media {
     };
 
     /**
-     * Get default image size object when size is not set
-     * @param {imageSizesType} inputSize
-     * @return {{height: number, width: number, size: ImageSize}}
+     * Resolves a named `ImageSize` enum value to a concrete `{height, width, size}` object.
+     *
+     * Falls back to `ImageSize.standard` when `inputSize` is not a recognised enum member,
+     * ensuring callers always receive a valid dimension set.
+     *
+     * @param {ImageSize} inputSize - A member of the `ImageSize` enum (e.g., `ImageSize.medium`).
+     * @returns {{height: number, width: number, size: ImageSize}} An object with the pixel
+     *   `height`, `width`, and the resolved `size` enum value.
      */
     static sizeObjectFromImageSize = (inputSize: ImageSize): { height: number, width: number, size: ImageSize } => {
       const sizeBase: ImageSize = ImageSize[inputSize] ?? ImageSize.standard;

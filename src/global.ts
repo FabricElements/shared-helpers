@@ -10,8 +10,8 @@ import {Buffer} from 'buffer';
  * Useful for introducing deliberate pauses between Firestore batch commits
  * or other rate-limited operations without blocking the Node.js event loop.
  *
- * @param ms - The duration to wait in milliseconds.
- * @returns A Promise that resolves to `void` after `ms` milliseconds.
+ * @param {number} ms - The duration to wait in milliseconds.
+ * @returns {Promise<void>} A Promise that resolves to `void` after `ms` milliseconds.
  */
 export const timeout = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));
 
@@ -22,8 +22,8 @@ export const timeout = (ms: number): Promise<void> => new Promise((res) => setTi
  * storage bucket name, then builds a `firebasestorage.googleapis.com`
  * URL with `alt=media` so browsers download the raw file bytes.
  *
- * @param filename - The full storage object path (e.g., `'images/photo.jpg'`).
- * @returns The public download URL string for the file.
+ * @param {string} filename - The full storage object path (e.g., `'images/photo.jpg'`).
+ * @returns {string} The public download URL string for the file.
  */
 export const getPublicUrl = (filename: string): string => {
   const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
@@ -38,8 +38,8 @@ export const getPublicUrl = (filename: string): string => {
  * Useful when a caller needs the raw storage reference alongside the
  * browser-accessible download link.
  *
- * @param filename - The full storage object path (e.g., `'images/photo.jpg'`).
- * @returns An object containing:
+ * @param {string} filename - The full storage object path (e.g., `'images/photo.jpg'`).
+ * @returns {{gs: string, url: string}} An object containing:
  *   - `gs` — the original storage path (passed through as-is).
  *   - `url` — the public `firebasestorage.googleapis.com` download URL.
  */
@@ -61,8 +61,8 @@ export const getUrlAndGs = (filename: string): { gs: string, url: string } => {
  * content must be buffered in memory before processing (e.g., image
  * transformation with `sharp`).
  *
- * @param stream - Any Node.js Readable stream emitting `Buffer` or `string` chunks.
- * @returns A Promise resolving to a `Buffer` containing all concatenated chunks.
+ * @param {any} stream - Any Node.js Readable stream emitting `Buffer` or `string` chunks.
+ * @returns {Promise<Buffer>} A Promise resolving to a `Buffer` containing all concatenated chunks.
  * @throws Rejects with the stream's error event payload if the stream errors.
  */
 export const streamToBuffer = (stream: any): Promise<Buffer> => {

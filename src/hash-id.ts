@@ -12,9 +12,9 @@
  * digits, and common symbols.  Suitable for generating short unique tokens,
  * one-time codes, or URL-safe random identifiers.
  *
- * @param length - Minimum character count for the output string.
+ * @param {number} [length] - Minimum character count for the output string.
  *   Defaults to `4`; the returned string will have `length + 1` characters.
- * @returns A randomly generated string of `length + 1` characters drawn from
+ * @returns {string} A randomly generated string of `length + 1` characters drawn from
  *   the alphanumeric-and-symbol character pool.
  */
 export default (length?: number): string => {

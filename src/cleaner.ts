@@ -14,15 +14,15 @@ const bigquery = new BigQuery();
  * for `timestamp` per `id` (and optionally per `column`), effectively
  * de-duplicating the table in place.
  *
- * @param filter - Descriptor for the target table and de-duplication columns.
- * @param filter.column - Optional extra grouping column included in the
+ * @param {object} filter - Descriptor for the target table and de-duplication columns.
+ * @param {string} [filter.column] - Optional extra grouping column included in the
  *   `SELECT DISTINCT` and the `WHERE … NOT IN` sub-query.
- * @param filter.dataset - BigQuery dataset identifier (required).
- * @param filter.table - BigQuery table name within `dataset`.
- * @param filter.timestamp - Name of the timestamp column used to pick the
+ * @param {string} filter.dataset - BigQuery dataset identifier (required).
+ * @param {string} filter.table - BigQuery table name within `dataset`.
+ * @param {string} filter.timestamp - Name of the timestamp column used to pick the
  *   most-recent row when duplicates are detected.
- * @returns A BigQuery-compatible SQL `DELETE` statement string.
- * @throws An `Error` when `filter.dataset` is not provided.
+ * @returns {string} A BigQuery-compatible SQL `DELETE` statement string.
+ * @throws {Error} When `filter.dataset` is not provided.
  */
 const query = (filter: {
   column?: string,
@@ -63,12 +63,12 @@ WHERE
  * targeting the specified dataset and table.  Side-effects: creates a
  * BigQuery query job and waits for it to complete.
  *
- * @param filter - Descriptor for the target table and de-duplication columns.
- * @param filter.column - Optional extra grouping column.
- * @param filter.dataset - BigQuery dataset identifier.
- * @param filter.table - BigQuery table name within `dataset`.
- * @param filter.timestamp - Name of the timestamp column.
- * @returns A Promise that resolves when the BigQuery job finishes, or
+ * @param {object} filter - Descriptor for the target table and de-duplication columns.
+ * @param {string} [filter.column] - Optional extra grouping column.
+ * @param {string} filter.dataset - BigQuery dataset identifier.
+ * @param {string} filter.table - BigQuery table name within `dataset`.
+ * @param {string} filter.timestamp - Name of the timestamp column.
+ * @returns {Promise<void>} A Promise that resolves when the BigQuery job finishes, or
  *   resolves silently after logging a warning if the job fails.
  */
 export default async (filter: {

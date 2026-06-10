@@ -10,8 +10,8 @@
  * equivalent of that letter.  Characters not preceded by an underscore are
  * returned unchanged.
  *
- * @param str - The snake_case input string to convert.
- * @returns The camelCase representation of the input string.
+ * @param {string} str - The snake_case input string to convert.
+ * @returns {string} The camelCase representation of the input string.
  */
 export const toCamelCase = (str: string): string => {
   return str.replace(/_([a-z])/g, (g) => {

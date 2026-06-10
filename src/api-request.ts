@@ -14,13 +14,13 @@ import type {InterfaceAPIRequest} from './interfaces.js';
  * omitted, the content-type of the response drives automatic deserialisation
  * (`application/json` → JSON, `text/*` → string, otherwise raw stream).
  *
- * @param options - Configuration object describing the target endpoint,
- *   HTTP method, headers, body, authentication, and desired response format.
- * @returns A Promise that resolves to the deserialised response body.
+ * @param {InterfaceAPIRequest} options - Configuration object describing the target
+ *   endpoint, HTTP method, headers, body, authentication, and desired response format.
+ * @returns {Promise<any>} A Promise that resolves to the deserialised response body.
  *   The concrete type depends on the `as` option: `object` for JSON,
  *   `string` for text, `ArrayBuffer`, `FormData`, `Blob`, or a Node.js
  *   `ReadableStream` for the remaining formats.
- * @throws An `Error` if `options.path` is falsy, if the HTTP response is not
+ * @throws {Error} If `options.path` is falsy, if the HTTP response is not
  *   `ok`, or if the server returns a JSON error body with a `message` field.
  */
 export default async (options: InterfaceAPIRequest) => {

@@ -17,14 +17,14 @@ import {emulator} from './variables.js';
  * logged and `process.exitCode` is set to `1` without re-throwing, so the
  * Cloud Function can finish cleanly.
  *
- * @param ps - An initialised `PubSub` client used to obtain the topic handle.
- * @param topic - The fully qualified or short Pub/Sub topic name to publish to.
- * @param data - Arbitrary JSON-serialisable payload object.  Defaults to `{}`.
- * @param attributes - Key-value string attributes attached to the message.
+ * @param {PubSub} ps - An initialised `PubSub` client used to obtain the topic handle.
+ * @param {string} topic - The fully qualified or short Pub/Sub topic name to publish to.
+ * @param {object} [data] - Arbitrary JSON-serialisable payload object.  Defaults to `{}`.
+ * @param {Attributes} [attributes] - Key-value string attributes attached to the message.
  *   Defaults to `{}`.
- * @param options - Publisher configuration options (e.g., batching, retry
+ * @param {PublishOptions} [options] - Publisher configuration options (e.g., batching, retry
  *   settings).  Defaults to `{}`.
- * @returns A Promise that resolves when the publish call completes or when the
+ * @returns {Promise<void>} A Promise that resolves when the publish call completes or when the
  *   error has been logged.
  */
 export default async (ps: PubSub, topic: string, data: object = {}, attributes: Attributes = {}, options: PublishOptions = {}) => {

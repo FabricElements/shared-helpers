@@ -14,8 +14,8 @@ import {parsePhoneNumberWithError} from 'libphonenumber-js';
  * number is valid and of a mobile-compatible type (`MOBILE`,
  * `FIXED_LINE_OR_MOBILE`, or `undefined`).
  *
- * @param phoneNumber - The raw phone number string or numeric value to validate.
- * @returns The E.164-formatted phone number string (e.g., `'+15551234567'`),
+ * @param {string|number} phoneNumber - The raw phone number string or numeric value to validate.
+ * @returns {string|null} The E.164-formatted phone number string (e.g., `'+15551234567'`),
  *   or `null` if the input cannot be parsed or is not a valid mobile number.
  */
 export default (phoneNumber: string | number): string | null => {

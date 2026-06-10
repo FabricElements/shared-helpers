@@ -13,9 +13,9 @@
  * table are left unchanged.  Useful for preparing SMS message bodies that must
  * stay within the GSM-7 character set to avoid multi-part encoding overhead.
  *
- * @param text - The input string to normalise, or `null`.  When `null`, an
+ * @param {string|null} text - The input string to normalise, or `null`.  When `null`, an
  *   empty string is returned.
- * @returns The normalised string with all recognised special characters
+ * @returns {string} The normalised string with all recognised special characters
  *   replaced by their GSM-7 counterparts.
  */
 export default (text: string | null): string => { // Definition of function and Input and Output Types.

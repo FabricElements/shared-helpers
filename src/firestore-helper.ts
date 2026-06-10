@@ -68,9 +68,9 @@ export namespace FirestoreHelper {
     /**
      * Checks whether a Firestore document exists without fetching its data.
      *
-     * @param options - Document address options (`collection`/`document` pair or
+     * @param {InterfaceFirestoreDocument} options - Document address options (`collection`/`document` pair or
      *   a `DocumentReference`).
-     * @returns A Promise resolving to `true` if the document exists, `false`
+     * @returns {Promise<boolean>} A Promise resolving to `true` if the document exists, `false`
      *   otherwise.
      */
     public static exists = async (options: InterfaceFirestoreDocument): Promise<boolean> => {
@@ -81,10 +81,10 @@ export namespace FirestoreHelper {
     /**
      * Fetches a single Firestore document and returns its data merged with its ID.
      *
-     * @param options - Document address options.
-     * @returns A Promise resolving to the document's data object, with the
+     * @param {InterfaceFirestoreDocument} options - Document address options.
+     * @returns {Promise<DocumentData>} A Promise resolving to the document's data object, with the
      *   Firestore document ID injected as an `id` field.
-     * @throws An `Error` if the document does not exist.
+     * @throws {Error} If the document does not exist.
      */
     public static getDocument = async (options: InterfaceFirestoreDocument): Promise<DocumentData> => this._getDocumentSnap(options);
 
@@ -94,9 +94,9 @@ export namespace FirestoreHelper {
      * Internally resolves the query to document references and fetches each
      * one individually, merging document IDs into each result.
      *
-     * @param options - Query descriptor including collection, filters, ordering,
-     *   and limit.
-     * @returns A Promise resolving to an array of document data objects.
+     * @param {InterfaceFirestoreQuery} options - Query descriptor including collection, filters,
+     *   ordering, and limit.
+     * @returns {Promise<DocumentData[]>} A Promise resolving to an array of document data objects.
      */
     public static getList = async (options: InterfaceFirestoreQuery): Promise<DocumentData[]> => {
       const references = await this.getListRef(options);
@@ -115,9 +115,10 @@ export namespace FirestoreHelper {
      * base collection or collection-group reference.  The caller is responsible
      * for executing the returned query.
      *
-     * @param options - Query descriptor; `collection` or `collectionGroup` is required.
-     * @returns A configured Firestore `Query` instance ready to be executed.
-     * @throws An `Error` if neither `collection` nor `collectionGroup` is provided.
+     * @param {InterfaceFirestoreQuery} options - Query descriptor; `collection` or
+     *   `collectionGroup` is required.
+     * @returns {Query} A configured Firestore `Query` instance ready to be executed.
+     * @throws {Error} If neither `collection` nor `collectionGroup` is provided.
      */
     public static getListReference = (options: InterfaceFirestoreQuery): Query => {
       if (!(options.collection || options.collectionGroup)) {
@@ -148,8 +149,8 @@ export namespace FirestoreHelper {
     /**
      * Returns the Firestore document IDs of all documents matching a query.
      *
-     * @param options - Query descriptor.
-     * @returns A Promise resolving to an array of document ID strings, or an
+     * @param {InterfaceFirestoreQuery} options - Query descriptor.
+     * @returns {Promise<string[]>} A Promise resolving to an array of document ID strings, or an
      *   empty array when no documents match.
      */
     public static getListIds = async (options: InterfaceFirestoreQuery): Promise<string[]> => {
@@ -168,9 +169,9 @@ export namespace FirestoreHelper {
      * Useful when callers need references for subsequent write operations
      * (e.g., batch updates or deletes) without fetching document data.
      *
-     * @param options - Query descriptor.
-     * @returns A Promise resolving to an array of `DocumentReference` objects,
-     *   or an empty array when no documents match.
+     * @param {InterfaceFirestoreQuery} options - Query descriptor.
+     * @returns {Promise<DocumentReference[]>} A Promise resolving to an array of `DocumentReference`
+     *   objects, or an empty array when no documents match.
      */
     public static getListRef = async (options: InterfaceFirestoreQuery): Promise<DocumentReference[]> => {
       const ref = this.getListReference(options);
@@ -187,8 +188,8 @@ export namespace FirestoreHelper {
      * the Firestore server-side `count()` aggregation, which avoids
      * downloading document data.
      *
-     * @param options - Query descriptor.
-     * @returns A Promise resolving to the integer count of matching documents,
+     * @param {InterfaceFirestoreQuery} options - Query descriptor.
+     * @returns {Promise<number>} A Promise resolving to the integer count of matching documents,
      *   or `0` when the aggregation snapshot is unavailable.
      */
     public static count = async (options: InterfaceFirestoreQuery): Promise<number> => {
@@ -205,10 +206,9 @@ export namespace FirestoreHelper {
      * pair.  Does not throw when the document is missing — callers must check
      * `snap.exists` themselves.
      *
-     * @param options - Document address options.
-     * @returns A Promise resolving to the `DocumentSnapshot`.
-     * @throws An `Error` if `collection` or `document` is absent and no
-     *   `reference` is supplied.
+     * @param {InterfaceFirestoreDocument} options - Document address options.
+     * @returns {Promise<DocumentSnapshot>} A Promise resolving to the `DocumentSnapshot`.
+     * @throws {Error} If `collection` or `document` is absent and no `reference` is supplied.
      */
     private static _getDocument = (options: InterfaceFirestoreDocument): Promise<DocumentSnapshot> => {
       // Get from Reference
@@ -231,10 +231,9 @@ export namespace FirestoreHelper {
      * Delegates to `_getDocument` for the snapshot, then merges `snap.data()`
      * with the `id` field before returning.
      *
-     * @param options - Document address options.
-     * @returns A Promise resolving to the document data object with `id` included.
-     * @throws An `Error` if the document does not exist, with the path in the
-     *   error message.
+     * @param {InterfaceFirestoreDocument} options - Document address options.
+     * @returns {Promise<DocumentData>} A Promise resolving to the document data object with `id` included.
+     * @throws {Error} If the document does not exist, with the path in the error message.
      */
     private static _getDocumentSnap = async (options: InterfaceFirestoreDocument): Promise<DocumentData> => {
       const snap = await this._getDocument(options);

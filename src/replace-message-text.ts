@@ -14,8 +14,8 @@ import {toCamelCase} from './strings.js';
  * with carrier limits.  Falls back to English when the language is not
  * recognised.
  *
- * @param language - BCP 47 language code (e.g., `'en'`, `'es'`).
- * @returns A randomly chosen unsubscribe instruction string for the language.
+ * @param {string} language - BCP 47 language code (e.g., `'en'`, `'es'`).
+ * @returns {string} A randomly chosen unsubscribe instruction string for the language.
  */
 const replyStop = (language: string): string => {
   const messages: Record<string, string[]> = {
@@ -69,13 +69,13 @@ const replyStop = (language: string): string => {
  * `specialCharToRegular` to normalise non-GSM characters.  Excess whitespace
  * is collapsed and any leftover `{}` characters are removed from the result.
  *
- * @param options - Template-rendering options.
- * @param options.data - Key-value map of substitution values indexed by camelCase key.
- * @param options.domains - Reserved for future use (domain allow-list).
- * @param options.language - BCP 47 language code used to select the unsubscribe
+ * @param {object} options - Template-rendering options.
+ * @param {object} [options.data] - Key-value map of substitution values indexed by camelCase key.
+ * @param {string[]} [options.domains] - Reserved for future use (domain allow-list).
+ * @param {string} [options.language] - BCP 47 language code used to select the unsubscribe
  *   message locale.  Defaults to `'en'`.
- * @param options.text - The template string containing `{placeholder}` tokens.
- * @returns The rendered string with all tokens replaced and excess whitespace removed.
+ * @param {string} options.text - The template string containing `{placeholder}` tokens.
+ * @returns {string} The rendered string with all tokens replaced and excess whitespace removed.
  */
 export default (options: {
   data?: object,
