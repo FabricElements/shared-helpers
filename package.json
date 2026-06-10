@@ -28,7 +28,7 @@
     "@google-cloud/pubsub": "^5.3.0",
     "firebase-admin": "^13.10.0",
     "firebase-functions": "^7.2.5",
-    "libphonenumber-js": "^1.13.4",
+    "libphonenumber-js": "^1.13.5",
     "lodash": "^4.18.1",
     "node-fetch": "^3.3.2",
     "sharp": "^0.34.5"
@@ -38,13 +38,13 @@
     "@types/express": "^5.0.6",
     "@types/lodash": "^4.17.24",
     "@types/node": "^25.9.1",
-    "eslint": "^10.4.0",
+    "eslint": "^10.4.1",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.60.0",
-    "vitest": "^3.2.6"
+    "typescript-eslint": "^8.60.1",
+    "vitest": "^4.1.8"
   },
   "overrides": {
-    "eslint": "^10.4.0"
+    "eslint": "^10.4.1"
   },
   "scripts": {
     "test": "vitest run",
