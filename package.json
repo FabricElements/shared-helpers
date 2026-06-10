@@ -1,6 +1,6 @@
 {
   "name": "@fabricelements/shared-helpers",
-  "description": "Shared helpers.",
+  "description": "Shared TypeScript helpers for Node.js and Firebase.",
   "type": "module",
   "main": "./lib/index.js",
   "module": "./lib/index.js",
