@@ -1,8 +1,10 @@
 # Copilot Instructions — `@fabricelements/shared-helpers`
 
-System rules manual for AI agents operating in this repository. These rules are
-mandatory. Follow them exactly. They describe how this specific
-Node.js/TypeScript/Firebase workspace is structured, built, and verified.
+System rules manual for AI agents operating in this repository. This file is the
+single source of truth for any AI agent executing subsequent workflow sessions
+(Documentation, Testing, and Architecture Validation). These rules are mandatory.
+Follow them exactly. They describe how this specific Node.js/TypeScript/Firebase
+workspace is structured, built, and verified.
 
 ---
 
@@ -53,49 +55,44 @@ and wiped on every build (`npm run clear`). Therefore, AI agents **MUST**:
 
 ---
 
-## 2. JSDoc Code Style Standards (Google TypeScript)
+## 2. JSDoc Code Style Standards (From Phase 1)
 
 All exported functions, methods, interfaces, and namespaces in `src/` must carry
 Google-style TypeScript JSDoc, consistent with the existing code and the
-`typescript-eslint` stylistic plugin:
+`typescript-eslint` stylistic plugin. Absolute compliance is required during any
+documentation sweep:
 
-- **Multi-line block format** opening with `/**` and a leading `*` on every line.
-- A concise one-line summary, followed by a blank `*` line and a fuller
-  description paragraph where behaviour is non-trivial.
-- **Explicit `@param {type} name - description`** for every parameter. Include the
-  brace-wrapped type, mark optional params with brackets (`@param {number} [length]`),
-  and document defaults in the description. Keep alignment/wrapping tidy so it
-  passes the stylistic ruleset.
+- **Multi-line `/** ... */` blocks only.** Open with `/**`, put a leading `*` on
+  every line. **No** triple-slash (`///`) and **no** single-line `//` docs for
+  definitions.
+- **Capitalized summary sentence.** The first sentence must be a clear, capitalized
+  summary ending in a period, followed by a blank `*` line and a fuller description
+  paragraph where behaviour is non-trivial. Always document the **why**, not just
+  the what.
+- **Strict type preservation & insertion.** Preserve any existing
+  `@param {type} name - description` structures exactly. If a parameter lacks a
+  type, add the brace-wrapped type that accurately matches the TypeScript
+  declaration. Mark optional params with brackets (`@param {number} [length]`) and
+  document defaults in the description. Keep alignment/wrapping tidy for the
+  stylistic ruleset.
+- **No banned type keywords.** Types inside braces must comply with strict
+  `typescript-eslint` preferences — never use banned wrappers like `Function` or
+  `Object`; use precise signatures/shapes (e.g. `Record<string, unknown>`, an
+  explicit interface, or a concrete function type) instead.
 - **`@returns {type} description`** for the return value. Note: ESLint
   `tagNamePreference` maps `returns` → `return`; respect the project's preferred
   tag where the linter enforces it.
 - **Explicit `@throws {Error} ...`** indicators wherever a function can throw,
   describing each failure condition (see `src/api-request.ts`, `src/validate-url.ts`).
-- **Protect external reference URLs** inside comments — never truncate, rewrite, or
-  line-wrap them. `max-len` is configured with `ignoreComments` and `ignoreUrls`,
-  so leave URLs intact on a single line.
+- **External URL & link protection.** Never clean up, alter, rewrite, line-wrap, or
+  remove markdown links, references, or external URLs found inside existing
+  comments. `max-len` is configured with `ignoreComments` and `ignoreUrls`, so
+  leave URLs intact on a single line.
 - Preserve the existing `@license`/Copyright header block at the top of each file.
 
 ---
 
-## 3. Strict Implementation Boundaries
-
-- **Async/await only.** Mandate `async`/`await` over raw `.then()`/`.catch()`
-  Promise chaining. New asynchronous code must use `async` functions and `await`,
-  matching existing modules.
-- **Separation of concerns — triggers vs. domain logic.** Maintain absolute
-  separation between Firebase event triggers (Pub/Sub, Firestore, HTTP handlers)
-  and inner core business/domain logic. Triggers stay thin: parse the event,
-  delegate to a pure, independently testable domain function, and handle
-  transport-level concerns only. Never embed business rules directly inside a
-  trigger handler.
-- **Validate before writing.** Require proper configuration tracking and explicit
-  schema validation before committing any database write (Firestore/RTDB).
-  Validate and shape data first; never persist unvalidated input.
-
----
-
-## 4. Automation & Verification Controls
+## 3. Testing Protocols & Mocking Controls (From Phase 2)
 
 Generate comprehensive unit and integration tests with `vitest` (the project's
 test runner — do not introduce Jest or Mocha/Chai). When you add or change a
@@ -159,14 +156,46 @@ test runner — do not introduce Jest or Mocha/Chai). When you add or change a
 
 ---
 
+## 4. Implementation Guardrails & README Requirements (From Phase 3)
+
+### Implementation guardrails
+- **Async/await only.** Mandate `async`/`await` over raw `.then()`/`.catch()`
+  Promise chaining. New asynchronous code must use `async` functions and `await`,
+  matching existing modules.
+- **Separation of concerns — triggers vs. domain logic.** Maintain absolute
+  separation between Firebase event triggers (Pub/Sub, Firestore, HTTP handlers)
+  and downstream core business/domain logic modules. Triggers stay thin: parse the
+  event, delegate to a pure, independently testable domain function, and handle
+  transport-level concerns only. Never embed business rules directly inside a
+  trigger handler.
+- **Validate before writing.** Require proper configuration tracking and explicit
+  schema validation before committing any database write (Firestore/RTDB).
+  Validate and shape data first; never persist unvalidated input.
+
+### README.md requirements
+Any update to `README.md` must:
+- **Preserve vital deployment URLs and diagram/reference links** intact — never
+  drop or rewrite them (consistent with the URL-protection rule in §2).
+- Comprehensively outline the following sections:
+  - **Project Architecture** — the library/`functions/` layout and public API surface.
+  - **Tech Stack Core** — exact versions (Node `>=22`, TypeScript `^6`,
+    `firebase-admin` `^13`, `firebase-functions` `^7`, Google Cloud SDKs, `sharp`, etc.).
+  - **Local Emulation controls** — `npm run build` (and `build:watch`) plus
+    `firebase emulators:start` with the emulator ports declared in `firebase.json`.
+  - **Test Execution commands** — `npm test` and `npm run test:watch` (and the
+    coverage command where relevant).
+
+---
+
 ## Quick Do / Don't
 
 **Do:** edit `src/` and `test/`; use `.js` extensions on relative imports; write
-full Google-style JSDoc; use async/await; keep triggers thin; validate before DB
-writes; mirror `src/` in `test/` with `vitest`; stub all external I/O; run lint +
-build + test.
+full Google-style JSDoc with precise brace-wrapped types; use async/await; keep
+triggers thin; validate before DB writes; mirror `src/` in `test/` with `vitest`;
+stub all external I/O; preserve README deployment URLs/links; run lint + build + test.
 
 **Don't:** read or modify `/lib` (incl. for test context); hand-edit build output;
-mix business logic into triggers; use raw Promise chains; make real network/cloud
-calls in tests; modify `src/` just to ease testing; add lint-disable directives;
-commit DB writes without validation; rewrite or wrap URLs in comments.
+use banned JSDoc types (`Function`/`Object`); mix business logic into triggers; use
+raw Promise chains; make real network/cloud calls in tests; modify `src/` just to
+ease testing; add lint-disable directives; commit DB writes without validation;
+rewrite or wrap URLs in comments.
