@@ -97,18 +97,65 @@ Google-style TypeScript JSDoc, consistent with the existing code and the
 
 ## 4. Automation & Verification Controls
 
-- **Test directory mapping.** Unit tests mirror `src/` inside `test/`: every
-  module `src/<name>.ts` has a matching `test/<name>.test.ts`. When you add or
-  change a `src/` module, add or update its corresponding `*.test.ts`. Vitest
-  discovers `test/**/*.test.ts` (and `*.spec.ts`) via `vitest.config.ts`.
-- **Cloud Function testing.** Use the `firebase-functions-test` utility to drive
-  and track Cloud Function execution in tests. Mock external clients
-  (`@google-cloud/pubsub`, `firebase-admin`, `firebase-functions/v2` logger) with
-  Vitest `vi.mock`/`vi.hoisted`, following the pattern in
-  `test/pubsub-event.test.ts`.
-- **Verification gate.** Before considering a change complete, run `npm run lint`,
-  `npm run build`, and `npm test`. All must pass. Remember `npm run build` is the
-  only approved way to regenerate `lib/`.
+Generate comprehensive unit and integration tests with `vitest` (the project's
+test runner — do not introduce Jest or Mocha/Chai). When you add or change a
+`src/` module, add or update its tests in the same change.
+
+### Source-of-truth mapping — IGNORE `/lib`
+- **Map every test to raw source only.** Tests derive their context and coverage
+  from `src/` (or `functions/src/` when explicitly working there). The `/lib`
+  directory is a generated build artifact: **NEVER** read it, map tests to it, or
+  use it for test context. See the `/lib` BLACKLIST in §1.
+
+### File placement & naming
+- All tests live in the isolated top-level `test/` directory, **mirroring the
+  `src/` hierarchy precisely**. Each module `src/<path>/<name>.ts` has a matching
+  `test/<path>/<name>.test.ts` (`.spec.ts` is also discovered). Vitest collects
+  `test/**/*.test.ts` and `test/**/*.spec.ts` via `vitest.config.ts`.
+- Import the module under test through its `.js` specifier
+  (e.g. `import pubSubEvent from '../src/pubsub-event.js';`), per the `Node16`
+  resolution rule in §1.
+
+### Environment isolation — no real side-effects
+- Tests must **never** perform real network requests or touch live external APIs
+  or real cloud instances. All I/O must be intercepted.
+- Stub external clients with Vitest `vi.mock` + `vi.hoisted` (every variable
+  referenced inside a `vi.mock` factory must be declared via `vi.hoisted`). Mock
+  `@google-cloud/pubsub`, `@google-cloud/bigquery`, `firebase-admin` sub-modules,
+  `node-fetch`, and the `firebase-functions/v2` `logger`. Reset state with
+  `vi.clearAllMocks()` in `beforeEach` and `vi.restoreAllMocks()` in `afterEach`.
+  Follow the established pattern in `test/pubsub-event.test.ts`.
+
+### Firebase & Cloud Function testing
+- Drive and track Cloud Function execution with the official
+  `firebase-functions-test` SDK.
+- For data assertions, either run against the local Firebase Emulators (ports are
+  declared in `firebase.json`) or heavily stub the `firebase-admin` SDK to
+  intercept Firestore / Realtime Database reads and writes — never hit real
+  Firestore/RTDB.
+
+### Test structure
+- Wrap suites in descriptive `describe()` blocks and individual cases in `it()`
+  blocks, and follow the **Arrange–Act–Assert** layout within each test.
+- Cover the documented behaviour: happy paths, default-parameter handling,
+  thrown-error / failure branches (the conditions noted in `@throws`), and edge
+  cases.
+
+### Zero source modification
+- **Do NOT modify `src/` code to make it "easier to test."** If a module is
+  genuinely untestable as written, record a short breakdown log explaining why,
+  then move on — do not alter the source to work around it.
+
+### Compilation & lint cleanliness
+- Every test file must be valid, strict TypeScript: correct imports, explicitly
+  typed mock parameters, and zero type errors.
+- Tests must pass all strict `typescript-eslint` rules **without** any
+  lint-disable directives.
+
+### Verification gate
+- Before considering a change complete, run `npm run lint`, `npm run build`, and
+  `npm test`. All must pass. Remember `npm run build` is the only approved way to
+  regenerate `lib/`.
 
 ---
 
@@ -116,8 +163,10 @@ Google-style TypeScript JSDoc, consistent with the existing code and the
 
 **Do:** edit `src/` and `test/`; use `.js` extensions on relative imports; write
 full Google-style JSDoc; use async/await; keep triggers thin; validate before DB
-writes; run lint + build + test.
+writes; mirror `src/` in `test/` with `vitest`; stub all external I/O; run lint +
+build + test.
 
-**Don't:** read or modify `/lib`; hand-edit build output; mix business logic into
-triggers; use raw Promise chains; commit DB writes without validation; rewrite or
-wrap URLs in comments.
+**Don't:** read or modify `/lib` (incl. for test context); hand-edit build output;
+mix business logic into triggers; use raw Promise chains; make real network/cloud
+calls in tests; modify `src/` just to ease testing; add lint-disable directives;
+commit DB writes without validation; rewrite or wrap URLs in comments.
