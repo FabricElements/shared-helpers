@@ -13,9 +13,9 @@ const {mockGetQueryResults, mockCreateQueryJob} = vi.hoisted(() => {
 });
 
 vi.mock('@google-cloud/bigquery', () => ({
-  BigQuery: vi.fn(() => ({
-    createQueryJob: mockCreateQueryJob,
-  })),
+  BigQuery: vi.fn(function() {
+    return {createQueryJob: mockCreateQueryJob};
+  }),
 }));
 
 // ---------- Firebase Functions logger mock ----------

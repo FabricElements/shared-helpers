@@ -10,9 +10,9 @@ const mockTable = vi.fn(() => ({insert: mockInsert}));
 const mockDataset = vi.fn(() => ({table: mockTable}));
 
 vi.mock('@google-cloud/bigquery', () => ({
-  BigQuery: vi.fn(() => ({
-    dataset: mockDataset,
-  })),
+  BigQuery: vi.fn(function() {
+    return {dataset: mockDataset};
+  }),
 }));
 
 // ---------- Firestore mock ----------

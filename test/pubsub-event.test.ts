@@ -13,7 +13,9 @@ const {mockPublishMessage, mockTopic, mockLoggerError} = vi.hoisted(() => {
 });
 
 vi.mock('@google-cloud/pubsub', () => ({
-  PubSub: vi.fn(() => ({topic: mockTopic})),
+  PubSub: vi.fn(function() {
+    return {topic: mockTopic};
+  }),
 }));
 
 vi.mock('firebase-functions/v2', () => ({
