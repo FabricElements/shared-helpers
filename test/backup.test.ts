@@ -4,9 +4,62 @@
  */
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
+// ---------- BigQuery Storage Write API mocks (vi.hoisted so factories can reference them) ----------
+const {
+  mockGetResult,
+  mockAppendRows,
+  mockJSONWriterClose,
+  mockCreateStreamConnection,
+  mockWriterClientClose,
+  mockConvertBigQuerySchema,
+  mockConvertStorageSchema,
+} = vi.hoisted(() => {
+  const mockGetResult = vi.fn().mockResolvedValue({});
+  const mockAppendRows = vi.fn(() => ({getResult: mockGetResult}));
+  const mockJSONWriterClose = vi.fn();
+  const mockCreateStreamConnection = vi.fn().mockResolvedValue({
+    onSchemaUpdated: vi.fn(() => ({off: vi.fn()})),
+  });
+  const mockWriterClientClose = vi.fn();
+  const mockConvertBigQuerySchema = vi.fn((s: unknown) => s);
+  const mockConvertStorageSchema = vi.fn(() => ({name: 'root', field: []}));
+  return {
+    mockGetResult,
+    mockAppendRows,
+    mockJSONWriterClose,
+    mockCreateStreamConnection,
+    mockWriterClientClose,
+    mockConvertBigQuerySchema,
+    mockConvertStorageSchema,
+  };
+});
+
+vi.mock('@google-cloud/bigquery-storage', () => ({
+  managedwriter: {
+    WriterClient: vi.fn(function() {
+      return {
+        createStreamConnection: mockCreateStreamConnection,
+        close: mockWriterClientClose,
+      };
+    }),
+    JSONWriter: vi.fn(function() {
+      return {
+        appendRows: mockAppendRows,
+        close: mockJSONWriterClose,
+        setDefaultMissingValueInterpretation: vi.fn(),
+      };
+    }),
+    DefaultStream: 'DEFAULT',
+  },
+  adapt: {
+    convertBigQuerySchemaToStorageTableSchema: mockConvertBigQuerySchema,
+    convertStorageSchemaToProto2Descriptor: mockConvertStorageSchema,
+  },
+}));
+
 // ---------- BigQuery mock ----------
-const mockInsert = vi.fn();
-const mockTable = vi.fn(() => ({insert: mockInsert}));
+const mockGetMetadata = vi.fn();
+const mockTable = vi.fn(() => ({getMetadata: mockGetMetadata}));
 const mockDataset = vi.fn(() => ({table: mockTable}));
 
 vi.mock('@google-cloud/bigquery', () => ({
@@ -49,7 +102,15 @@ import backup from '../src/backup.js';
 describe('backup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockInsert.mockResolvedValue(undefined);
+    mockGetMetadata.mockResolvedValue([{
+      schema: {fields: [{name: 'id', type: 'STRING'}]},
+      tableReference: {projectId: 'test-project', datasetId: 'ds', tableId: 'tbl'},
+    }]);
+    mockGetResult.mockResolvedValue({});
+    mockCreateStreamConnection.mockResolvedValue({
+      onSchemaUpdated: vi.fn(() => ({off: vi.fn()})),
+    });
+    mockBatchCommit.mockResolvedValue(undefined);
   });
 
   describe('input validation', () => {
@@ -81,18 +142,20 @@ describe('backup', () => {
   describe('empty items list', () => {
     it('logs and returns early when items is empty', async () => {
       await backup({collection: 'col', dataset: 'ds', items: [], table: 'tbl'});
-      expect(mockInsert).not.toHaveBeenCalled();
+      expect(mockAppendRows).not.toHaveBeenCalled();
     });
   });
 
-  describe('successful BigQuery insert without Firestore update', () => {
-    it('calls BigQuery insert with the items', async () => {
+  describe('successful BigQuery write without Firestore update', () => {
+    it('writes items via the Storage Write API to the correct destination', async () => {
       const items = [{id: 'a', value: 1}, {id: 'b', value: 2}];
       await backup({collection: 'col', dataset: 'ds', items, table: 'tbl'});
-      expect(mockInsert).toHaveBeenCalledWith(items, {
-        ignoreUnknownValues: true,
-        skipInvalidRows: true,
-      });
+      expect(mockAppendRows).toHaveBeenCalledWith(items);
+      expect(mockCreateStreamConnection).toHaveBeenCalledWith(
+        expect.objectContaining({
+          streamId: 'projects/test-project/datasets/ds/tables/tbl/streams/_default',
+        }),
+      );
     });
 
     it('does not call Firestore batch when update is false', async () => {
@@ -130,11 +193,58 @@ describe('backup', () => {
   });
 
   describe('BigQuery error handling', () => {
-    it('re-throws when BigQuery insert fails', async () => {
-      mockInsert.mockRejectedValue(new Error('BQ error'));
+    it('re-throws when BigQuery Storage write fails', async () => {
+      mockGetResult.mockRejectedValue(new Error('BQ error'));
       await expect(
         backup({collection: 'col', dataset: 'ds', items: [{id: 'x'}], table: 'tbl'}),
       ).rejects.toBeTruthy();
+    });
+
+    it('does not update Firestore when the BigQuery backup fails', async () => {
+      mockGetResult.mockRejectedValue(new Error('BQ error'));
+      await expect(
+        backup({collection: 'col', dataset: 'ds', items: [{id: 'x'}], table: 'tbl', update: true}),
+      ).rejects.toBeTruthy();
+      expect(mockBatchUpdate).not.toHaveBeenCalled();
+      expect(mockBatchDelete).not.toHaveBeenCalled();
+      expect(mockBatchCommit).not.toHaveBeenCalled();
+    });
+
+    it('does not delete Firestore documents when the BigQuery backup fails', async () => {
+      mockGetResult.mockRejectedValue(new Error('BQ error'));
+      await expect(
+        backup({
+          collection: 'col',
+          dataset: 'ds',
+          items: [{id: 'x'}],
+          table: 'tbl',
+          update: true,
+          delete: true,
+        }),
+      ).rejects.toBeTruthy();
+      expect(mockBatchDelete).not.toHaveBeenCalled();
+      expect(mockBatchCommit).not.toHaveBeenCalled();
+    });
+
+    it('updates Firestore only after the BigQuery write has resolved', async () => {
+      const order: string[] = [];
+      mockAppendRows.mockImplementationOnce(() => {
+        order.push('bq.append');
+        return {
+          getResult: async () => {
+            order.push('bq.getResult');
+            return {};
+          },
+        };
+      });
+      mockBatchUpdate.mockImplementationOnce(() => {
+        order.push('firestore.update');
+      });
+      mockBatchCommit.mockImplementationOnce(async () => {
+        order.push('firestore.commit');
+      });
+      await backup({collection: 'col', dataset: 'ds', items: [{id: 'doc1'}], table: 'tbl', update: true});
+      expect(order).toEqual(['bq.append', 'bq.getResult', 'firestore.update', 'firestore.commit']);
     });
   });
 });

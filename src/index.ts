@@ -11,6 +11,7 @@
  */
 import apiRequest from './api-request.js';
 import backup from './backup.js';
+import {BigQueryStreamWriter} from './bigquery-stream-writer.js';
 import checkNumber from './check-number.js';
 import cleaner from './cleaner.js';
 import {FirestoreHelper} from './firestore-helper.js';
@@ -29,6 +30,7 @@ import validateUrl from './validate-url.js';
 export {
   apiRequest,
   backup,
+  BigQueryStreamWriter,
   checkNumber,
   cleaner,
   interfaces,
