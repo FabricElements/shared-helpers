@@ -304,6 +304,19 @@ export class BigQueryStreamWriter {
   }
 
   /**
+   * Drops all buffered rows without writing them and cancels any pending
+   * time-based flush. Use this to abort an in-progress batch — for example when
+   * an upstream operation has failed and the buffered rows must not reach
+   * BigQuery — before calling {@link BigQueryStreamWriter.close}.
+   *
+   * @returns {void}
+   */
+  discard(): void {
+    this.clearFlushTimer();
+    this.buffer = [];
+  }
+
+  /**
    * Flushes any remaining buffered rows, then tears down the long-lived writer
    * and client. Call during graceful shutdown; subsequent writes lazily
    * re-establish the connection.

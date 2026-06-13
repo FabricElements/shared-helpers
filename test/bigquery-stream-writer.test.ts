@@ -228,6 +228,24 @@ describe('BigQueryStreamWriter', () => {
     });
   });
 
+  describe('discard', () => {
+    it('drops buffered rows so they are never written', async () => {
+      const writer = new BigQueryStreamWriter({dataset: 'ds', table: 'tbl', maxBatchSize: 100});
+      await writer.add({id: 'a'});
+      writer.discard();
+      await writer.flush();
+      expect(mockAppendRows).not.toHaveBeenCalled();
+    });
+
+    it('leaves close as a no-op append after discarding', async () => {
+      const writer = new BigQueryStreamWriter({dataset: 'ds', table: 'tbl', maxBatchSize: 100});
+      await writer.add({id: 'a'});
+      writer.discard();
+      await writer.close();
+      expect(mockAppendRows).not.toHaveBeenCalled();
+    });
+  });
+
   describe('close', () => {
     it('flushes remaining rows and closes the writer and client', async () => {
       const writer = new BigQueryStreamWriter({dataset: 'ds', table: 'tbl', maxBatchSize: 100});

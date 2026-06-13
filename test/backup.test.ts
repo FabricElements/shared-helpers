@@ -199,5 +199,52 @@ describe('backup', () => {
         backup({collection: 'col', dataset: 'ds', items: [{id: 'x'}], table: 'tbl'}),
       ).rejects.toBeTruthy();
     });
+
+    it('does not update Firestore when the BigQuery backup fails', async () => {
+      mockGetResult.mockRejectedValue(new Error('BQ error'));
+      await expect(
+        backup({collection: 'col', dataset: 'ds', items: [{id: 'x'}], table: 'tbl', update: true}),
+      ).rejects.toBeTruthy();
+      expect(mockBatchUpdate).not.toHaveBeenCalled();
+      expect(mockBatchDelete).not.toHaveBeenCalled();
+      expect(mockBatchCommit).not.toHaveBeenCalled();
+    });
+
+    it('does not delete Firestore documents when the BigQuery backup fails', async () => {
+      mockGetResult.mockRejectedValue(new Error('BQ error'));
+      await expect(
+        backup({
+          collection: 'col',
+          dataset: 'ds',
+          items: [{id: 'x'}],
+          table: 'tbl',
+          update: true,
+          delete: true,
+        }),
+      ).rejects.toBeTruthy();
+      expect(mockBatchDelete).not.toHaveBeenCalled();
+      expect(mockBatchCommit).not.toHaveBeenCalled();
+    });
+
+    it('updates Firestore only after the BigQuery write has resolved', async () => {
+      const order: string[] = [];
+      mockAppendRows.mockImplementationOnce(() => {
+        order.push('bq.append');
+        return {
+          getResult: async () => {
+            order.push('bq.getResult');
+            return {};
+          },
+        };
+      });
+      mockBatchUpdate.mockImplementationOnce(() => {
+        order.push('firestore.update');
+      });
+      mockBatchCommit.mockImplementationOnce(async () => {
+        order.push('firestore.commit');
+      });
+      await backup({collection: 'col', dataset: 'ds', items: [{id: 'doc1'}], table: 'tbl', update: true});
+      expect(order).toEqual(['bq.append', 'bq.getResult', 'firestore.update', 'firestore.commit']);
+    });
   });
 });

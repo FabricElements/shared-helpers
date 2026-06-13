@@ -65,16 +65,22 @@ export default async (data: {
   let backup = 0;
   const writer = new BigQueryStreamWriter({dataset: data.dataset, table: data.table});
   try {
-    // Buffer every item and flush as a single committed batch on close. The
-    // writer owns all Storage Write API resources and error inspection.
+    // Buffer every item, then explicitly flush so the BigQuery Storage Write API
+    // has acknowledged the committed batch before we touch Firestore. `flush`
+    // rejects on any append/row error, which aborts this function and guarantees
+    // the Firestore update pass below never runs for a failed backup.
     await writer.addRows(data.items);
-    await writer.close();
+    await writer.flush();
   } catch (error: any) {
     const errorMessage = error?.message ?? JSON.stringify(error);
     logger.error(`Error backup for collection "${data.collection}" to BigQuery: ${errorMessage}`);
-    // Release any half-initialised connection before propagating the failure.
-    await writer.close().catch(() => undefined);
+    // Drop any rows still buffered after the failure so teardown never partially
+    // writes them, then re-throw without proceeding to the Firestore update pass.
+    writer.discard();
     throw error.toString();
+  } finally {
+    // Always release the long-lived gRPC connection.
+    await writer.close().catch(() => undefined);
   }
   if (!data.update) {
     logger.info(`${total} items backup for collection "${data.collection}" to BigQuery but not update Firestore. To update Firestore pass the parameter "update" as true`);
