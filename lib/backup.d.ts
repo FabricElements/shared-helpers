@@ -1,15 +1,14 @@
 /**
- * Streams Firestore documents into a BigQuery table using the BigQuery Storage
- * Write API and optionally updates or deletes the originating Firestore documents
- * afterwards.
+ * Streams Firestore documents into a BigQuery table using the
+ * {@link BigQueryStreamWriter} (BigQuery Storage Write API) and optionally
+ * updates or deletes the originating Firestore documents afterwards.
  *
  * Rows are written via the Storage Write API default stream (at-least-once,
  * committed-on-append semantics), which is the modern high-throughput replacement
  * for the legacy `tabledata.insertAll` streaming insert.  Missing fields receive
- * their column default value (`DEFAULT_VALUE` interpretation), which approximates
- * the `ignoreUnknownValues` / `skipInvalidRows` tolerance of the legacy API; rows
- * whose fields do not conform to the table schema may be rejected by the server.
- * Well-formed rows are committed immediately.
+ * their column default value (`DEFAULT_VALUE` interpretation); rows whose fields
+ * do not conform to the table schema may be rejected by the server.  Well-formed
+ * rows are committed immediately.
  *
  * The destination project is taken from the resolved table metadata, which the
  * Cloud Run runtime provides automatically — callers only supply `data.dataset`

@@ -153,12 +153,7 @@ describe('backup', () => {
       expect(mockAppendRows).toHaveBeenCalledWith(items);
       expect(mockCreateStreamConnection).toHaveBeenCalledWith(
         expect.objectContaining({
-          destinationTable: expect.stringContaining('ds'),
-        }),
-      );
-      expect(mockCreateStreamConnection).toHaveBeenCalledWith(
-        expect.objectContaining({
-          destinationTable: expect.stringContaining('tbl'),
+          streamId: 'projects/test-project/datasets/ds/tables/tbl/streams/_default',
         }),
       );
     });
