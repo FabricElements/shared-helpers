@@ -3,7 +3,7 @@
  * before serialization. Any column not listed in a writer's `fieldTypes` map is
  * passed through untouched (`DEFAULT`).
  *
- * - `TIMESTAMP` / `DATETIME` values are normalised to RFC 3339 strings via
+ * - `TIMESTAMP` / `DATETIME` values are normalised to ISO 8601 strings via
  *   `Date.prototype.toISOString()`.
  * - `NUMERIC` / `BIGNUMERIC` values are emitted as strings so that
  *   high-precision decimals are never truncated by JavaScript's IEEE-754

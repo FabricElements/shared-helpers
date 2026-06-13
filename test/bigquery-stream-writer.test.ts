@@ -160,7 +160,7 @@ describe('BigQueryStreamWriter', () => {
       await writer.add({id: 'a'});
       expect(mockCreateStreamConnection).toHaveBeenCalledWith(
         expect.objectContaining({
-          destinationTable: 'projects/test-project/datasets/ds/tables/tbl/streams/_default',
+          streamId: 'projects/test-project/datasets/ds/tables/tbl/streams/_default',
         }),
       );
       expect(mockSetDefaultMissing).toHaveBeenCalledWith('DEFAULT_VALUE');

@@ -13,7 +13,7 @@ import {logger} from 'firebase-functions/v2';
  * before serialization. Any column not listed in a writer's `fieldTypes` map is
  * passed through untouched (`DEFAULT`).
  *
- * - `TIMESTAMP` / `DATETIME` values are normalised to RFC 3339 strings via
+ * - `TIMESTAMP` / `DATETIME` values are normalised to ISO 8601 strings via
  *   `Date.prototype.toISOString()`.
  * - `NUMERIC` / `BIGNUMERIC` values are emitted as strings so that
  *   high-precision decimals are never truncated by JavaScript's IEEE-754
@@ -176,7 +176,7 @@ export class BigQueryStreamWriter {
       switch (type) {
         case 'TIMESTAMP':
         case 'DATETIME':
-          // Normalise temporal values to RFC 3339 strings the API accepts.
+          // Normalise temporal values to ISO 8601 strings the API accepts.
           out[key] = value instanceof Date ? value.toISOString() : value;
           break;
         case 'NUMERIC':
@@ -213,13 +213,15 @@ export class BigQueryStreamWriter {
         const protoDescriptor = adapt.convertStorageSchemaToProto2Descriptor(storageSchema, 'root');
 
         // Default Stream path: committed-on-append, shareable, no stream to create.
-        const destinationTable =
+        // Pass the fully-qualified `_default` stream path as the streamId so the
+        // SDK uses it verbatim (passing the DefaultStream sentinel alongside a
+        // suffixed table would duplicate the `/streams/_default` segment).
+        const defaultStreamPath =
           `projects/${projectId}/datasets/${this.dataset}/tables/${this.table}/streams/_default`;
 
         this.client = new managedwriter.WriterClient();
         this.connection = await this.client.createStreamConnection({
-          streamId: managedwriter.DefaultStream,
-          destinationTable,
+          streamId: defaultStreamPath,
         });
         const writer = new managedwriter.JSONWriter({
           connection: this.connection,
