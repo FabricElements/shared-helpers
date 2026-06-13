@@ -1,13 +1,24 @@
 /**
- * Streams Firestore documents into a BigQuery table and optionally updates
- * or deletes the originating Firestore documents afterwards.
+ * Streams Firestore documents into a BigQuery table using the BigQuery Storage
+ * Write API and optionally updates or deletes the originating Firestore documents
+ * afterwards.
  *
- * The function inserts all items into BigQuery using `ignoreUnknownValues`
- * and `skipInvalidRows` to tolerate schema mismatches.  When `update` is
- * `true` it subsequently iterates the item list in Firestore batch commits
- * (max 500 per batch) and either marks each document with `backup: true` or
- * deletes it when `delete` is `true`.  A 100 ms pause is injected between
- * batches to stay within Firestore write limits (~1 500 writes/minute).
+ * Rows are written via the Storage Write API default stream (at-least-once,
+ * committed-on-append semantics), which is the modern high-throughput replacement
+ * for the legacy `tabledata.insertAll` streaming insert.  Missing fields receive
+ * their column default value (`DEFAULT_VALUE` interpretation), which approximates
+ * the `ignoreUnknownValues` / `skipInvalidRows` tolerance of the legacy API; rows
+ * whose fields do not conform to the table schema may be rejected by the server.
+ * Well-formed rows are committed immediately.
+ *
+ * The destination project is resolved from the BigQuery client's own Application
+ * Default Credentials — callers only supply `data.dataset` and `data.table`.
+ *
+ * When `update` is `true` the function subsequently iterates the item list in
+ * Firestore batch commits (max 500 per batch) and either marks each document with
+ * `backup: true` or deletes it when `delete` is `true`.  A 100 ms pause is
+ * injected between batches to stay within Firestore write limits
+ * (~1 500 writes/minute).
  *
  * @param {object} data - Backup job descriptor.
  * @param {string} data.collection - Name of the Firestore source collection; used for
@@ -15,14 +26,14 @@
  * @param {string} data.dataset - BigQuery dataset identifier.
  * @param {boolean} [data.delete] - When `true`, deletes Firestore documents after backup
  *   instead of setting `backup: true`.  Requires `update: true`.
- * @param {any[]} data.items - Array of document payloads to insert into BigQuery.
+ * @param {any[]} data.items - Array of document payloads to write into BigQuery.
  *   Each item should have an `id` field for the Firestore update pass.
  * @param {string} data.table - BigQuery table identifier within `dataset`.
- * @param {boolean} [data.update] - When `true`, triggers the Firestore post-insert pass
+ * @param {boolean} [data.update] - When `true`, triggers the Firestore post-write pass
  *   that marks or deletes each source document.
- * @returns {Promise<void>} A Promise that resolves when the BigQuery insert and any
+ * @returns {Promise<void>} A Promise that resolves when the BigQuery write and any
  *   Firestore updates have completed.
- * @throws {string} A stringified error if the BigQuery insert job fails.
+ * @throws {string} A stringified error if the BigQuery Storage Write API call fails.
  */
 declare const _default: (data: {
     collection: string;

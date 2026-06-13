@@ -21,8 +21,8 @@ workspace is structured, built, and verified.
 - **Firebase:** `firebase-admin` `^13`, `firebase-functions` `^7`. Import from the
   modular sub-paths already used in the codebase (e.g. `firebase-admin/firestore`,
   `firebase-functions/v2`).
-- **Other key deps:** `@google-cloud/bigquery`, `@google-cloud/pubsub`,
-  `libphonenumber-js`, `lodash`, `node-fetch`, `sharp`.
+- **Other key deps:** `@google-cloud/bigquery`, `@google-cloud/bigquery-storage`,
+  `@google-cloud/pubsub`, `libphonenumber-js`, `lodash`, `node-fetch`, `sharp`.
 - **Lint:** ESLint `^10` with `typescript-eslint` (`recommended` + `stylistic`).
 - **Test:** `vitest` `^3` with globals enabled, `node` environment.
 
@@ -118,10 +118,10 @@ test runner — do not introduce Jest or Mocha/Chai). When you add or change a
   or real cloud instances. All I/O must be intercepted.
 - Stub external clients with Vitest `vi.mock` + `vi.hoisted` (every variable
   referenced inside a `vi.mock` factory must be declared via `vi.hoisted`). Mock
-  `@google-cloud/pubsub`, `@google-cloud/bigquery`, `firebase-admin` sub-modules,
-  `node-fetch`, and the `firebase-functions/v2` `logger`. Reset state with
-  `vi.clearAllMocks()` in `beforeEach` and `vi.restoreAllMocks()` in `afterEach`.
-  Follow the established pattern in `test/pubsub-event.test.ts`.
+  `@google-cloud/pubsub`, `@google-cloud/bigquery`, `@google-cloud/bigquery-storage`,
+  `firebase-admin` sub-modules, `node-fetch`, and the `firebase-functions/v2` `logger`.
+  Reset state with `vi.clearAllMocks()` in `beforeEach` and `vi.restoreAllMocks()` in
+  `afterEach`. Follow the established pattern in `test/pubsub-event.test.ts`.
 
 ### Firebase & Cloud Function testing
 - Drive and track Cloud Function execution with the official

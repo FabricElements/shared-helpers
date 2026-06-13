@@ -3,6 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import {BigQuery} from '@google-cloud/bigquery';
+import {adapt, managedwriter} from '@google-cloud/bigquery-storage';
 import {getFirestore} from 'firebase-admin/firestore';
 import {logger} from 'firebase-functions/v2';
 
@@ -10,15 +11,26 @@ import _ from 'lodash';
 import {timeout} from './global.js';
 
 /**
- * Streams Firestore documents into a BigQuery table and optionally updates
- * or deletes the originating Firestore documents afterwards.
+ * Streams Firestore documents into a BigQuery table using the BigQuery Storage
+ * Write API and optionally updates or deletes the originating Firestore documents
+ * afterwards.
  *
- * The function inserts all items into BigQuery using `ignoreUnknownValues`
- * and `skipInvalidRows` to tolerate schema mismatches.  When `update` is
- * `true` it subsequently iterates the item list in Firestore batch commits
- * (max 500 per batch) and either marks each document with `backup: true` or
- * deletes it when `delete` is `true`.  A 100 ms pause is injected between
- * batches to stay within Firestore write limits (~1 500 writes/minute).
+ * Rows are written via the Storage Write API default stream (at-least-once,
+ * committed-on-append semantics), which is the modern high-throughput replacement
+ * for the legacy `tabledata.insertAll` streaming insert.  Missing fields receive
+ * their column default value (`DEFAULT_VALUE` interpretation), which approximates
+ * the `ignoreUnknownValues` / `skipInvalidRows` tolerance of the legacy API; rows
+ * whose fields do not conform to the table schema may be rejected by the server.
+ * Well-formed rows are committed immediately.
+ *
+ * The destination project is resolved from the BigQuery client's own Application
+ * Default Credentials — callers only supply `data.dataset` and `data.table`.
+ *
+ * When `update` is `true` the function subsequently iterates the item list in
+ * Firestore batch commits (max 500 per batch) and either marks each document with
+ * `backup: true` or deletes it when `delete` is `true`.  A 100 ms pause is
+ * injected between batches to stay within Firestore write limits
+ * (~1 500 writes/minute).
  *
  * @param {object} data - Backup job descriptor.
  * @param {string} data.collection - Name of the Firestore source collection; used for
@@ -26,14 +38,14 @@ import {timeout} from './global.js';
  * @param {string} data.dataset - BigQuery dataset identifier.
  * @param {boolean} [data.delete] - When `true`, deletes Firestore documents after backup
  *   instead of setting `backup: true`.  Requires `update: true`.
- * @param {any[]} data.items - Array of document payloads to insert into BigQuery.
+ * @param {any[]} data.items - Array of document payloads to write into BigQuery.
  *   Each item should have an `id` field for the Firestore update pass.
  * @param {string} data.table - BigQuery table identifier within `dataset`.
- * @param {boolean} [data.update] - When `true`, triggers the Firestore post-insert pass
+ * @param {boolean} [data.update] - When `true`, triggers the Firestore post-write pass
  *   that marks or deletes each source document.
- * @returns {Promise<void>} A Promise that resolves when the BigQuery insert and any
+ * @returns {Promise<void>} A Promise that resolves when the BigQuery write and any
  *   Firestore updates have completed.
- * @throws {string} A stringified error if the BigQuery insert job fails.
+ * @throws {string} A stringified error if the BigQuery Storage Write API call fails.
  */
 export default async (data: {
   collection: string,
@@ -53,12 +65,46 @@ export default async (data: {
     return;
   }
   let backup = 0;
+  let storageClient: managedwriter.WriterClient | undefined;
+  let writer: managedwriter.JSONWriter | undefined;
   try {
     const bigquery = new BigQuery();
-    await bigquery.dataset(data.dataset).table(data.table).insert(data.items, {
-      ignoreUnknownValues: true,
-      skipInvalidRows: true,
+
+    // Resolve the GCP project from the BigQuery client's own ambient credentials
+    // (Application Default Credentials). Callers never need to supply a project id.
+    const projectId = await new Promise<string>((resolve, reject) => {
+      bigquery.getProjectId((err: Error | null, id?: string) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(id!);
+        }
+      });
     });
+
+    // Fetch the table schema to build the protobuf descriptor required by JSONWriter.
+    const [tableMetadata] = await bigquery.dataset(data.dataset).table(data.table).getMetadata();
+    const storageSchema = adapt.convertBigQuerySchemaToStorageTableSchema(tableMetadata.schema);
+    const protoDescriptor = adapt.convertStorageSchemaToProto2Descriptor(storageSchema, 'root');
+
+    // Build the fully-qualified destination path required by the Storage Write API.
+    // The project is resolved above via ADC; dataset and table are caller-supplied.
+    const destinationTable = `projects/${projectId}/datasets/${data.dataset}/tables/${data.table}`;
+
+    storageClient = new managedwriter.WriterClient();
+    const connection = await storageClient.createStreamConnection({
+      streamId: managedwriter.DefaultStream,
+      destinationTable,
+    });
+
+    // Use DEFAULT_VALUE for missing fields: rows with extra unknown fields that are
+    // not in the schema will be rejected by the server (unlike the legacy
+    // ignoreUnknownValues option). Well-formed rows are committed immediately on
+    // the default stream (at-least-once, fire-and-forget semantics).
+    writer = new managedwriter.JSONWriter({connection, protoDescriptor});
+    writer.setDefaultMissingValueInterpretation('DEFAULT_VALUE');
+    const pendingWrite = writer.appendRows(data.items);
+    await pendingWrite.getResult();
   } catch (error: any) {
     let errorMessage = error.message ?? null;
     if (error.response && error.insertErrors) {
@@ -71,6 +117,9 @@ export default async (data: {
       logger.error(`Error backup for collection "${data.collection}" to BigQuery: ${JSON.stringify(error)}`);
     }
     throw error.toString();
+  } finally {
+    writer?.close();
+    storageClient?.close();
   }
   if (!data.update) {
     logger.info(`${total} items backup for collection "${data.collection}" to BigQuery but not update Firestore. To update Firestore pass the parameter "update" as true`);
