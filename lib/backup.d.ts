@@ -11,8 +11,9 @@
  * whose fields do not conform to the table schema may be rejected by the server.
  * Well-formed rows are committed immediately.
  *
- * The destination project is resolved from the BigQuery client's own Application
- * Default Credentials — callers only supply `data.dataset` and `data.table`.
+ * The destination project is taken from the resolved table metadata, which the
+ * Cloud Run runtime provides automatically — callers only supply `data.dataset`
+ * and `data.table` and never need to specify a project id.
  *
  * When `update` is `true` the function subsequently iterates the item list in
  * Firestore batch commits (max 500 per batch) and either marks each document with

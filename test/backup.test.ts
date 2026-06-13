@@ -60,12 +60,11 @@ vi.mock('@google-cloud/bigquery-storage', () => ({
 // ---------- BigQuery mock ----------
 const mockGetMetadata = vi.fn();
 const mockTable = vi.fn(() => ({getMetadata: mockGetMetadata}));
-const mockGetProjectId = vi.fn();
 const mockDataset = vi.fn(() => ({table: mockTable}));
 
 vi.mock('@google-cloud/bigquery', () => ({
   BigQuery: vi.fn(function() {
-    return {dataset: mockDataset, getProjectId: mockGetProjectId};
+    return {dataset: mockDataset};
   }),
 }));
 
@@ -103,10 +102,10 @@ import backup from '../src/backup.js';
 describe('backup', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetProjectId.mockImplementation((cb: (err: Error | null, id?: string) => void) => {
-      cb(null, 'test-project');
-    });
-    mockGetMetadata.mockResolvedValue([{schema: {fields: [{name: 'id', type: 'STRING'}]}}]);
+    mockGetMetadata.mockResolvedValue([{
+      schema: {fields: [{name: 'id', type: 'STRING'}]},
+      tableReference: {projectId: 'test-project', datasetId: 'ds', tableId: 'tbl'},
+    }]);
     mockGetResult.mockResolvedValue({});
     mockCreateStreamConnection.mockResolvedValue({
       onSchemaUpdated: vi.fn(() => ({off: vi.fn()})),

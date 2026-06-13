@@ -23,8 +23,9 @@ import {timeout} from './global.js';
  * whose fields do not conform to the table schema may be rejected by the server.
  * Well-formed rows are committed immediately.
  *
- * The destination project is resolved from the BigQuery client's own Application
- * Default Credentials — callers only supply `data.dataset` and `data.table`.
+ * The destination project is taken from the resolved table metadata, which the
+ * Cloud Run runtime provides automatically — callers only supply `data.dataset`
+ * and `data.table` and never need to specify a project id.
  *
  * When `update` is `true` the function subsequently iterates the item list in
  * Firestore batch commits (max 500 per batch) and either marks each document with
@@ -70,25 +71,15 @@ export default async (data: {
   try {
     const bigquery = new BigQuery();
 
-    // Resolve the GCP project from the BigQuery client's own ambient credentials
-    // (Application Default Credentials). Callers never need to supply a project id.
-    const projectId = await new Promise<string>((resolve, reject) => {
-      bigquery.getProjectId((err: Error | null, id?: string) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(id!);
-        }
-      });
-    });
-
     // Fetch the table schema to build the protobuf descriptor required by JSONWriter.
     const [tableMetadata] = await bigquery.dataset(data.dataset).table(data.table).getMetadata();
     const storageSchema = adapt.convertBigQuerySchemaToStorageTableSchema(tableMetadata.schema);
     const protoDescriptor = adapt.convertStorageSchemaToProto2Descriptor(storageSchema, 'root');
 
     // Build the fully-qualified destination path required by the Storage Write API.
-    // The project is resolved above via ADC; dataset and table are caller-supplied.
+    // The project is taken from the table metadata (provided by the Cloud Run
+    // runtime); dataset and table are caller-supplied. No project id is specified.
+    const projectId = tableMetadata.tableReference.projectId;
     const destinationTable = `projects/${projectId}/datasets/${data.dataset}/tables/${data.table}`;
 
     storageClient = new managedwriter.WriterClient();
