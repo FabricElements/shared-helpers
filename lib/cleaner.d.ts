@@ -2,9 +2,8 @@
  * Submits the de-duplication query to BigQuery as an asynchronous job and
  * waits for results, logging a warning on failure without re-throwing.
  *
- * Reads the `FIREBASE_CONFIG` environment variable to construct the SQL
- * targeting the specified dataset and table.  Side-effects: creates a
- * BigQuery query job and waits for it to complete.
+ * All identifier parameters are validated before the SQL statement is built.
+ * Side-effects: creates a BigQuery query job and waits for it to complete.
  *
  * @param {object} filter - Descriptor for the target table and de-duplication columns.
  * @param {string} [filter.column] - Optional extra grouping column.

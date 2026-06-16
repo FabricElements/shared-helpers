@@ -47,6 +47,16 @@ describe('apiRequest', () => {
     ).rejects.toThrow('unknown error');
   });
 
+  it('throws with "unknown error" when error body is not valid JSON', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      json: vi.fn().mockRejectedValue(new SyntaxError('Unexpected token')),
+    });
+    await expect(
+      apiRequest({path: 'https://example.com', method: 'GET'}),
+    ).rejects.toThrow('unknown error');
+  });
+
   it('returns JSON when as is "json"', async () => {
     const payload = {data: 42};
     mockFetch.mockResolvedValue({

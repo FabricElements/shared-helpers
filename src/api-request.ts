@@ -52,12 +52,19 @@ export default async (options: InterfaceAPIRequest) => {
   }
   const response = await fetch(options.path, requestOptions);
   if (!response.ok) {
-    const BodyJsonError = await response.json();
+    let errorMessage = 'unknown error';
+    try {
+      const bodyJsonError = await response.json() as Record<string, unknown>;
+      if (Object.prototype.hasOwnProperty.call(bodyJsonError, 'message') && typeof bodyJsonError['message'] === 'string') {
+        errorMessage = bodyJsonError['message'];
+      }
+    } catch {
+      // Response body is not valid JSON — use the generic message.
+    }
     // noinspection ExceptionCaughtLocallyJS
-    throw new Error(Object.prototype.hasOwnProperty.call(BodyJsonError, 'message') ? BodyJsonError['message'] : 'unknown error');
+    throw new Error(errorMessage);
   }
   let responseData: any;
-  console.log('content-type', response.headers.get('content-type'));
   switch (options.as) {
     case 'arrayBuffer':
       responseData = await response.arrayBuffer();

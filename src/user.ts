@@ -446,7 +446,8 @@ export namespace User {
           await refUser.delete();
         }
       } catch (error: any) {
-        throw `Error removing user access: ${error.message ?? error.toString()}`;
+        // @ts-expect-error — Error(message, {cause}) requires ES2022 lib but is fully supported by Node.js >=16.9.
+        throw new Error(`Error removing user access: ${error.message ?? error.toString()}`, {cause: error});
       }
     };
 
@@ -639,7 +640,8 @@ export namespace User {
           role: data.role,
         });
       } catch (error: any) {
-        throw `Error updating user access: ${error.message}`;
+        // @ts-expect-error — Error(message, {cause}) requires ES2022 lib but is fully supported by Node.js >=16.9.
+        throw new Error(`Error updating user access: ${error.message}`, {cause: error});
       }
       // Remove avatar first
       delete data.avatar;

@@ -22,6 +22,7 @@ export declare const timeout: (ms: number) => Promise<void>;
  *
  * @param {string} filename - The full storage object path (e.g., `'images/photo.jpg'`).
  * @returns {string} The public download URL string for the file.
+ * @throws {Error} When `FIREBASE_CONFIG` is absent or contains invalid JSON.
  */
 export declare const getPublicUrl: (filename: string) => string;
 /**
@@ -35,6 +36,7 @@ export declare const getPublicUrl: (filename: string) => string;
  * @returns {{gs: string, url: string}} An object containing:
  *   - `gs` — the original storage path (passed through as-is).
  *   - `url` — the public `firebasestorage.googleapis.com` download URL.
+ * @throws {Error} When `FIREBASE_CONFIG` is absent or contains invalid JSON.
  */
 export declare const getUrlAndGs: (filename: string) => {
     gs: string;
