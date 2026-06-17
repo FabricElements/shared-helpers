@@ -1,5 +1,7 @@
 # FabricElements Shared Helpers
 
+[![Node CI](https://github.com/FabricElements/shared-helpers/actions/workflows/nodejs.yml/badge.svg)](https://github.com/FabricElements/shared-helpers/actions/workflows/nodejs.yml)
+
 `@fabricelements/shared-helpers` is a TypeScript helper library for Firebase and
 Google Cloud backend projects. It packages reusable, well-tested utilities —
 Firestore access helpers, media/image processing, phone-number validation,
@@ -46,42 +48,42 @@ function wired into Hosting rewrites in `firebase.json`).
 The package entry point (`src/index.ts`) re-exports the following helpers.
 Subpath exports `./user` and `./media` are also exposed via `package.json`.
 
-| Helper | Source | Purpose |
-| --- | --- | --- |
-| `apiRequest` | [src/api-request.ts](src/api-request.ts) | Call a Firebase project's base API. |
-| `backup` | [src/backup.ts](src/backup.ts) | Custom backup from Firestore to BigQuery. |
-| `checkNumber` | [src/check-number.ts](src/check-number.ts) | Validate and format phone numbers. |
-| `cleaner` | [src/cleaner.ts](src/cleaner.ts) | BigQuery database cleanup. |
-| `FirestoreHelper` | [src/firestore-helper.ts](src/firestore-helper.ts) | Google Cloud Firestore access helpers. |
-| `global` | [src/global.ts](src/global.ts) | Basic and reusable helpers. |
-| `hashId` | [src/hash-id.ts](src/hash-id.ts) | Generate a random hash id (4+ characters). |
-| `messageQueueSpeed` | [src/message-queue-speed.ts](src/message-queue-speed.ts) | Compute safe message dispatch throughput (Twilio rate limits). |
-| `pubSubEvent` | [src/pubsub-event.ts](src/pubsub-event.ts) | Google Cloud Pub/Sub event helper. |
-| `replaceMessageText` | [src/replace-message-text.ts](src/replace-message-text.ts) | Replace message text with custom keys. |
-| `specialCharToRegular` | [src/special-char-to-regular.ts](src/special-char-to-regular.ts) | Convert special characters to regular GSM characters. |
-| `strings` | [src/strings.ts](src/strings.ts) | String transformation utilities (e.g. snake_case → camelCase). |
-| `validateUrl` | [src/validate-url.ts](src/validate-url.ts) | Validate URL strings and strip embedded whitespace. |
-| `regex` | [src/regex.ts](src/regex.ts) | Shared regular expressions (email, media content types, etc.). |
-| `interfaces` | [src/interfaces.ts](src/interfaces.ts) | Shared TypeScript interfaces and types. |
-| `Media` (`./media`) | [src/media.ts](src/media.ts) | Image/media processing with `sharp` and Cloud Storage. |
-| `User` (`./user`) | [src/user.ts](src/user.ts) | Firebase Auth/Firestore user helpers. |
+| Helper                 | Source                                                           | Purpose                                                        |
+|------------------------|------------------------------------------------------------------|----------------------------------------------------------------|
+| `apiRequest`           | [src/api-request.ts](src/api-request.ts)                         | Call a Firebase project's base API.                            |
+| `backup`               | [src/backup.ts](src/backup.ts)                                   | Custom backup from Firestore to BigQuery.                      |
+| `checkNumber`          | [src/check-number.ts](src/check-number.ts)                       | Validate and format phone numbers.                             |
+| `cleaner`              | [src/cleaner.ts](src/cleaner.ts)                                 | BigQuery database cleanup.                                     |
+| `FirestoreHelper`      | [src/firestore-helper.ts](src/firestore-helper.ts)               | Google Cloud Firestore access helpers.                         |
+| `global`               | [src/global.ts](src/global.ts)                                   | Basic and reusable helpers.                                    |
+| `hashId`               | [src/hash-id.ts](src/hash-id.ts)                                 | Generate a random hash id (4+ characters).                     |
+| `messageQueueSpeed`    | [src/message-queue-speed.ts](src/message-queue-speed.ts)         | Compute safe message dispatch throughput (Twilio rate limits). |
+| `pubSubEvent`          | [src/pubsub-event.ts](src/pubsub-event.ts)                       | Google Cloud Pub/Sub event helper.                             |
+| `replaceMessageText`   | [src/replace-message-text.ts](src/replace-message-text.ts)       | Replace message text with custom keys.                         |
+| `specialCharToRegular` | [src/special-char-to-regular.ts](src/special-char-to-regular.ts) | Convert special characters to regular GSM characters.          |
+| `strings`              | [src/strings.ts](src/strings.ts)                                 | String transformation utilities (e.g. snake_case → camelCase). |
+| `validateUrl`          | [src/validate-url.ts](src/validate-url.ts)                       | Validate URL strings and strip embedded whitespace.            |
+| `regex`                | [src/regex.ts](src/regex.ts)                                     | Shared regular expressions (email, media content types, etc.). |
+| `interfaces`           | [src/interfaces.ts](src/interfaces.ts)                           | Shared TypeScript interfaces and types.                        |
+| `Media` (`./media`)    | [src/media.ts](src/media.ts)                                     | Image/media processing with `sharp` and Cloud Storage.         |
+| `User` (`./user`)      | [src/user.ts](src/user.ts)                                       | Firebase Auth/Firestore user helpers.                          |
 
 ------
 
 ## Tech Stack & Source Architecture Map
 
-| Area | Details |
-| --- | --- |
-| Language | **TypeScript** `^6.0.3`, compiled to **ES2020** ESM (`"type": "module"`, `module`/`moduleResolution`: `Node16`, `strict: true`, `declaration: true`). |
-| Runtime | **Node.js `>=22`** (see `engines` in `package.json`). |
-| Firebase | `firebase-admin` `^13.10.0`, `firebase-functions` `^7.2.5`. |
-| Google Cloud | `@google-cloud/bigquery` `^8.3.1`, `@google-cloud/bigquery-storage` `^5.1.1`, `@google-cloud/pubsub` `^5.3.0`. |
-| Media | `sharp` `^0.34.5` for image resizing/transformation. |
-| Utilities | `libphonenumber-js` `^1.13.5`, `lodash` `^4.18.1`, `node-fetch` `^3.3.2`. |
-| Database / storage engines | **Cloud Firestore**, **Cloud Storage**, and **Realtime Database** (rules in `firestore.rules`, `storage.rules`, `database.rules.json`); analytics/queue via **BigQuery** and **Pub/Sub**. |
-| Linting | **ESLint `^10.4.1`** via flat config (`eslint.config.js`) using `typescript-eslint` `recommended` + `stylistic` presets. |
-| Testing | **Vitest `^4.1.8`** (`globals` enabled, `node` environment). |
-| Configuration patterns | Compiler settings in `tsconfig.json` (`rootDir: src`, `outDir: lib`, declarations + source maps); test compiler config in `tsconfig.test.json`; Firebase services and emulator ports in `firebase.json`; default project alias in `.firebaserc`. |
+| Area                       | Details                                                                                                                                                                                                                                          |
+|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Language                   | **TypeScript** `^6.0.3`, compiled to **ES2020** ESM (`"type": "module"`, `module`/`moduleResolution`: `Node16`, `strict: true`, `declaration: true`).                                                                                            |
+| Runtime                    | **Node.js `>=22`** (see `engines` in `package.json`).                                                                                                                                                                                            |
+| Firebase                   | `firebase-admin` `^13.10.0`, `firebase-functions` `^7.2.5`.                                                                                                                                                                                      |
+| Google Cloud               | `@google-cloud/bigquery` `^8.3.1`, `@google-cloud/bigquery-storage` `^5.1.1`, `@google-cloud/pubsub` `^5.3.0`.                                                                                                                                   |
+| Media                      | `sharp` `^0.34.5` for image resizing/transformation.                                                                                                                                                                                             |
+| Utilities                  | `libphonenumber-js` `^1.13.5`, `lodash` `^4.18.1`, `node-fetch` `^3.3.2`.                                                                                                                                                                        |
+| Database / storage engines | **Cloud Firestore**, **Cloud Storage**, and **Realtime Database** (rules in `firestore.rules`, `storage.rules`, `database.rules.json`); analytics/queue via **BigQuery** and **Pub/Sub**.                                                        |
+| Linting                    | **ESLint `^10.4.1`** via flat config (`eslint.config.js`) using `typescript-eslint` `recommended` + `stylistic` presets.                                                                                                                         |
+| Testing                    | **Vitest `^4.1.8`** (`globals` enabled, `node` environment).                                                                                                                                                                                     |
+| Configuration patterns     | Compiler settings in `tsconfig.json` (`rootDir: src`, `outDir: lib`, declarations + source maps); test compiler config in `tsconfig.test.json`; Firebase services and emulator ports in `firebase.json`; default project alias in `.firebaserc`. |
 
 ### Active source directory map
 
@@ -118,9 +120,9 @@ shared-helpers/
 >
 > - **NEVER** edit, create, or delete files in `/lib`.
 > - **NEVER** read `/lib` or use it as development/AI context — the source of
->   truth is always `src/`.
+    > truth is always `src/`.
 > - Make all changes in `src/` only, and refresh the compiled output **solely**
->   by running `npm run build`.
+    > by running `npm run build`.
 >
 > The compiler excludes `lib` (`tsconfig.json`) and ESLint ignores it
 > (`eslint.config.js`).
@@ -172,16 +174,16 @@ Firestore, Realtime Database, Hosting, Pub/Sub, Storage, plus the Emulator UI):
 firebase emulators:start
 ```
 
-| Emulator | Port |
-| --- | --- |
-| Authentication | 9099 |
-| Functions | 5001 |
-| Firestore | 8080 |
+| Emulator          | Port |
+|-------------------|------|
+| Authentication    | 9099 |
+| Functions         | 5001 |
+| Firestore         | 8080 |
 | Realtime Database | 9000 |
-| Hosting | 5000 |
-| Pub/Sub | 8085 |
-| Storage | 9199 |
-| Emulator UI | 4000 |
+| Hosting           | 5000 |
+| Pub/Sub           | 8085 |
+| Storage           | 9199 |
+| Emulator UI       | 4000 |
 
 ------
 
