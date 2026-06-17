@@ -69,11 +69,28 @@ describe('cleaner', () => {
       expect(call.query).not.toContain('undefined');
     });
 
-    it('resolves silently when BigQuery job fails', async () => {
-      mockCreateQueryJob.mockRejectedValue(new Error('quota exceeded'));
+    it('throws when dataset contains disallowed characters', async () => {
       await expect(
-        cleaner({dataset: 'ds', table: 'tbl', timestamp: 'ts'}),
-      ).resolves.toBeUndefined();
+        cleaner({dataset: 'my-dataset; DROP TABLE foo', table: 'tbl', timestamp: 'ts'}),
+      ).rejects.toThrow('Invalid BigQuery identifier for dataset');
+    });
+
+    it('throws when table contains disallowed characters', async () => {
+      await expect(
+        cleaner({dataset: 'ds', table: 'tbl`; DROP TABLE foo', timestamp: 'ts'}),
+      ).rejects.toThrow('Invalid BigQuery identifier for table');
+    });
+
+    it('throws when timestamp column contains disallowed characters', async () => {
+      await expect(
+        cleaner({dataset: 'ds', table: 'tbl', timestamp: 'ts; DELETE FROM foo'}),
+      ).rejects.toThrow('Invalid BigQuery identifier for timestamp');
+    });
+
+    it('throws when optional column contains disallowed characters', async () => {
+      await expect(
+        cleaner({dataset: 'ds', table: 'tbl', timestamp: 'ts', column: 'col--injection'}),
+      ).rejects.toThrow('Invalid BigQuery identifier for column');
     });
   });
 });

@@ -16,6 +16,26 @@ import {Buffer} from 'buffer';
 export const timeout = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));
 
 /**
+ * Parses the `FIREBASE_CONFIG` environment variable and returns the resulting object.
+ *
+ * Throws a descriptive error when the variable is absent or its value is not
+ * valid JSON, preventing silent `undefined` access or cryptic `SyntaxError`
+ * propagation at call sites.
+ *
+ * @returns {Record<string, unknown>} The parsed Firebase configuration object.
+ * @throws {Error} When `FIREBASE_CONFIG` is not set or cannot be parsed as JSON.
+ */
+const parseFirebaseConfig = (): Record<string, unknown> => {
+  const raw = process.env.FIREBASE_CONFIG;
+  if (!raw) throw new Error('FIREBASE_CONFIG environment variable is not set');
+  try {
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    throw new Error('FIREBASE_CONFIG environment variable contains invalid JSON');
+  }
+};
+
+/**
  * Constructs the public HTTPS URL for a file stored in Firebase Storage.
  *
  * Reads the `FIREBASE_CONFIG` environment variable to determine the
@@ -24,9 +44,10 @@ export const timeout = (ms: number): Promise<void> => new Promise((res) => setTi
  *
  * @param {string} filename - The full storage object path (e.g., `'images/photo.jpg'`).
  * @returns {string} The public download URL string for the file.
+ * @throws {Error} When `FIREBASE_CONFIG` is absent or contains invalid JSON.
  */
 export const getPublicUrl = (filename: string): string => {
-  const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+  const firebaseConfig = parseFirebaseConfig();
   const uri = encodeURIComponent(filename);
   return `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${uri}?alt=media`;
 };
@@ -42,9 +63,10 @@ export const getPublicUrl = (filename: string): string => {
  * @returns {{gs: string, url: string}} An object containing:
  *   - `gs` — the original storage path (passed through as-is).
  *   - `url` — the public `firebasestorage.googleapis.com` download URL.
+ * @throws {Error} When `FIREBASE_CONFIG` is absent or contains invalid JSON.
  */
 export const getUrlAndGs = (filename: string): { gs: string, url: string } => {
-  const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+  const firebaseConfig = parseFirebaseConfig();
   const uri = encodeURIComponent(filename);
   const bucketName = firebaseConfig.storageBucket;
   const url = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${uri}?alt=media`;

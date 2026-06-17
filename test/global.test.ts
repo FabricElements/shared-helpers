@@ -48,6 +48,16 @@ describe('global', () => {
       const url = getPublicUrl('file.txt');
       expect(url).toContain('my-project.appspot.com');
     });
+
+    it('throws when FIREBASE_CONFIG is not set', () => {
+      delete process.env.FIREBASE_CONFIG;
+      expect(() => getPublicUrl('file.txt')).toThrow('FIREBASE_CONFIG environment variable is not set');
+    });
+
+    it('throws when FIREBASE_CONFIG contains invalid JSON', () => {
+      process.env.FIREBASE_CONFIG = 'not-valid-json{';
+      expect(() => getPublicUrl('file.txt')).toThrow('FIREBASE_CONFIG environment variable contains invalid JSON');
+    });
   });
 
   describe('getUrlAndGs', () => {
@@ -79,6 +89,16 @@ describe('global', () => {
     it('url includes the bucket name from FIREBASE_CONFIG', () => {
       const result = getUrlAndGs('file.txt');
       expect(result.url).toContain('my-project.appspot.com');
+    });
+
+    it('throws when FIREBASE_CONFIG is not set', () => {
+      delete process.env.FIREBASE_CONFIG;
+      expect(() => getUrlAndGs('file.txt')).toThrow('FIREBASE_CONFIG environment variable is not set');
+    });
+
+    it('throws when FIREBASE_CONFIG contains invalid JSON', () => {
+      process.env.FIREBASE_CONFIG = '{bad json}';
+      expect(() => getUrlAndGs('file.txt')).toThrow('FIREBASE_CONFIG environment variable contains invalid JSON');
     });
   });
 
