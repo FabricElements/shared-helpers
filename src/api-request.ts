@@ -2,15 +2,14 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
-import fetch from 'node-fetch';
 import type {InterfaceAPIRequest} from './interfaces.js';
 
 /**
  * Executes an outbound HTTP request against an external or Firebase project API.
  *
- * Constructs a `node-fetch` request from the supplied options, attaches any
- * Authorization header when `scheme` and `credentials` are provided, and
- * deserialises the response body according to the `as` field.  When `as` is
+ * Constructs a request from the supplied options using the native `fetch` API,
+ * attaches any Authorization header when `scheme` and `credentials` are provided,
+ * and deserialises the response body according to the `as` field.  When `as` is
  * omitted, the content-type of the response drives automatic deserialisation
  * (`application/json` → JSON, `text/*` → string, otherwise raw stream).
  *
@@ -36,16 +35,8 @@ export default async (options: InterfaceAPIRequest) => {
     body: finalBody,
     // set to `manual` to extract redirect headers, `error` to reject redirect
     redirect: 'error',
-    // The following properties are node-fetch extensions
-    // maximum redirect count. 0 to not follow redirect
-    follow: 2,
-    // req/res timeout in ms, it resets on redirect. 0 to disable.
-    timeout: 60000,
-    // Signal is recommended instead.
-    size: 0, // maximum response body size in bytes. 0 to disable
-    // http(s).Agent instance, allows custom proxy, certificate, dns lookup etc.
-    agent: null,
-    compress: true,
+    // req/res timeout, aborts the request once the signal fires.
+    signal: AbortSignal.timeout(60000),
   };
   if (options.scheme && options.credentials) {
     requestOptions.headers.Authorization = `${options.scheme} ${options.credentials}`;

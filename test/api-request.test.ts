@@ -4,11 +4,11 @@
  */
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-// Mock node-fetch so no real HTTP requests are made.
-const mockFetch = vi.fn();
-vi.mock('node-fetch', () => ({default: mockFetch}));
-
 import type {InterfaceAPIRequest} from '../src/interfaces.js';
+
+// Mock the native global fetch so no real HTTP requests are made.
+const mockFetch = vi.fn();
+vi.stubGlobal('fetch', mockFetch);
 
 describe('apiRequest', () => {
   let apiRequest: (options: InterfaceAPIRequest) => Promise<unknown>;

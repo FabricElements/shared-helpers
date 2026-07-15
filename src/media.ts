@@ -6,7 +6,6 @@ import {Buffer} from 'buffer';
 import type {Request, Response} from 'express';
 import {getStorage} from 'firebase-admin/storage';
 import {logger} from 'firebase-functions/v2';
-import fetch from 'node-fetch';
 import sharp, {ResizeOptions} from 'sharp';
 import {contentTypeIsImageForSharp} from './regex.js';
 import {emulator} from './variables.js';
@@ -221,8 +220,6 @@ export namespace Media {
       const fileResponse = await fetch(options.url, {
         method: 'GET',
         redirect: 'follow',
-        follow: 3,
-        compress: true,
       });
       if (!fileResponse.ok) throw Error(`Can't fetch file`);
       const fileRef = getStorage().bucket().file(options.path);
