@@ -45,7 +45,8 @@ vi.mock('firebase-functions/v2', () => ({
   https: {HttpsError: class HttpsError extends Error {}},
 }));
 
-vi.mock('node-fetch', () => ({default: vi.fn()}));
+// Mock the native global fetch so no real HTTP requests are made.
+vi.stubGlobal('fetch', vi.fn());
 
 describe('Media namespace', () => {
   let Media: typeof import('../src/media.js').Media;

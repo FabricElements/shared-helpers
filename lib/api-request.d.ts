@@ -1,10 +1,14 @@
+/**
+ * @license
+ * Copyright FabricElements. All Rights Reserved.
+ */
 import type { InterfaceAPIRequest } from './interfaces.js';
 /**
  * Executes an outbound HTTP request against an external or Firebase project API.
  *
- * Constructs a `node-fetch` request from the supplied options, attaches any
- * Authorization header when `scheme` and `credentials` are provided, and
- * deserialises the response body according to the `as` field.  When `as` is
+ * Constructs a request from the supplied options using the native `fetch` API,
+ * attaches any Authorization header when `scheme` and `credentials` are provided,
+ * and deserialises the response body according to the `as` field.  When `as` is
  * omitted, the content-type of the response drives automatic deserialisation
  * (`application/json` → JSON, `text/*` → string, otherwise raw stream).
  *

@@ -70,7 +70,7 @@ export interface InterfaceAPIRequest {
     credentials?: string;
     /** Additional HTTP headers to merge into the request. */
     headers?: any;
-    /** HTTP method for the request. Defaults to the node-fetch default when omitted. */
+    /** HTTP method for the request. Defaults to the native `fetch` default (`'GET'`) when omitted. */
     method?: 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'CONNECT' | 'OPTIONS' | 'TRACE' | 'PATCH';
     /** Fully qualified URL of the API endpoint to call. */
     path?: string;

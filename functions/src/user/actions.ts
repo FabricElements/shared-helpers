@@ -26,8 +26,7 @@ export const exists = https.onCall({
     if (!_exists) {
       throw new Error('You are not registered. Please contact your account administrator to request access.');
     }
-  } catch (error) {
-    // @ts-ignore
+  } catch (error: any) {
     throw new https.HttpsError('permission-denied', error.message);
   }
   return {message: 'User Exists'};
@@ -55,8 +54,7 @@ export const add = https.onCall({
     User.Helper.isAdmin({role, fail: true, group: data?.group});
     await User.Helper.add(data);
     return {message: 'User Invited'};
-  } catch (error) {
-    // @ts-ignore
+  } catch (error: any) {
     throw new https.HttpsError('unknown', error.message);
   }
 });
@@ -82,8 +80,7 @@ export const remove = https.onCall({
     User.Helper.isAdmin({role, fail: true, group: data?.group});
     await User.Helper.remove(data);
     return {message: 'User Removed'};
-  } catch (error) {
-    // @ts-expect-error
+  } catch (error: any) {
     throw new https.HttpsError('unknown', error.message);
   }
 });
@@ -106,8 +103,7 @@ export const update = https.onCall({
   const data: User.Interface = request.data;
   try {
     await User.Helper.update({...data, id: request.auth.uid}, mainUrl);
-  } catch (error) {
-    // @ts-ignore
+  } catch (error: any) {
     throw new https.HttpsError('failed-precondition', error.message);
   }
   return {
@@ -136,8 +132,7 @@ export const role = https.onCall({
   try {
     const _role = await User.Helper.getRole(request.auth.uid, data?.role);
     User.Helper.isAdmin({role: _role, fail: true, group: data?.group});
-  } catch (error) {
-    // @ts-expect-error
+  } catch (error: any) {
     throw new https.HttpsError('permission-denied', error.message);
   }
   try {
