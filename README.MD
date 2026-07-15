@@ -79,7 +79,7 @@ Subpath exports `./user` and `./media` are also exposed via `package.json`.
 | Firebase                   | `firebase-admin` `^13.10.0`, `firebase-functions` `^7.2.5`.                                                                                                                                                                                      |
 | Google Cloud               | `@google-cloud/bigquery` `^8.3.1`, `@google-cloud/bigquery-storage` `^5.1.1`, `@google-cloud/pubsub` `^5.3.0`.                                                                                                                                   |
 | Media                      | `sharp` `^0.34.5` for image resizing/transformation.                                                                                                                                                                                             |
-| Utilities                  | `libphonenumber-js` `^1.13.5`, `lodash` `^4.18.1`, `node-fetch` `^3.3.2`.                                                                                                                                                                        |
+| Utilities                  | `libphonenumber-js` `^1.13.5`, `lodash` `^4.18.1`, native `fetch` (Node.js `>=22`).                                                                                                                                                              |
 | Database / storage engines | **Cloud Firestore**, **Cloud Storage**, and **Realtime Database** (rules in `firestore.rules`, `storage.rules`, `database.rules.json`); analytics/queue via **BigQuery** and **Pub/Sub**.                                                        |
 | Linting                    | **ESLint `^10.4.1`** via flat config (`eslint.config.js`) using `typescript-eslint` `recommended` + `stylistic` presets.                                                                                                                         |
 | Testing                    | **Vitest `^4.1.8`** (`globals` enabled, `node` environment).                                                                                                                                                                                     |
@@ -224,7 +224,7 @@ real cloud instances — all I/O must be intercepted:
 - **Stub external clients** with `vi.mock` + `vi.hoisted` (every variable
   referenced inside a `vi.mock` factory must be declared via `vi.hoisted`). Mock
   `@google-cloud/pubsub`, `@google-cloud/bigquery`, `@google-cloud/bigquery-storage`,
-  `firebase-admin` sub-modules, `node-fetch`, and the `firebase-functions/v2` `logger`.
+  `firebase-admin` sub-modules, the global `fetch`, and the `firebase-functions/v2` `logger`.
   Reset state with `vi.clearAllMocks()` in `beforeEach` and `vi.restoreAllMocks()` in
   `afterEach`. Follow the established pattern in `test/pubsub-event.test.ts`.
 - **Cloud Functions:** drive and track execution with the official
