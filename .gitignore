@@ -40,6 +40,7 @@ build/Release
 dist/*
 src/**.js
 functions/**.js
+!functions/eslint.config.js
 functions/lib/*
 #lib/*/*
 

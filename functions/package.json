@@ -21,29 +21,20 @@
     "lint:fix": "eslint --fix"
   },
   "engines": {
-    "node": "16"
+    "node": ">=22"
   },
   "dependencies": {
     "@fabricelements/shared-helpers": "file:..",
-    "@google-cloud/functions-framework": "^3.3.0",
-    "cors": "^2.8.5",
     "express": "^4.18.2",
-    "firebase-admin": "^11.11.1",
-    "firebase-functions": "^4.5.0"
+    "firebase-admin": "^13.10.0",
+    "firebase-functions": "^7.2.5"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@typescript-eslint/eslint-plugin": "^6.12.0",
-    "@typescript-eslint/parser": "^6.12.0",
-    "eslint": "^8.54.0",
-    "eslint-config-google": "^0.14.0",
-    "eslint-plugin-import": "^2.29.0",
-    "eslint-plugin-jsdoc": "^46.9.0",
-    "eslint-plugin-no-explicit-type-exports": "^0.12.1",
-    "eslint-plugin-prefer-arrow": "^1.2.3",
-    "eslint-plugin-promise": "^6.1.1",
-    "firebase-functions-test": "^3.1.0",
-    "typescript": "^5.3.2"
+    "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.6",
+    "eslint": "^10.4.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0"
   },
   "overrides": {},
   "private": true
