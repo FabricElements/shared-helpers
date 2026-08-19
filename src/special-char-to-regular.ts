@@ -4,23 +4,13 @@
  */
 
 /**
- * Normalises non-GSM characters in a string by replacing them with their
- * closest ASCII or GSM-7 equivalents.
+ * Lookup table mapping a character's UTF-16 code unit (as returned by
+ * `String.prototype.charCodeAt(0)`) to its GSM-7 / ASCII replacement.
  *
- * Iterates over each character in the input, looks up its Unicode code point
- * in a comprehensive replacement table, and substitutes any matched character
- * with the mapped GSM-compatible replacement.  Characters not present in the
- * table are left unchanged.  Useful for preparing SMS message bodies that must
- * stay within the GSM-7 character set to avoid multi-part encoding overhead.
- *
- * @param {string|null} text - The input string to normalise, or `null`.  When `null`, an
- *   empty string is returned.
- * @returns {string} The normalised string with all recognised special characters
- *   replaced by their GSM-7 counterparts.
+ * Declared once at module scope so the ~320-entry table is built a single time
+ * on module load rather than being reconstructed on every function call.
  */
-export default (text: string | null): string => { // Definition of function and Input and Output Types.
-  let finalText = text && typeof text === 'string' && text.length > 0 ? text : '';
-  const charactersChange2 = {
+const charactersChange2: Record<number, {original: string, replace: string}> = {
     0: {original: '', replace: ''},
     3: {original: '', replace: ''},
     4: {original: '', replace: ''},
@@ -341,12 +331,29 @@ export default (text: string | null): string => { // Definition of function and 
     65380: {original: '、', replace: ','},
   };
 
-  for (const i of finalText) {
-    const character: number = i.charCodeAt(0); // Define Char Code for letter.
-    if (Object.prototype.hasOwnProperty.call(charactersChange2, character)) {
-      // Replace all characters according condition.
-      finalText = finalText.replace(i, charactersChange2[character].replace);
-    }
+/**
+ * Normalises non-GSM characters in a string by replacing them with their
+ * closest ASCII or GSM-7 equivalents.
+ *
+ * Performs a single left-to-right pass over the input, looking up each
+ * character's UTF-16 code unit in the module-level replacement table and
+ * appending either the mapped replacement or the original character.  Runs in
+ * linear time and preserves every occurrence of a mapped character.  Useful for
+ * preparing SMS message bodies that must stay within the GSM-7 character set to
+ * avoid multi-part encoding overhead.
+ *
+ * @param {string|null} text - The input string to normalise, or `null`.  When `null`, an
+ *   empty string is returned.
+ * @returns {string} The normalised string with all recognised special characters
+ *   replaced by their GSM-7 counterparts.
+ */
+export default (text: string | null): string => {
+  if (!(text && typeof text === 'string' && text.length > 0)) return '';
+  let result = '';
+  for (const character of text) {
+    const code: number = character.charCodeAt(0); // Char code for the current letter.
+    const entry = charactersChange2[code];
+    result += entry ? entry.replace : character;
   }
-  return finalText; // Return the message with changes.
+  return result; // Return the message with changes.
 };

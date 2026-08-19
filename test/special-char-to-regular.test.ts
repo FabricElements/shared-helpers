@@ -52,4 +52,9 @@ describe('specialCharToRegular', () => {
     const result = specialCharToRegular('résumé');
     expect(result).toBe('resume');
   });
+
+  it('replaces every occurrence of a repeated mapped character', () => {
+    expect(specialCharToRegular('ááá')).toBe('aaa');
+    expect(specialCharToRegular('á-é-í')).toBe('a-e-i');
+  });
 });
