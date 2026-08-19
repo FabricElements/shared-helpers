@@ -6,11 +6,12 @@
  * Normalises non-GSM characters in a string by replacing them with their
  * closest ASCII or GSM-7 equivalents.
  *
- * Iterates over each character in the input, looks up its Unicode code point
- * in a comprehensive replacement table, and substitutes any matched character
- * with the mapped GSM-compatible replacement.  Characters not present in the
- * table are left unchanged.  Useful for preparing SMS message bodies that must
- * stay within the GSM-7 character set to avoid multi-part encoding overhead.
+ * Performs a single left-to-right pass over the input, looking up each
+ * character's UTF-16 code unit in the module-level replacement table and
+ * appending either the mapped replacement or the original character.  Runs in
+ * linear time and preserves every occurrence of a mapped character.  Useful for
+ * preparing SMS message bodies that must stay within the GSM-7 character set to
+ * avoid multi-part encoding overhead.
  *
  * @param {string|null} text - The input string to normalise, or `null`.  When `null`, an
  *   empty string is returned.

@@ -77,8 +77,10 @@ export declare namespace FirestoreHelper {
         /**
          * Fetches all documents matching a Firestore query and returns their data.
          *
-         * Internally resolves the query to document references and fetches each
-         * one individually, merging document IDs into each result.
+         * Executes the query a single time and reads each document's data straight
+         * from the resulting snapshot, merging the document ID into each result.
+         * The query response already contains every matching document, so no
+         * additional per-document reads are performed.
          *
          * @param {InterfaceFirestoreQuery} options - Query descriptor including collection, filters,
          *   ordering, and limit.
