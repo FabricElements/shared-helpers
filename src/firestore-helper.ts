@@ -159,7 +159,8 @@ export namespace FirestoreHelper {
      */
     public static getListIds = async (options: InterfaceFirestoreQuery): Promise<string[]> => {
       const ref = this.getListReference(options);
-      const snapshot = await ref.get();
+      // Empty field mask: fetch only document references, not their field data.
+      const snapshot = await ref.select().get();
       if (!snapshot || !snapshot.docs || snapshot.empty) {
         return [];
       }
@@ -179,7 +180,8 @@ export namespace FirestoreHelper {
      */
     public static getListRef = async (options: InterfaceFirestoreQuery): Promise<DocumentReference[]> => {
       const ref = this.getListReference(options);
-      const snapshot = await ref.get();
+      // Empty field mask: fetch only document references, not their field data.
+      const snapshot = await ref.select().get();
       if (!snapshot || !snapshot.docs || snapshot.empty) {
         return [];
       }

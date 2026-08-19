@@ -18,6 +18,7 @@ const mockCount = vi.fn(() => ({get: mockCountGet}));
 const mockLimit = vi.fn();
 const mockWhere = vi.fn();
 const mockOrderBy = vi.fn();
+const mockSelect = vi.fn();
 const mockQueryGet = vi.fn();
 const mockCollectionGroup = vi.fn();
 const mockCollection = vi.fn();
@@ -44,12 +45,14 @@ describe('FirestoreHelper', () => {
       orderBy: mockOrderBy,
       where: mockWhere,
       limit: mockLimit,
+      select: mockSelect,
       get: mockQueryGet,
       count: mockCount,
     };
     mockOrderBy.mockReturnValue(queryRef);
     mockWhere.mockReturnValue(queryRef);
     mockLimit.mockReturnValue(queryRef);
+    mockSelect.mockReturnValue(queryRef);
 
     // Firestore document get
     mockRefGet.mockResolvedValue({
@@ -114,6 +117,8 @@ describe('FirestoreHelper', () => {
     it('returns an array of document IDs', async () => {
       const ids = await FirestoreHelper.Helper.getListIds({collection: 'users'});
       expect(ids).toEqual(['doc1', 'doc2']);
+      // Only references are fetched, not document field data.
+      expect(mockSelect).toHaveBeenCalledWith();
     });
 
     it('returns empty array when snapshot is empty', async () => {
@@ -128,6 +133,8 @@ describe('FirestoreHelper', () => {
       const refs = await FirestoreHelper.Helper.getListRef({collection: 'users'});
       expect(refs).toHaveLength(2);
       expect(refs[0]).toBe(mockDocRef);
+      // Only references are fetched, not document field data.
+      expect(mockSelect).toHaveBeenCalledWith();
     });
   });
 
