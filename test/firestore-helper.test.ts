@@ -131,6 +131,25 @@ describe('FirestoreHelper', () => {
     });
   });
 
+  describe('getList', () => {
+    it('returns document data from the query snapshot with ids merged, without per-document reads', async () => {
+      const data = await FirestoreHelper.Helper.getList({collection: 'users'});
+      expect(data).toEqual([
+        {val: 1, id: 'doc1'},
+        {val: 2, id: 'doc2'},
+      ]);
+      // The query already returns the data; no individual document gets.
+      expect(mockRefGet).not.toHaveBeenCalled();
+      expect(mockQueryGet).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns empty array when snapshot is empty', async () => {
+      mockQueryGet.mockResolvedValueOnce({empty: true, docs: []});
+      const data = await FirestoreHelper.Helper.getList({collection: 'users'});
+      expect(data).toEqual([]);
+    });
+  });
+
   describe('count', () => {
     it('returns the count from the aggregation snapshot', async () => {
       const n = await FirestoreHelper.Helper.count({collection: 'users'});

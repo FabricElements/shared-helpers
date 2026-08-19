@@ -91,21 +91,25 @@ export namespace FirestoreHelper {
     /**
      * Fetches all documents matching a Firestore query and returns their data.
      *
-     * Internally resolves the query to document references and fetches each
-     * one individually, merging document IDs into each result.
+     * Executes the query a single time and reads each document's data straight
+     * from the resulting snapshot, merging the document ID into each result.
+     * The query response already contains every matching document, so no
+     * additional per-document reads are performed.
      *
      * @param {InterfaceFirestoreQuery} options - Query descriptor including collection, filters,
      *   ordering, and limit.
      * @returns {Promise<DocumentData[]>} A Promise resolving to an array of document data objects.
      */
     public static getList = async (options: InterfaceFirestoreQuery): Promise<DocumentData[]> => {
-      const references = await this.getListRef(options);
-      let data: DocumentData[] = [];
-      for (const ref of references) {
-        const docData = await this._getDocumentSnap({reference: ref});
-        data.push(docData);
+      const ref = this.getListReference(options);
+      const snapshot = await ref.get();
+      if (!snapshot || !snapshot.docs || snapshot.empty) {
+        return [];
       }
-      return data;
+      return snapshot.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      } as DocumentData));
     };
 
     /**
