@@ -296,6 +296,34 @@ Or from GitHub:
 npm i github:FabricElements/shared-helpers --save
 ```
 
+### Peer dependencies
+
+`firebase-admin` and `firebase-functions` are **peer dependencies**, not regular
+dependencies. Your project must declare them itself:
+
+```shell
+npm i firebase-admin@^13.10.0 firebase-functions@^7.3.2 --save
+```
+
+| Peer dependency | Supported range |
+| --- | --- |
+| `firebase-admin` | `^13.10.0 \|\| ^14.0.0` |
+| `firebase-functions` | `^7.3.2` |
+
+Both are singletons and **must resolve to exactly one copy** in the consuming
+project. `firebase-admin` keeps a module-global app registry: when the consumer
+calls `initializeApp()` on its own copy while this library resolves to a second,
+nested copy, that second registry stays empty and every service accessor
+(`getFirestore()`, `getAuth()`, `getStorage()`) throws *"The default Firebase app
+does not exist."* Similarly, an `HttpsError` thrown from a duplicate
+`firebase-functions` copy fails the runtime's `instanceof` check and is
+downgraded to a generic `INTERNAL` error.
+
+Because a `github:` install copies a tarball rather than symlinking, a duplicate
+would otherwise be installed whenever the ranges diverge. Declaring these as
+peers makes that structurally impossible, and the deliberately wide
+`firebase-admin` range lets consumers adopt v14 on their own schedule.
+
 ## Usage
 
 Import only what you need:
