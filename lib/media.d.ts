@@ -4,6 +4,7 @@
  */
 import { Buffer } from 'buffer';
 import type { Request, Response } from 'express';
+import { AvailableOutputFormats as AvailableOutputFormatsLeaf } from './media-formats.js';
 /**
  * Media Namespace
  * @namespace Media
@@ -13,34 +14,13 @@ export declare namespace Media {
     /**
      * Available Image Output Formats
      *
-     * Members mirror the container formats libvips can read.  Only a subset is
-     * usable as an output format by `sharp.toFormat` (`avif`, `dz`, `gif`, `jpeg`,
-     * `jp2`, `jxl`, `png`, `raw`, `tiff`, `webp`); the remaining members are kept
-     * for backwards compatibility and for content-type detection, and sharp will
-     * reject them if requested as an output format.
+     * Re-exported from `./media-formats.js` so that `Media.AvailableOutputFormats`
+     * keeps resolving to exactly the same enum, with the same members and values,
+     * while the underlying declaration lives in a leaf module that does not
+     * participate in the `media` <-> `regex` import cycle.
      * @enum {string}
      */
-    enum AvailableOutputFormats {
-        avif = "avif",
-        dz = "dz",
-        fits = "fits",
-        gif = "gif",
-        heif = "heif",
-        input = "input",
-        jpeg = "jpeg",
-        jp2 = "jp2",
-        jxl = "jxl",
-        magick = "magick",
-        openslide = "openslide",
-        pdf = "pdf",
-        png = "png",
-        ppm = "ppm",
-        raw = "raw",
-        svg = "svg",
-        tiff = "tiff",
-        v = "v",
-        webp = "webp"
-    }
+    export import AvailableOutputFormats = AvailableOutputFormatsLeaf;
     /**
      * Set of predefined image sizes
      * @enum {string}

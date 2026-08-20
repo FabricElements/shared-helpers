@@ -14,15 +14,6 @@ import {afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest
  * regression in the pipeline (for example after a `sharp` upgrade) fails CI.
  */
 
-// Break the media <-> regex circular dependency by mocking regex before media loads.
-vi.mock('../src/regex.js', () => ({
-  isEmail: /email/,
-  contentTypeIsImageForSharp: /^(image\/)(jpeg|png|webp|gif)/,
-  contentTypeIsJPEG: /^(image\/)(jpeg|jpg)/,
-  isImage: /^(image\/)/,
-  isMedia: /^(application\/pdf|image|audio|video|text\/)/,
-}));
-
 vi.mock('firebase-admin/storage', () => ({
   getStorage: vi.fn(() => ({
     bucket: vi.fn(() => ({
