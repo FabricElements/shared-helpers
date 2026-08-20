@@ -6,9 +6,17 @@ import {Buffer} from 'buffer';
 import type {Request, Response} from 'express';
 import {getStorage} from 'firebase-admin/storage';
 import {logger} from 'firebase-functions/v2';
-import sharp, {ResizeOptions} from 'sharp';
+import sharp, {ResizeOptions, Sharp} from 'sharp';
 import {contentTypeIsImageForSharp} from './regex.js';
 import {emulator} from './variables.js';
+
+/**
+ * Output format identifiers accepted by sharp's `toFormat`.
+ *
+ * Derived from sharp's own signature so it tracks upstream changes to
+ * `FormatEnum` automatically.
+ */
+type SharpOutputFormat = Parameters<Sharp['toFormat']>[0];
 
 /**
  * Media Namespace
@@ -18,6 +26,12 @@ import {emulator} from './variables.js';
 export namespace Media {
   /**
    * Available Image Output Formats
+   *
+   * Members mirror the container formats libvips can read.  Only a subset is
+   * usable as an output format by `sharp.toFormat` (`avif`, `dz`, `gif`, `jpeg`,
+   * `jp2`, `jxl`, `png`, `raw`, `tiff`, `webp`); the remaining members are kept
+   * for backwards compatibility and for content-type detection, and sharp will
+   * reject them if requested as an output format.
    * @enum {string}
    */
   export enum AvailableOutputFormats {
@@ -527,7 +541,7 @@ export namespace Media {
       }
       // Add density information to the image
       final = final.withMetadata({density: dpr * 72});
-      const result = final.toFormat(outputFormat, {
+      const result = final.toFormat(outputFormat as SharpOutputFormat, {
         force: true,
         quality: options.quality,
       }).toBuffer();
