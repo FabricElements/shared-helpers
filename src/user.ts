@@ -110,29 +110,74 @@ export namespace User {
   }
 
   /**
-   * Caller-supplied profile fields that may be persisted when a user account is
-   * created through {@link Helper.create}.
+   * Fields that must never be accepted from a caller because only server-side code
+   * can know their correct value.
    *
-   * This is an **allow-list**: any key absent from this array is dropped before the
-   * Firestore write, so a field nobody anticipated can never reach a user document.
-   * Authorization state (`role`, `group`, `groups`), credentials (`password`) and
-   * server-managed bookkeeping (`id`, `created`, `updated`, `ping`, `backup`) are
-   * deliberately excluded — they are assigned server-side, never accepted from the
-   * caller.
+   * Three groups, all excluded from {@link creatableProfileFields}:
+   *
+   * - **Authorization state** — `role`, `group`, `groups`. A caller choosing these
+   *   chooses their own privileges, and `groups` is copied into Firebase Auth custom
+   *   claims by a later role update.
+   * - **Billing/provider identity and metering** — `bcId`, `bsId`, `bsiId`, `bst`,
+   *   `but`, `buq`. These identify records inside a payment provider and are produced
+   *   by a server-side call to it.  A caller supplying one is either mistaken or is
+   *   pointing their account at somebody else's customer or subscription record.
+   * - **Credentials and server bookkeeping** — `password`, `id`, `created`, `updated`,
+   *   `ping`, `backup`.
+   *
+   * `account` is included because it designates the user's *active* account and is
+   * therefore a tenancy pointer in any consumer that scopes data by it.
+   *
+   * Exported so consumers can assert the same rule in their own validation and
+   * security rules rather than re-deriving the list.
    *
    * @see Helper.sanitizeProfile
    */
-  export const creatableProfileFields: readonly string[] = Object.freeze([
-    'abbr',
+  export const serverOnlyFields: readonly string[] = Object.freeze([
     'account',
-    'ads',
-    'avatar',
+    'backup',
     'bcId',
     'bsId',
     'bsiId',
     'bst',
     'buq',
     'but',
+    'created',
+    'group',
+    'groups',
+    'id',
+    'password',
+    'ping',
+    'role',
+    'updated',
+  ]);
+
+  /**
+   * Caller-supplied profile fields that may be persisted when a user account is
+   * created through {@link Helper.create}.
+   *
+   * This is an **allow-list**: any key absent from this array is dropped before the
+   * Firestore write, so a field nobody anticipated can never reach a user document.
+   * Every field in {@link serverOnlyFields} is deliberately absent — authorization
+   * state, billing/provider identity, the tenancy pointer `account`, credentials, and
+   * server-managed bookkeeping are all assigned server-side, never accepted from the
+   * caller.
+   *
+   * The test applied when adding a field here is **"who knows the correct value?"**.
+   * `ads` stays creatable because it holds the user's *own* ad-network placement
+   * identifiers, which the user knows and the server does not; `bcId` does not,
+   * because only the payment provider and the server ever know it.
+   *
+   * To seed a server-only field at creation, write it explicitly from server code
+   * after {@link Helper.create} returns — {@link Helper.createDocument} performs no
+   * filtering and exists for exactly that purpose.
+   *
+   * @see Helper.sanitizeProfile
+   */
+  export const creatableProfileFields: readonly string[] = Object.freeze([
+    'abbr',
+    'ads',
+    'avatar',
     'country',
     'email',
     'fcm',
@@ -708,10 +753,11 @@ export namespace User {
      *
      * Copies each permitted key that the input owns directly, skipping inherited
      * properties and `undefined` values.  Every other key — including nested
-     * authorization maps such as `groups`, the `role` and `group` scalars, and
-     * `password` — is discarded rather than forwarded, so a consumer that passes an
-     * unvalidated request body cannot inject privilege-bearing fields into a user
-     * document.
+     * authorization maps such as `groups`, the `role` and `group` scalars,
+     * billing/provider identity fields such as `bcId`, the tenancy pointer `account`,
+     * and `password` — is discarded rather than forwarded, so a consumer that passes
+     * an unvalidated request body cannot inject privilege-bearing or billing-bearing
+     * fields into a user document.
      *
      * Use this on any object that originates outside your own trust boundary before
      * handing it to {@link Helper.createDocument} or another Firestore write.
@@ -766,8 +812,10 @@ export namespace User {
      * The data written to Firestore is reduced to {@link creatableProfileFields} by
      * {@link Helper.sanitizeProfile} first, so authorization state supplied by the
      * caller — `role`, `group`, or a nested `groups` map — is dropped instead of
-     * persisted.  The role is then assigned server-side as `'user'`.  `password` is
-     * forwarded to Firebase Auth only and never stored in Firestore.
+     * persisted, as are billing/provider identity fields and the `account` tenancy
+     * pointer (see {@link serverOnlyFields}).  The role is then assigned server-side
+     * as `'user'`.  `password` is forwarded to Firebase Auth only and never stored in
+     * Firestore.
      *
      * @param {Interface} data - New user data; must include `email` or `phone`,
      *   `firstName`, and `lastName`.
@@ -807,6 +855,24 @@ export namespace User {
      * For group-scoped roles, the `groups` map on both the Firestore document and
      * custom claims is updated, preserving other group memberships.
      *
+     * ⚠️ **This method promotes Firestore document state into signed ID tokens.** The
+     * resulting `groups` map is written to Firebase Auth custom claims, which are
+     * embedded in every ID token the user subsequently receives and are presented to
+     * relying parties as verified identity.  Anything able to influence the `groups`
+     * field of `user/{id}` can therefore influence a signed token — which is why
+     * `Helper.create` refuses caller-supplied `groups` (see {@link serverOnlyFields})
+     * and why write access to `user/{id}` must be treated as equivalent to role
+     * assignment.
+     *
+     * When authority is withdrawn (`type: 'remove'`) or an existing role is replaced
+     * with a different one, refresh tokens are revoked so the previous claims cannot
+     * be re-minted.  **Revocation is not instantaneous on its own:** already-issued ID
+     * tokens stay cryptographically valid until they expire (up to one hour) unless
+     * the relying party verifies them with `getAuth().verifyIdToken(token, true)`.
+     * Consumers that need immediate de-provisioning must pass that `checkRevoked`
+     * flag and treat claim removal as eventually consistent.  A pure grant does not
+     * revoke, because the new claim takes effect on the next refresh anyway.
+     *
      * @param {object} data - Role update descriptor.
      * @param {string} [data.group] - Optional group identifier; when provided the update
      *   targets the `groups[group]` field rather than the top-level `role`.
@@ -832,6 +898,10 @@ export namespace User {
       const refUser = db.collection('user').doc(data.id);
       const _role = data.role ?? 'user';
       const userRecord = await getAuth().getUser(data.id);
+      // Snapshot the claims before the mutations below, so the revocation decision can
+      // compare the authority the user held against the authority they end up with.
+      const previousClaims: Record<string, any> = {...(userRecord.customClaims ?? {})};
+      const previousGroups: Record<string, any> = {...(previousClaims.groups ?? {})};
       let userData: any = {
         backup: false,
         updated: timestamp,
@@ -891,20 +961,41 @@ export namespace User {
       /**
        * Update custom claims
        */
-      let collectionClaims: any;
       if (grouped) {
-        if (Object.prototype.hasOwnProperty.call(userDoc, 'groups')) {
-          collectionClaims = userDoc.groups;
-          userClaims = {
-            ...userClaims,
-            'groups': collectionClaims,
-          };
+        /**
+         * Derive the resulting map locally rather than reading `groups` back from
+         * `userDoc`, which is the **pre-write** snapshot.  Publishing claims from it
+         * makes them lag the change by one update, so a removal would leave the
+         * removed group in the user's token indefinitely.
+         */
+        const nextGroups: Record<string, any> = {...(userDoc.groups ?? {})};
+        if (data.type === 'remove') {
+          delete nextGroups[data.group];
+        } else {
+          nextGroups[data.group] = _role;
         }
+        userClaims = {
+          ...userClaims,
+          'groups': nextGroups,
+        };
         updateClaims = true;
       }
+      /**
+       * Revoke refresh tokens when authority is withdrawn or replaced, so a removed
+       * role or group cannot be presented from an already-issued token.  A pure grant
+       * does not revoke: the new claim simply takes effect on the next refresh, and
+       * forcing re-authentication there would be a UX cost with no security benefit.
+       *
+       * Because roles are opaque strings, a replacement cannot be ranked, so any
+       * change to an existing value is treated as potentially a downgrade.
+       */
+      const previousRole = grouped ? previousGroups[data.group] : previousClaims.role;
+      const authorityReduced = data.type === 'remove'
+        ? previousRole !== undefined
+        : previousRole !== undefined && previousRole !== _role;
       if (updateClaims) {
         await getAuth().setCustomUserClaims(data.id, userClaims);
-        // await getAuth().revokeRefreshTokens(data.id);
+        if (authorityReduced) await getAuth().revokeRefreshTokens(data.id);
       }
     };
   }

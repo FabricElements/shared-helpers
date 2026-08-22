@@ -7,6 +7,10 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 const {
   mockGetUsers,
   mockCreateUser,
+  mockGetUser,
+  mockSetCustomUserClaims,
+  mockRevokeRefreshTokens,
+  mockUpdateUser,
   mockSet,
   mockDoc,
   mockCollection,
@@ -14,6 +18,10 @@ const {
 } = vi.hoisted(() => ({
   mockGetUsers: vi.fn(),
   mockCreateUser: vi.fn(),
+  mockGetUser: vi.fn(),
+  mockSetCustomUserClaims: vi.fn(),
+  mockRevokeRefreshTokens: vi.fn(),
+  mockUpdateUser: vi.fn(),
   mockSet: vi.fn(),
   mockDoc: vi.fn(),
   mockCollection: vi.fn(),
@@ -24,9 +32,10 @@ vi.mock('firebase-admin/auth', () => ({
   getAuth: vi.fn(() => ({
     getUsers: mockGetUsers,
     createUser: mockCreateUser,
-    getUser: vi.fn(),
-    updateUser: vi.fn(),
-    setCustomUserClaims: vi.fn(),
+    getUser: mockGetUser,
+    updateUser: mockUpdateUser,
+    setCustomUserClaims: mockSetCustomUserClaims,
+    revokeRefreshTokens: mockRevokeRefreshTokens,
   })),
   UserRecord: class UserRecord {},
 }));
@@ -97,6 +106,31 @@ describe('User.Helper.sanitizeProfile', () => {
     expect(result).toEqual({firstName: 'Ada'});
   });
 
+  it('drops billing and provider identity fields', () => {
+    const result = User.Helper.sanitizeProfile({
+      firstName: 'Ada',
+      // Only a server-side call to the payment provider knows these values.
+      bcId: 'cus_somebody_else',
+      bsId: 'sub_somebody_else',
+      bsiId: 'si_somebody_else',
+      bst: 1234567890,
+      but: 1234567890,
+      buq: 0,
+    });
+    // Positive control: the legitimate field survived, so the filter ran.
+    expect(result).toEqual({firstName: 'Ada'});
+  });
+
+  it('drops the account tenancy pointer', () => {
+    const result = User.Helper.sanitizeProfile({firstName: 'Ada', account: 'tenant-they-do-not-own'});
+    expect(result).toEqual({firstName: 'Ada'});
+  });
+
+  it('keeps ads, which holds the user\'s own placement identifiers', () => {
+    const ads = {adsense: {client: 'ca-pub-0000000000000000', slot: '1234567890'}};
+    expect(User.Helper.sanitizeProfile({ads})).toEqual({ads});
+  });
+
   it('ignores inherited properties and undefined values', () => {
     const inherited = Object.create({groups: {'tenant-a': 'owner'}});
     inherited.firstName = 'Ada';
@@ -115,6 +149,30 @@ describe('User.Helper.sanitizeProfile', () => {
     for (const reserved of ['role', 'group', 'groups', 'password', 'id', 'created', 'updated', 'ping', 'backup']) {
       expect(User.creatableProfileFields).not.toContain(reserved);
     }
+  });
+
+  it('never lists a billing, provider identity or tenancy field as creatable', () => {
+    for (const reserved of ['account', 'bcId', 'bsId', 'bsiId', 'bst', 'but', 'buq']) {
+      expect(User.creatableProfileFields).not.toContain(reserved);
+    }
+  });
+
+  it('keeps the creatable and server-only lists disjoint', () => {
+    const overlap = User.creatableProfileFields.filter((field) => User.serverOnlyFields.includes(field));
+    expect(overlap).toEqual([]);
+    // Positive control: both lists are actually populated, so the intersection above
+    // is empty because the lists are disjoint and not because one of them is empty.
+    expect(User.creatableProfileFields.length).toBeGreaterThan(0);
+    expect(User.serverOnlyFields.length).toBeGreaterThan(0);
+  });
+
+  it('drops every server-only field while keeping a legitimate one', () => {
+    const injected: Record<string, unknown> = {firstName: 'Ada'};
+    for (const field of User.serverOnlyFields) injected[field] = 'injected';
+    const result = User.Helper.sanitizeProfile(injected);
+    // Positive control first: the legitimate field really did survive.
+    expect(result.firstName).toBe('Ada');
+    expect(Object.keys(result)).toEqual(['firstName']);
   });
 });
 
@@ -191,5 +249,32 @@ describe('User.Helper.create — caller-supplied authorization fields', () => {
       role: 'owner',
     });
     expect(writtenDocument().role).toBe('user');
+  });
+
+  it('does not write caller-supplied billing identity or the account pointer', async () => {
+    await User.Helper.create({
+      email: 'mallory@example.com',
+      firstName: 'Mal',
+      lastName: 'Lory',
+      language: 'en',
+      bcId: 'cus_somebody_else',
+      bsId: 'sub_somebody_else',
+      bsiId: 'si_somebody_else',
+      bst: 1234567890,
+      but: 1234567890,
+      buq: 0,
+      account: 'tenant-they-do-not-own',
+    });
+
+    const document = writtenDocument();
+    // Positive control: the write happened and legitimate fields landed, so the
+    // absences below are real rather than the result of a skipped write.
+    expect(mockCreateUser).toHaveBeenCalledTimes(1);
+    expect(document.name).toBe('Mal Lory');
+    expect(document.language).toBe('en');
+    // Negative path.
+    for (const field of ['bcId', 'bsId', 'bsiId', 'bst', 'but', 'buq', 'account']) {
+      expect(Object.prototype.hasOwnProperty.call(document, field)).toBe(false);
+    }
   });
 });
