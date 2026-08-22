@@ -8,6 +8,7 @@ import {getStorage} from 'firebase-admin/storage';
 import {logger} from 'firebase-functions/v2';
 import sharp, {ResizeOptions, Sharp} from 'sharp';
 import {AvailableOutputFormats as AvailableOutputFormatsLeaf} from './media-formats.js';
+import {safeFetch} from './outbound-url.js';
 import {contentTypeIsImageForSharp} from './regex.js';
 import {emulator} from './variables.js';
 
@@ -18,6 +19,12 @@ import {emulator} from './variables.js';
  * `FormatEnum` automatically.
  */
 type SharpOutputFormat = Parameters<Sharp['toFormat']>[0];
+
+/**
+ * Maximum number of bytes accepted when downloading a remote file, bounding the
+ * memory a hostile or misconfigured origin can make a function allocate.
+ */
+const maxDownloadBytes = 25 * 1024 * 1024;
 
 /**
  * Media Namespace
@@ -200,24 +207,29 @@ export namespace Media {
     /**
      * Downloads a remote file by URL and saves it to Firebase Cloud Storage.
      *
-     * Performs a `GET` request (following up to 3 redirects) to `options.url`,
-     * converts the response body to a `Buffer`, and saves it to the storage path
-     * specified by `options.path` using the response's `content-type` header.
-     * Logs the resulting `gs://` URI when running in the emulator.
+     * The URL is validated with `assertSafeOutboundUrl` before any request is made,
+     * and every redirect hop is re-validated, so a caller-supplied address cannot be
+     * used to reach loopback, link-local, private, or cloud instance-metadata
+     * endpoints.  The request is bounded by a timeout and the response body is
+     * capped, so a hostile origin can neither hang the function nor exhaust its
+     * memory.  The downloaded bytes are saved to `options.path` using the response's
+     * `content-type` header.  Logs the resulting `gs://` URI when running in the
+     * emulator.
      *
      * @param {SaveFromUrlOptions} options - Download and storage options.
      * @returns {Promise<SaveFromUrl>} A Promise resolving to an object with `contentType`
      *   (the MIME type from the response) and `uri` (the `gs://` Cloud Storage URI).
-     * @throws {Error} When the HTTP response status is not `ok`.
+     * @throws {Error} When the URL fails validation, the HTTP response status is not
+     *   `ok`, or the response body exceeds the maximum allowed size.
      */
     public static async saveFromUrl(options: SaveFromUrlOptions): Promise<SaveFromUrl> {
-      const fileResponse = await fetch(options.url, {
-        method: 'GET',
-        redirect: 'follow',
-      });
+      const fileResponse = await safeFetch(options.url);
       if (!fileResponse.ok) throw Error(`Can't fetch file`);
+      const declaredLength = Number(fileResponse.headers.get('content-length') ?? 0);
+      if (declaredLength > maxDownloadBytes) throw new Error('Remote file is too large');
       const fileRef = getStorage().bucket().file(options.path);
       let blob = await fileResponse.arrayBuffer();
+      if (blob.byteLength > maxDownloadBytes) throw new Error('Remote file is too large');
       const uint8Array = new Uint8Array(blob);
       const buffer = Buffer.from(uint8Array);
       const contentType: string = fileResponse.headers.get('content-type');

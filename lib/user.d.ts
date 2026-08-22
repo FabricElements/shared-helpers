@@ -97,6 +97,54 @@ export declare namespace User {
         [key: string]: any;
     }
     /**
+     * Fields that must never be accepted from a caller because only server-side code
+     * can know their correct value.
+     *
+     * Three groups, all excluded from {@link creatableProfileFields}:
+     *
+     * - **Authorization state** — `role`, `group`, `groups`. A caller choosing these
+     *   chooses their own privileges, and `groups` is copied into Firebase Auth custom
+     *   claims by a later role update.
+     * - **Billing/provider identity and metering** — `bcId`, `bsId`, `bsiId`, `bst`,
+     *   `but`, `buq`. These identify records inside a payment provider and are produced
+     *   by a server-side call to it.  A caller supplying one is either mistaken or is
+     *   pointing their account at somebody else's customer or subscription record.
+     * - **Credentials and server bookkeeping** — `password`, `id`, `created`, `updated`,
+     *   `ping`, `backup`.
+     *
+     * `account` is included because it designates the user's *active* account and is
+     * therefore a tenancy pointer in any consumer that scopes data by it.
+     *
+     * Exported so consumers can assert the same rule in their own validation and
+     * security rules rather than re-deriving the list.
+     *
+     * @see Helper.sanitizeProfile
+     */
+    const serverOnlyFields: readonly string[];
+    /**
+     * Caller-supplied profile fields that may be persisted when a user account is
+     * created through {@link Helper.create}.
+     *
+     * This is an **allow-list**: any key absent from this array is dropped before the
+     * Firestore write, so a field nobody anticipated can never reach a user document.
+     * Every field in {@link serverOnlyFields} is deliberately absent — authorization
+     * state, billing/provider identity, the tenancy pointer `account`, credentials, and
+     * server-managed bookkeeping are all assigned server-side, never accepted from the
+     * caller.
+     *
+     * The test applied when adding a field here is **"who knows the correct value?"**.
+     * `ads` stays creatable because it holds the user's *own* ad-network placement
+     * identifiers, which the user knows and the server does not; `bcId` does not,
+     * because only the payment provider and the server ever know it.
+     *
+     * To seed a server-only field at creation, write it explicitly from server code
+     * after {@link Helper.create} returns — {@link Helper.createDocument} performs no
+     * filtering and exists for exactly that purpose.
+     *
+     * @see Helper.sanitizeProfile
+     */
+    const creatableProfileFields: readonly string[];
+    /**
      * UserHelper
      */
     class Helper {
@@ -132,6 +180,11 @@ export declare namespace User {
          * fetched and returned.  Otherwise a new Firebase Auth user and Firestore
          * document are created via `Helper.createUser`.
          *
+         * On the creation path the supplied object is reduced to
+         * {@link creatableProfileFields}, so caller-supplied authorization fields are
+         * discarded and the new account always starts with the server-assigned role
+         * `'user'` and no group membership.
+         *
          * @param {Interface} data - User data containing at least `email` or `phone`, and the
          *   first/last name fields required by `createUser`.
          * @returns {Promise<Interface>} A Promise resolving to the existing or newly created user
@@ -144,6 +197,11 @@ export declare namespace User {
          * Writes to the `user/{user.id}` Firestore path using `set` with `merge: true`,
          * injecting server-side timestamps for `created`, `updated`, and `ping` when not
          * already set.  Returns the merged data object with the document ID attached.
+         *
+         * ⚠️ This is a low-level writer and performs **no field filtering** — every key on
+         * `user` is persisted, including `role`, `group` and `groups`.  It is safe only for
+         * server-authored objects.  Reduce anything that originated with a caller through
+         * {@link Helper.sanitizeProfile} first, or use {@link Helper.create} which does so.
          *
          * @param {Interface} user - User data object including a required `id` field
          *   corresponding to the Firebase Auth UID.
@@ -258,6 +316,9 @@ export declare namespace User {
          *   `lastName`, `name`, and `abbr` fields.
          * @throws {Error} When either name is shorter than 2 characters or when both
          *   first and last names are not provided.
+         * @see Helper.sanitizeProfile — this method is **not** a filter.  It spreads the
+         *   input, so every caller-supplied key survives; reduce untrusted data with
+         *   `sanitizeProfile` before writing the result anywhere sensitive.
          */
         static formatUserNames: (data: Interface) => Interface;
         /**
@@ -299,6 +360,26 @@ export declare namespace User {
             id?: string;
         }, mainUrl: string) => Promise<void>;
         /**
+         * Reduces a caller-supplied user object to the fields listed in
+         * {@link creatableProfileFields}.
+         *
+         * Copies each permitted key that the input owns directly, skipping inherited
+         * properties and `undefined` values.  Every other key — including nested
+         * authorization maps such as `groups`, the `role` and `group` scalars,
+         * billing/provider identity fields such as `bcId`, the tenancy pointer `account`,
+         * and `password` — is discarded rather than forwarded, so a consumer that passes
+         * an unvalidated request body cannot inject privilege-bearing or billing-bearing
+         * fields into a user document.
+         *
+         * Use this on any object that originates outside your own trust boundary before
+         * handing it to {@link Helper.createDocument} or another Firestore write.
+         *
+         * @param {Interface} data - Untrusted user data to filter.  A nullish value yields
+         *   an empty object.
+         * @returns {Interface} A new object containing only the allow-listed profile fields.
+         */
+        static sanitizeProfile: (data: Interface) => Interface;
+        /**
          * Asserts that the supplied data object is non-null and non-empty.
          *
          * @param {object|null} data - The data object to validate.
@@ -319,6 +400,14 @@ export declare namespace User {
          * `getAuth().createUser` with the prepared payload.  The resulting Auth UID is
          * written to the Firestore `user` collection via `createDocument`.
          *
+         * The data written to Firestore is reduced to {@link creatableProfileFields} by
+         * {@link Helper.sanitizeProfile} first, so authorization state supplied by the
+         * caller — `role`, `group`, or a nested `groups` map — is dropped instead of
+         * persisted, as are billing/provider identity fields and the `account` tenancy
+         * pointer (see {@link serverOnlyFields}).  The role is then assigned server-side
+         * as `'user'`.  `password` is forwarded to Firebase Auth only and never stored in
+         * Firestore.
+         *
          * @param {Interface} data - New user data; must include `email` or `phone`,
          *   `firstName`, and `lastName`.
          * @returns {Promise<Interface>} A Promise resolving to the newly created user data object
@@ -333,6 +422,24 @@ export declare namespace User {
          * atomically.  For non-grouped roles, the `role` custom claim is set or deleted.
          * For group-scoped roles, the `groups` map on both the Firestore document and
          * custom claims is updated, preserving other group memberships.
+         *
+         * ⚠️ **This method promotes Firestore document state into signed ID tokens.** The
+         * resulting `groups` map is written to Firebase Auth custom claims, which are
+         * embedded in every ID token the user subsequently receives and are presented to
+         * relying parties as verified identity.  Anything able to influence the `groups`
+         * field of `user/{id}` can therefore influence a signed token — which is why
+         * `Helper.create` refuses caller-supplied `groups` (see {@link serverOnlyFields})
+         * and why write access to `user/{id}` must be treated as equivalent to role
+         * assignment.
+         *
+         * When authority is withdrawn (`type: 'remove'`) or an existing role is replaced
+         * with a different one, refresh tokens are revoked so the previous claims cannot
+         * be re-minted.  **Revocation is not instantaneous on its own:** already-issued ID
+         * tokens stay cryptographically valid until they expire (up to one hour) unless
+         * the relying party verifies them with `getAuth().verifyIdToken(token, true)`.
+         * Consumers that need immediate de-provisioning must pass that `checkRevoked`
+         * flag and treat claim removal as eventually consistent.  A pure grant does not
+         * revoke, because the new claim takes effect on the next refresh anyway.
          *
          * @param {object} data - Role update descriptor.
          * @param {string} [data.group] - Optional group identifier; when provided the update

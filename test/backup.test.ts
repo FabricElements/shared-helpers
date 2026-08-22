@@ -200,6 +200,19 @@ describe('backup', () => {
       ).rejects.toBeTruthy();
     });
 
+    it('throws a generic Error that keeps the original failure as its cause', async () => {
+      const original = new Error('BQ internal detail: projects/p/datasets/d');
+      mockGetResult.mockRejectedValue(original);
+      const thrown = await backup({collection: 'col', dataset: 'ds', items: [{id: 'x'}], table: 'tbl'})
+        .then(() => null, (error: unknown) => error);
+      // Positive control: the failure path really ran and produced a rejection.
+      expect(thrown).toBeInstanceOf(Error);
+      expect((thrown as Error).message).toBe('Backup failed for collection "col"');
+      // The internal detail is preserved for logs but not re-serialised into the message.
+      expect((thrown as Error).message).not.toContain('BQ internal detail');
+      expect((thrown as Error).cause).toBe(original);
+    });
+
     it('does not update Firestore when the BigQuery backup fails', async () => {
       mockGetResult.mockRejectedValue(new Error('BQ error'));
       await expect(

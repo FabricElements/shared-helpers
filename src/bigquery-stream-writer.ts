@@ -7,6 +7,7 @@
 import {BigQuery} from '@google-cloud/bigquery';
 import {adapt, managedwriter} from '@google-cloud/bigquery-storage';
 import {logger} from 'firebase-functions/v2';
+import {validateBigQueryIdentifier} from './bigquery-identifier.js';
 
 /**
  * Supported BigQuery column types that require explicit client-side coercion
@@ -121,11 +122,16 @@ export class BigQueryStreamWriter {
    * independent, separately-managed writer is required.
    *
    * @param {BigQueryStreamWriterOptions} options - Destination and batching configuration.
-   * @throws {Error} When `options.dataset` or `options.table` is missing.
+   * @throws {Error} When `options.dataset` or `options.table` is missing or contains
+   *   characters outside the BigQuery identifier set.
    */
   constructor(options: BigQueryStreamWriterOptions) {
     if (!options.dataset) throw new Error('dataset is required');
     if (!options.table) throw new Error('table is required');
+    // Both values are interpolated into a BigQuery resource path, which cannot be
+    // parameterised; validate them before they are ever used to build one.
+    validateBigQueryIdentifier(options.dataset, 'dataset');
+    validateBigQueryIdentifier(options.table, 'table');
     this.dataset = options.dataset;
     this.table = options.table;
     this.maxBatchSize = options.maxBatchSize ?? 500;
