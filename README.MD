@@ -52,21 +52,47 @@ Subpath exports `./user` and `./media` are also exposed via `package.json`.
 |------------------------|------------------------------------------------------------------|----------------------------------------------------------------|
 | `apiRequest`           | [src/api-request.ts](src/api-request.ts)                         | Call a Firebase project's base API.                            |
 | `backup`               | [src/backup.ts](src/backup.ts)                                   | Custom backup from Firestore to BigQuery.                      |
+| `BigQueryStreamWriter` | [src/bigquery-stream-writer.ts](src/bigquery-stream-writer.ts)   | Stream rows into BigQuery via the Storage Write API.           |
 | `checkNumber`          | [src/check-number.ts](src/check-number.ts)                       | Validate and format phone numbers.                             |
 | `cleaner`              | [src/cleaner.ts](src/cleaner.ts)                                 | BigQuery database cleanup.                                     |
 | `FirestoreHelper`      | [src/firestore-helper.ts](src/firestore-helper.ts)               | Google Cloud Firestore access helpers.                         |
 | `global`               | [src/global.ts](src/global.ts)                                   | Basic and reusable helpers.                                    |
 | `hashId`               | [src/hash-id.ts](src/hash-id.ts)                                 | Generate a random hash id (4+ characters).                     |
 | `messageQueueSpeed`    | [src/message-queue-speed.ts](src/message-queue-speed.ts)         | Compute safe message dispatch throughput (Twilio rate limits). |
+| `outboundUrl`          | [src/outbound-url.ts](src/outbound-url.ts)                       | SSRF-guarded URL validation and `fetch` for caller-supplied URLs. |
 | `pubSubEvent`          | [src/pubsub-event.ts](src/pubsub-event.ts)                       | Google Cloud Pub/Sub event helper.                             |
 | `replaceMessageText`   | [src/replace-message-text.ts](src/replace-message-text.ts)       | Replace message text with custom keys.                         |
 | `specialCharToRegular` | [src/special-char-to-regular.ts](src/special-char-to-regular.ts) | Convert special characters to regular GSM characters.          |
 | `strings`              | [src/strings.ts](src/strings.ts)                                 | String transformation utilities (e.g. snake_case → camelCase). |
-| `validateUrl`          | [src/validate-url.ts](src/validate-url.ts)                       | Validate URL strings and strip embedded whitespace.            |
+| `validateBigQueryIdentifier` | [src/bigquery-identifier.ts](src/bigquery-identifier.ts)    | Anchored allow-list check for BigQuery dataset/table/column names. |
+| `validateUrl`          | [src/validate-url.ts](src/validate-url.ts)                       | Validate URL *shape* and strip embedded whitespace. Not an SSRF guard. |
 | `regex`                | [src/regex.ts](src/regex.ts)                                     | Shared regular expressions (email, media content types, etc.). |
 | `interfaces`           | [src/interfaces.ts](src/interfaces.ts)                           | Shared TypeScript interfaces and types.                        |
 | `Media` (`./media`)    | [src/media.ts](src/media.ts)                                     | Image/media processing with `sharp` and Cloud Storage.         |
 | `User` (`./user`)      | [src/user.ts](src/user.ts)                                       | Firebase Auth/Firestore user helpers.                          |
+
+### Security notes for consumers
+
+These contracts are deliberate; relying on the opposite behaviour is unsafe.
+
+- **`User.Helper.create` filters its input.** Only the fields in
+  `User.creatableProfileFields` are persisted to the new `user/{uid}` document.
+  Authorization state (`role`, `group`, `groups`), credentials (`password`) and
+  server-managed bookkeeping are dropped, and the new account always starts with the
+  server-assigned role `'user'`. Use `User.Helper.sanitizeProfile` to apply the same
+  filter at your own call sites. See the [migration note](CHANGELOG.md) if you previously
+  relied on extra fields being written.
+- **`User.Helper.createDocument` does *not* filter.** It is the low-level writer for
+  server-authored objects. Never hand it an unvalidated request body.
+- **`Media.Helper.saveFromUrl` validates the URL** through
+  `outboundUrl.assertSafeOutboundUrl`, re-validates every redirect hop, applies a timeout,
+  and caps the response size. Private, loopback, link-local and cloud metadata addresses
+  are refused.
+- **`validateUrl` checks shape only.** It accepts `http://127.0.0.1`. For anything you
+  intend to fetch, use `outboundUrl.assertSafeOutboundUrl` or `outboundUrl.safeFetch`.
+- **`checkNumber` is a best-effort formatter**, not an authorization or anti-abuse control.
+- **`FirestoreHelper` interpolates the `collection`/`document` names it is given.** Never
+  pass untrusted identifiers to it.
 
 ------
 

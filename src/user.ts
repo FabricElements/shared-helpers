@@ -110,6 +110,46 @@ export namespace User {
   }
 
   /**
+   * Caller-supplied profile fields that may be persisted when a user account is
+   * created through {@link Helper.create}.
+   *
+   * This is an **allow-list**: any key absent from this array is dropped before the
+   * Firestore write, so a field nobody anticipated can never reach a user document.
+   * Authorization state (`role`, `group`, `groups`), credentials (`password`) and
+   * server-managed bookkeeping (`id`, `created`, `updated`, `ping`, `backup`) are
+   * deliberately excluded — they are assigned server-side, never accepted from the
+   * caller.
+   *
+   * @see Helper.sanitizeProfile
+   */
+  export const creatableProfileFields: readonly string[] = Object.freeze([
+    'abbr',
+    'account',
+    'ads',
+    'avatar',
+    'bcId',
+    'bsId',
+    'bsiId',
+    'bst',
+    'buq',
+    'but',
+    'country',
+    'email',
+    'fcm',
+    'firstName',
+    'language',
+    'lastName',
+    'links',
+    'name',
+    'onboarding',
+    'path',
+    'phone',
+    'referrer',
+    'url',
+    'username',
+  ]);
+
+  /**
    * UserHelper
    */
   export class Helper {
@@ -163,6 +203,11 @@ export namespace User {
      * fetched and returned.  Otherwise a new Firebase Auth user and Firestore
      * document are created via `Helper.createUser`.
      *
+     * On the creation path the supplied object is reduced to
+     * {@link creatableProfileFields}, so caller-supplied authorization fields are
+     * discarded and the new account always starts with the server-assigned role
+     * `'user'` and no group membership.
+     *
      * @param {Interface} data - User data containing at least `email` or `phone`, and the
      *   first/last name fields required by `createUser`.
      * @returns {Promise<Interface>} A Promise resolving to the existing or newly created user
@@ -190,6 +235,11 @@ export namespace User {
      * Writes to the `user/{user.id}` Firestore path using `set` with `merge: true`,
      * injecting server-side timestamps for `created`, `updated`, and `ping` when not
      * already set.  Returns the merged data object with the document ID attached.
+     *
+     * ⚠️ This is a low-level writer and performs **no field filtering** — every key on
+     * `user` is persisted, including `role`, `group` and `groups`.  It is safe only for
+     * server-authored objects.  Reduce anything that originated with a caller through
+     * {@link Helper.sanitizeProfile} first, or use {@link Helper.create} which does so.
      *
      * @param {Interface} user - User data object including a required `id` field
      *   corresponding to the Firebase Auth UID.
@@ -464,6 +514,9 @@ export namespace User {
      *   `lastName`, `name`, and `abbr` fields.
      * @throws {Error} When either name is shorter than 2 characters or when both
      *   first and last names are not provided.
+     * @see Helper.sanitizeProfile — this method is **not** a filter.  It spreads the
+     *   input, so every caller-supplied key survives; reduce untrusted data with
+     *   `sanitizeProfile` before writing the result anywhere sensitive.
      */
     static formatUserNames = (data: Interface): Interface => {
       const {firstName, lastName} = data;
@@ -650,6 +703,36 @@ export namespace User {
     };
 
     /**
+     * Reduces a caller-supplied user object to the fields listed in
+     * {@link creatableProfileFields}.
+     *
+     * Copies each permitted key that the input owns directly, skipping inherited
+     * properties and `undefined` values.  Every other key — including nested
+     * authorization maps such as `groups`, the `role` and `group` scalars, and
+     * `password` — is discarded rather than forwarded, so a consumer that passes an
+     * unvalidated request body cannot inject privilege-bearing fields into a user
+     * document.
+     *
+     * Use this on any object that originates outside your own trust boundary before
+     * handing it to {@link Helper.createDocument} or another Firestore write.
+     *
+     * @param {Interface} data - Untrusted user data to filter.  A nullish value yields
+     *   an empty object.
+     * @returns {Interface} A new object containing only the allow-listed profile fields.
+     */
+    public static sanitizeProfile = (data: Interface): Interface => {
+      const sanitized: Interface = {};
+      if (!data) return sanitized;
+      for (const field of creatableProfileFields) {
+        if (!Object.prototype.hasOwnProperty.call(data, field)) continue;
+        const value = data[field];
+        if (value === undefined) continue;
+        sanitized[field] = value;
+      }
+      return sanitized;
+    };
+
+    /**
      * Asserts that the supplied data object is non-null and non-empty.
      *
      * @param {object|null} data - The data object to validate.
@@ -680,6 +763,12 @@ export namespace User {
      * `getAuth().createUser` with the prepared payload.  The resulting Auth UID is
      * written to the Firestore `user` collection via `createDocument`.
      *
+     * The data written to Firestore is reduced to {@link creatableProfileFields} by
+     * {@link Helper.sanitizeProfile} first, so authorization state supplied by the
+     * caller — `role`, `group`, or a nested `groups` map — is dropped instead of
+     * persisted.  The role is then assigned server-side as `'user'`.  `password` is
+     * forwarded to Firebase Auth only and never stored in Firestore.
+     *
      * @param {Interface} data - New user data; must include `email` or `phone`,
      *   `firstName`, and `lastName`.
      * @returns {Promise<Interface>} A Promise resolving to the newly created user data object
@@ -693,11 +782,9 @@ export namespace User {
       if (data.email) userData.email = data.email;
       if (data.phone) userData.phoneNumber = data.phone;
       const formatNames = this.formatUserNames(data);
-      let user: Interface = {
-        ...formatNames,
+      const user: Interface = {
+        ...this.sanitizeProfile(formatNames),
         role: 'user',
-        group: undefined,
-        password: undefined,
       };
       if (!user.name?.length) {
         throw new Error('First Name and Last Name are required');

@@ -156,15 +156,20 @@ export declare namespace Media {
         /**
          * Downloads a remote file by URL and saves it to Firebase Cloud Storage.
          *
-         * Performs a `GET` request (following up to 3 redirects) to `options.url`,
-         * converts the response body to a `Buffer`, and saves it to the storage path
-         * specified by `options.path` using the response's `content-type` header.
-         * Logs the resulting `gs://` URI when running in the emulator.
+         * The URL is validated with `assertSafeOutboundUrl` before any request is made,
+         * and every redirect hop is re-validated, so a caller-supplied address cannot be
+         * used to reach loopback, link-local, private, or cloud instance-metadata
+         * endpoints.  The request is bounded by a timeout and the response body is
+         * capped, so a hostile origin can neither hang the function nor exhaust its
+         * memory.  The downloaded bytes are saved to `options.path` using the response's
+         * `content-type` header.  Logs the resulting `gs://` URI when running in the
+         * emulator.
          *
          * @param {SaveFromUrlOptions} options - Download and storage options.
          * @returns {Promise<SaveFromUrl>} A Promise resolving to an object with `contentType`
          *   (the MIME type from the response) and `uri` (the `gs://` Cloud Storage URI).
-         * @throws {Error} When the HTTP response status is not `ok`.
+         * @throws {Error} When the URL fails validation, the HTTP response status is not
+         *   `ok`, or the response body exceeds the maximum allowed size.
          */
         static saveFromUrl(options: SaveFromUrlOptions): Promise<SaveFromUrl>;
         /**

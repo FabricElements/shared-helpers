@@ -9,6 +9,8 @@ applied automatically by their `applyTo` globs:
 
 | File | Applies to | Topic |
 | --- | --- | --- |
+| [`security.instructions.md`](instructions/security.instructions.md) | `src/**/*.ts` | Security invariants, tied to audited `file:line` findings |
+| [`cross-repo.instructions.md`](instructions/cross-repo.instructions.md) | `src/`, `functions/src/`, `test/`, `**/*.md` | Canonical FabricElements security & agent playbook |
 | [`documentation.instructions.md`](instructions/documentation.instructions.md) | `**/*.ts` | JSDoc, inline comments, API docs, changelog |
 | [`readme.instructions.md`](instructions/readme.instructions.md) | `**/*.md` | Root & module README maintenance |
 | [`serialized-models.instructions.md`](instructions/serialized-models.instructions.md) | interfaces, entities, DTOs | Serialization & API contracts |
@@ -167,6 +169,32 @@ Treat every value crossing a trigger, network, or storage boundary as hostile un
 validated. **Fail closed** — on any validation or authorization failure, throw or deny;
 never proceed with unvalidated data or "best-effort" partial trust.
 
+### 🔒 Non-negotiable security invariants
+
+This package is **published and public**. Its defaults become somebody else's security
+posture, so these five invariants outrank convenience. Each is tied to a real finding in
+[`security.instructions.md`](instructions/security.instructions.md); read it before
+changing anything under `src/`.
+
+1. **Allow-list, never denylist, at every sensitive write.** When a caller object reaches
+   Firestore, Storage, Auth custom claims, or BigQuery, enumerate the fields you *permit*.
+   Resetting known-bad scalars does not stop a nested authorization map
+   (`groups: {tenant: 'owner'}`) from riding along. Use `User.Helper.sanitizeProfile` /
+   `User.creatableProfileFields` as the reference shape.
+2. **Spread ordering is a security property.** `{...caller, server: x}` is safe;
+   `{server: x, ...caller}` is not. Sweep the **sink** (`\.\.\.` inside an object literal
+   after a literal key), never just the variable name.
+3. **Every caller-influenced outbound URL goes through `src/outbound-url.ts`**
+   (`assertSafeOutboundUrl` / `safeFetch`): scheme allow-list, blocked address ranges
+   including IPv4-mapped IPv6 and NAT64, DNS re-check, per-hop redirect re-validation,
+   a timeout, and a response-size cap.
+4. **Never interpolate an unvalidated identifier** into SQL, a resource path, a document
+   path, or a storage object path. `src/bigquery-identifier.ts` is the single canonical
+   validator — import it, never re-implement it.
+5. **Fail closed and never leak internals.** Missing config denies; generic errors go to
+   callers, detail goes to `logger` (and to `Error.cause`), never a stack trace or raw
+   internal text.
+
 ### Secrets & credentials
 - **No secrets in source.** Never hard-code API keys, tokens, service-account JSON, or
   credentials. Read config from environment / Firebase Functions params (`defineSecret` /
@@ -229,6 +257,10 @@ never proceed with unvalidated data or "best-effort" partial trust.
 These are governed in depth by the modular files — read them before editing the matching
 files. Global essentials:
 
+- **Security invariants are tied to audited findings.** Before changing anything under
+  `src/`, read [`security.instructions.md`](instructions/security.instructions.md) and the
+  canonical playbook it companions,
+  [`cross-repo.instructions.md`](instructions/cross-repo.instructions.md).
 - **Every exported symbol carries Google-style multi-line JSDoc** with a capitalized
   summary, brace-typed `@param`/`@returns`, and `@throws {Error} …` where it can throw.
   Preserve the `@license` header and never rewrite/line-wrap URLs in comments.

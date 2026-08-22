@@ -4,33 +4,9 @@
  */
 import {BigQuery} from '@google-cloud/bigquery';
 import {logger} from 'firebase-functions/v2';
+import {validateBigQueryIdentifier as validateIdentifier} from './bigquery-identifier.js';
 
 const bigquery = new BigQuery();
-
-/**
- * BigQuery identifier pattern: letters, digits, and underscores only.
- * This matches the permitted characters for dataset names, table names,
- * and column/field names, preventing SQL injection via identifier interpolation.
- */
-const BQ_IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
-
-/**
- * Validates a single BigQuery identifier (dataset, table, or column name).
- *
- * BigQuery identifiers must start with a letter or underscore and contain only
- * letters, digits, and underscores.  Rejects empty strings and any value that
- * contains characters outside that set, preventing SQL injection through
- * template-literal identifier interpolation.
- *
- * @param {string} value - The identifier string to validate.
- * @param {string} label - Human-readable label used in the error message.
- * @throws {Error} When the value is empty or contains disallowed characters.
- */
-const validateIdentifier = (value: string, label: string): void => {
-  if (!value || !BQ_IDENTIFIER_RE.test(value)) {
-    throw new Error(`Invalid BigQuery identifier for ${label}: "${value}"`);
-  }
-};
 
 /**
  * Constructs a BigQuery DML statement that removes duplicate rows from a table.

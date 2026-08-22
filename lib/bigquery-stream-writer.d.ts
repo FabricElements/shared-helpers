@@ -103,7 +103,8 @@ export declare class BigQueryStreamWriter {
      * independent, separately-managed writer is required.
      *
      * @param {BigQueryStreamWriterOptions} options - Destination and batching configuration.
-     * @throws {Error} When `options.dataset` or `options.table` is missing.
+     * @throws {Error} When `options.dataset` or `options.table` is missing or contains
+     *   characters outside the BigQuery identifier set.
      */
     constructor(options: BigQueryStreamWriterOptions);
     /**

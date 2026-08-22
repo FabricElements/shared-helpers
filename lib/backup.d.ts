@@ -33,7 +33,10 @@
  *   that marks or deletes each source document.
  * @returns {Promise<void>} A Promise that resolves when the BigQuery write and any
  *   Firestore updates have completed.
- * @throws {string} A stringified error if the BigQuery Storage Write API call fails.
+ * @throws {Error} When a required field is missing, or when the BigQuery Storage
+ *   Write API call fails.  The thrown error preserves the original failure as its
+ *   `cause` so detail stays available to logs without being re-serialised into the
+ *   message a caller sees.
  */
 declare const _default: (data: {
     collection: string;

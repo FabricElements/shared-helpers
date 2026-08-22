@@ -43,7 +43,10 @@ import {timeout} from './global.js';
  *   that marks or deletes each source document.
  * @returns {Promise<void>} A Promise that resolves when the BigQuery write and any
  *   Firestore updates have completed.
- * @throws {string} A stringified error if the BigQuery Storage Write API call fails.
+ * @throws {Error} When a required field is missing, or when the BigQuery Storage
+ *   Write API call fails.  The thrown error preserves the original failure as its
+ *   `cause` so detail stays available to logs without being re-serialised into the
+ *   message a caller sees.
  */
 export default async (data: {
   collection: string,
@@ -77,7 +80,8 @@ export default async (data: {
     // Drop any rows still buffered after the failure so teardown never partially
     // writes them, then re-throw without proceeding to the Firestore update pass.
     writer.discard();
-    throw error.toString();
+    // @ts-expect-error — Error(message, {cause}) requires ES2022 lib but is fully supported by Node.js >=16.9.
+    throw new Error(`Backup failed for collection "${data.collection}"`, {cause: error});
   } finally {
     // Always release the long-lived gRPC connection.
     await writer.close().catch(() => undefined);
