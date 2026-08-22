@@ -26,6 +26,50 @@ Prior releases are tracked through Git history and GitHub Releases.
   write. **Consumers should treat this as a priority upgrade**, especially if they pin an
   exact commit: a fix on `main` is not a fix in production until the pin moves.
 
+- **Caller-supplied billing and tenancy fields can no longer reach a user document.**
+  The creation allow-list was originally derived as "the declared non-authorization
+  fields of `User.Interface`". That rule is coherent but it admitted `bcId`, `bsId`,
+  `bsiId`, `bst`, `but` and `buq` — **payment-provider identity and metering state** —
+  along with `account`, which designates the user's *active* account and is therefore a
+  tenancy pointer. A consumer passing an unvalidated request body let the requester
+  choose their own billing identity at creation, e.g. pointing `bcId` at another
+  tenant's customer record. All seven are now excluded and are enumerated in the new
+  exported `User.serverOnlyFields`. The test for admitting a field is now **"who knows
+  the correct value?"** — `ads` stays creatable because it holds the user's own
+  ad-network placement identifiers; `bcId` does not, because only the payment provider
+  and the server ever know it.
+
+- **Group role removal now actually removes the claim.** `roleUpdateCall` rebuilt the
+  `groups` custom claim from `userDoc`, which is the **pre-write** snapshot, so
+  published claims lagged the change by one update: removing a group left the removed
+  group in the user's token indefinitely, and the very first group grant published no
+  claim at all. The resulting map is now derived locally, so removals and first grants
+  are both reflected immediately.
+
+- **Refresh tokens are revoked when authority is withdrawn or replaced.** The
+  `revokeRefreshTokens` call following `setCustomUserClaims` was commented out, so a
+  de-provisioned user kept a validly-signed token carrying the **old** claims until
+  natural expiry. It is now called when a role or group is removed, or when an existing
+  role is replaced with a different one. A pure grant does not revoke, since the new
+  claim takes effect on the next refresh anyway and forcing re-authentication there has
+  a UX cost with no security benefit.
+
+  ⚠️ **Revocation is not instantaneous by itself.** Already-issued ID tokens remain
+  cryptographically valid until they expire (up to one hour) unless the relying party
+  verifies them with `getAuth().verifyIdToken(token, true)`. Consumers needing immediate
+  de-provisioning **must** pass that `checkRevoked` flag and treat claim removal as
+  eventually consistent.
+
+- **Documented: this library promotes Firestore document state into signed ID tokens.**
+  `roleUpdateCall` copies the `groups` map from `user/{uid}` into Firebase Auth custom
+  claims via `setCustomUserClaims`. Consumers may not realise the call happens at all,
+  because it lives here rather than in their own codebase. The practical consequence is
+  that **write access to `user/{uid}` is equivalent to role assignment**: anything able
+  to influence that document's `groups` field can influence a signed token that is then
+  presented to every relying party as verified identity — and which outlives deletion of
+  the document itself. This is what made the escalation above more than a stray field.
+  Keep security rules default-deny on `user/{uid}`.
+
 - **`Media.Helper.saveFromUrl` is now SSRF-guarded.** It previously issued a bare
   `fetch(url, {redirect: 'follow'})` with no timeout, no size cap, and no address checks,
   and it is reachable with a URL that originates outside the server (a Firebase Auth
@@ -49,6 +93,10 @@ Prior releases are tracked through Git history and GitHub Releases.
 
 - `outboundUrl` (`src/outbound-url.ts`) — `assertSafeOutboundUrl`, `safeFetch` and
   `isBlockedAddress` for any helper that fetches a caller-influenced URL.
+- `User.serverOnlyFields` — the explicit list of fields that must never be accepted from
+  a caller (authorization state, billing/provider identity, `account`, credentials and
+  server bookkeeping), exported so consumers can assert the same rule in their own
+  validation and security rules rather than re-deriving it.
 - `validateBigQueryIdentifier` (`src/bigquery-identifier.ts`) — the single canonical
   BigQuery identifier validator, now shared by `cleaner` and `BigQueryStreamWriter`.
 - `User.Helper.sanitizeProfile` and `User.creatableProfileFields` — the allow-list used by
@@ -60,8 +108,11 @@ Prior releases are tracked through Git history and GitHub Releases.
 ### Changed
 
 - **BREAKING —** `User.Helper.create` now persists **only** the fields listed in
-  `User.creatableProfileFields`. Undeclared keys and authorization fields are dropped
-  instead of written.
+  `User.creatableProfileFields`. Undeclared keys, authorization fields, billing/provider
+  identity fields and the `account` tenancy pointer are dropped instead of written.
+- **BREAKING —** `User.Helper.updateRole` and `User.Helper.remove` now revoke the user's
+  refresh tokens when a role or group is withdrawn or replaced, forcing re-authentication
+  on those paths.
 - **BREAKING —** `Media.Helper.saveFromUrl` now throws for URLs that fail SSRF validation
   (non-`http(s)` schemes, embedded credentials, unresolvable hosts, or hosts resolving to a
   blocked range) and for responses larger than 25 MiB.
@@ -90,6 +141,27 @@ If you relied on a custom field being persisted at creation time, either add it 
 follow-up write via `User.Helper.createDocument` (which is unfiltered by design and must
 only receive server-authored data), or open an issue to have the field added to
 `creatableProfileFields`.
+
+Billing identity must now be seeded explicitly from server code that already knows the
+correct value, rather than arriving inside a caller's profile blob:
+
+```ts
+const user = await User.Helper.create(request.body);
+// Server-side: create the provider record first, then write the id you got back.
+const customer = await billingProvider.customers.create({email: user.email});
+await User.Helper.createDocument({id: user.id, bcId: customer.id});
+```
+
+Role changes now revoke refresh tokens when authority is withdrawn or replaced. To act on
+that immediately, verify ID tokens with the `checkRevoked` flag:
+
+```ts
+// Before: a de-provisioned user's existing token stayed valid until expiry.
+const decoded = await getAuth().verifyIdToken(token);
+
+// 2.0.0: detect revocation, and treat claim removal as eventually consistent.
+const decoded = await getAuth().verifyIdToken(token, true);
+```
 
 `Media.Helper.saveFromUrl` — if you were passing an internal or emulator URL, fetch it
 yourself and use `Media.Helper.save` with the resulting buffer.

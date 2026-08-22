@@ -278,3 +278,78 @@ describe('User.Helper.create — caller-supplied authorization fields', () => {
     }
   });
 });
+
+describe('User.Helper role changes — custom claims and token revocation', () => {
+  /**
+   * Returns the claims object handed to the most recent `setCustomUserClaims` call.
+   *
+   * @returns {object} The published custom claims.
+   */
+  const publishedClaims = (): {role?: string, groups?: Record<string, string>} => {
+    expect(mockSetCustomUserClaims).toHaveBeenCalled();
+    return mockSetCustomUserClaims.mock.calls[mockSetCustomUserClaims.mock.calls.length - 1][1];
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSet.mockResolvedValue(undefined);
+    mockDoc.mockReturnValue({set: mockSet, delete: vi.fn().mockResolvedValue(undefined)});
+    mockCollection.mockReturnValue({doc: mockDoc});
+    mockSetCustomUserClaims.mockResolvedValue(undefined);
+    mockRevokeRefreshTokens.mockResolvedValue(undefined);
+    mockUpdateUser.mockResolvedValue(undefined);
+    mockGetUser.mockResolvedValue({
+      uid: 'uid-1',
+      email: 'ada@example.com',
+      phoneNumber: null,
+      customClaims: {groups: {'tenant-a': 'admin'}},
+    });
+    mockGetDocument.mockResolvedValue({id: 'uid-1', groups: {'tenant-a': 'admin'}});
+  });
+
+  it('removes the group from published claims rather than republishing a stale map', async () => {
+    await User.Helper.remove({id: 'uid-1', group: 'tenant-a'});
+    const claims = publishedClaims();
+    // Positive control: claims really were published on this path.
+    expect(mockSetCustomUserClaims).toHaveBeenCalledTimes(1);
+    expect(claims.groups).toBeDefined();
+    // The removed group must not survive into the signed token.
+    expect(claims.groups['tenant-a']).toBeUndefined();
+  });
+
+  it('revokes refresh tokens when a group role is withdrawn', async () => {
+    await User.Helper.remove({id: 'uid-1', group: 'tenant-a'});
+    expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
+  });
+
+  it('revokes refresh tokens when an existing role is replaced', async () => {
+    await User.Helper.updateRole({id: 'uid-1', group: 'tenant-a', role: 'viewer'}, 'https://example.com');
+    // Positive control: the replacement really was published.
+    expect(publishedClaims().groups['tenant-a']).toBe('viewer');
+    expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
+  });
+
+  it('does not revoke on a pure grant of a group the user did not hold', async () => {
+    await User.Helper.updateRole({id: 'uid-1', group: 'tenant-b', role: 'admin'}, 'https://example.com');
+    // Positive control: the grant was published, so the absence of a revoke below
+    // reflects the grant path and not a call that never happened.
+    expect(publishedClaims().groups['tenant-b']).toBe('admin');
+    expect(mockRevokeRefreshTokens).not.toHaveBeenCalled();
+  });
+
+  it('preserves other group memberships when one is removed', async () => {
+    mockGetDocument.mockResolvedValue({id: 'uid-1', groups: {'tenant-a': 'admin', 'tenant-b': 'viewer'}});
+    await User.Helper.remove({id: 'uid-1', group: 'tenant-a'});
+    const claims = publishedClaims();
+    expect(claims.groups['tenant-b']).toBe('viewer');
+    expect(claims.groups['tenant-a']).toBeUndefined();
+  });
+
+  it('publishes a group claim on the first grant, when the document has no groups yet', async () => {
+    mockGetUser.mockResolvedValue({uid: 'uid-1', email: 'ada@example.com', phoneNumber: null, customClaims: {}});
+    mockGetDocument.mockResolvedValue({id: 'uid-1'});
+    await User.Helper.updateRole({id: 'uid-1', group: 'tenant-a', role: 'admin'}, 'https://example.com');
+    expect(publishedClaims().groups).toEqual({'tenant-a': 'admin'});
+    expect(mockRevokeRefreshTokens).not.toHaveBeenCalled();
+  });
+});
