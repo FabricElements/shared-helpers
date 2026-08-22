@@ -28,13 +28,13 @@ and patching one consumer's call site does not fix the package.
 
 This is not hypothetical. It is the defect this file was written from:
 
-- `src/user.ts:551` — `formatUserNames` returns `{...data, …}`. It is a *formatter*, not a
+- `src/user.ts:596` — `formatUserNames` returns `{...data, …}`. It is a *formatter*, not a
   filter: every caller-supplied key survives it.
 - Before the fix, `createUser` built `{...formatNames, role: 'user', group: undefined,
   password: undefined}` — a **denylist** that reset three known scalars.
 - A nested authorization map (`groups: {tenant: 'owner'}`) is not a scalar, so it passed
-  straight through into `set(…, {merge: true})` at `src/user.ts:261`.
-- Worse, `src/user.ts:900` copies the document's `groups` map into Firebase Auth **custom
+  straight through into `set(…, {merge: true})` at `src/user.ts:306`.
+- Worse, `src/user.ts:997` copies the document's `groups` map into Firebase Auth **custom
   claims** on the next role update. An injected map is therefore promoted from "a field in
   a document" to "a signed claim in a token".
 
@@ -43,18 +43,43 @@ This is not hypothetical. It is the defect this file was written from:
 > **Reset or reject by allow-list, never by denylist.** When you accept a caller object and
 > write it somewhere sensitive, enumerate the fields you *permit*.
 
-The fix is `src/user.ts:125` (`creatableProfileFields`, the allow-list) applied by
-`src/user.ts:723` (`Helper.sanitizeProfile`) at the sink in `src/user.ts:786`.
+The fix is `src/user.ts:177` (`creatableProfileFields`, the allow-list) applied by
+`src/user.ts:769` (`Helper.sanitizeProfile`) at the sink in `src/user.ts:834`.
 A denylist is only correct until someone adds a field; an allow-list fails safe against the
 next field nobody thought of.
 
 **Consequences for new code:**
 
+### Choosing what goes in an allow-list: "who knows the correct value?"
+
+An allow-list is only as good as its admission rule. The first version of
+`creatableProfileFields` used "the declared non-authorization fields of `User.Interface`".
+That rule is coherent, and it was **wrong** — it admitted `bcId`, `bsId`, `bsiId`, `bst`,
+`but`, `buq` (payment-provider identity and metering) and `account` (the user's *active*
+account, i.e. a tenancy pointer). None are authorization fields, so the rule let them in,
+and a caller could choose their own billing identity at creation.
+
+The rule that replaced it:
+
+> **Admit a field only if the caller is the party who knows its correct value.**
+
+- `ads` — the user's own ad-network placement identifiers. The user knows them; the server
+  does not. **Creatable.**
+- `bcId` — identifies a record inside a payment provider, produced by a server-side call to
+  it. A caller supplying one is mistaken or malicious. **Server-only.**
+
+`serverOnlyFields` (`src/user.ts:136`) enumerates the excluded set and is exported so
+consumers can assert the same rule in their own validation and security rules.
+`test/user.test.ts` asserts the two lists stay **disjoint**, so a future field cannot
+quietly appear in both.
+
 - Any new helper that accepts a caller object and writes it to Firestore, Storage, Auth
   claims, or BigQuery must reduce it through an allow-list first.
-- `src/user.ts:261` (`Helper.createDocument`) is deliberately **unfiltered** — it is the
-  low-level writer used by server-authored paths such as `onCreate`. Its JSDoc says so.
-  Do not "fix" it by filtering; do not call it with untrusted input either.
+- `src/user.ts:293` (`Helper.createDocument`) is deliberately **unfiltered** — it is the
+  low-level writer used by server-authored paths such as `onCreate`, and it is the
+  sanctioned way to seed a server-only field such as `bcId` once the server knows the
+  correct value. Its JSDoc says so. Do not "fix" it by filtering; do not call it with
+  untrusted input either.
 
 ## 2. Spread ordering is a security property
 
@@ -69,15 +94,15 @@ Sweep with a bare `\.\.\.` across `src/` and classify every hit.
 
 Audited hits:
 
-- ✅ `src/user.ts:786` — server-authored `role: 'user'` follows the spread.
-- ✅ `src/user.ts:655`, `src/firestore-helper.ts:110`, `src/firestore-helper.ts:251` —
+- ✅ `src/user.ts:834` — server-authored `role: 'user'` follows the spread.
+- ✅ `src/user.ts:700`, `src/firestore-helper.ts:110`, `src/firestore-helper.ts:251` —
   server keys (`updated`, `backup`, `id`) all follow the spread.
 - ⚠️ `src/media.ts:464` — `{contentType, resumable: false, validation: true,
   ...options.options}` spreads **after** the server keys, so a caller can set
   `validation: false` and disable upload integrity checking. This is an intentional
   escape hatch for Cloud Storage save options; it is safe **only** because `options.options`
   is developer-supplied. Never forward a request body into it.
-- ⚠️ `src/user.ts:297` — `{...userDoc, ...doc.data()}` lets an existing Firestore document
+- ⚠️ `src/user.ts:342` — `{...userDoc, ...doc.data()}` lets an existing Firestore document
   override the server default `role: 'user'`. This is intentional (a pre-provisioned invite
   should win) and the spread source is a server-side read, not caller input — but it means
   **write access to `user/{uid}` is equivalent to role assignment**. Keep `firestore.rules`
@@ -85,7 +110,7 @@ Audited hits:
 
 ## 3. Validate outbound URLs (SSRF)
 
-`src/user.ts:306` passes a Firebase Auth `photoURL` — which originates with the identity
+`src/user.ts:351` passes a Firebase Auth `photoURL` — which originates with the identity
 provider or the account creator, not with you — into `Media.Helper.saveFromUrl`. Before the
 fix that reached a bare `fetch(url, {redirect: 'follow'})` with no timeout, no size cap, and
 no address checks.
@@ -121,7 +146,7 @@ cannot be parameterised, so they need an **anchored** pattern check first.
 - ✅ `src/bigquery-identifier.ts` is the single canonical validator. Both
   `src/cleaner.ts` and `src/bigquery-stream-writer.ts:133` import it. Do **not** re-implement
   it — two copies of one security primitive will drift, and one will end up weaker.
-- ⚠️ `src/user.ts:866` — `{[data.group]: _role}` uses a caller-supplied `group` as a
+- ⚠️ `src/user.ts:936` — `{[data.group]: _role}` uses a caller-supplied `group` as a
   Firestore map key. Validate `group` against an allow-list at your call site before
   invoking `updateRole`/`remove`.
 - ⚠️ `src/firestore-helper.ts:133`, `:230` — `collection`, `collectionGroup` and `document`
@@ -161,11 +186,52 @@ capacity or balance is a race.
 Consumers will trust these. `src/user.ts` `getRole`, `updateRole`, `roleUpdateCall` and the
 `groups` map are authorization surface:
 
-- `Helper.authenticated` (`src/user.ts:167`) only proves *authentication*. It is not an
+- `Helper.authenticated` (`src/user.ts:212`) only proves *authentication*. It is not an
   authorization check. Callers must still verify the caller may act on the target user.
 - `updateRole`/`remove` are privileged admin operations with **no built-in caller
   authorization**. The consuming callable/HTTP trigger must authorize before invoking them.
 - Never trust a client-supplied uid, role, group, or ownership claim.
+
+### 🔴 This library promotes document state into signed ID tokens
+
+`roleUpdateCall` copies the `groups` map into Firebase Auth **custom claims** via
+`setCustomUserClaims`. Consumers frequently do not realise this happens, because the call
+lives *here*, in a dependency, and not in their own codebase — a system can show users
+holding a `role` claim while `setCustomUserClaims` appears nowhere in its source.
+
+The consequences are load-bearing and must not be lost:
+
+- **Write access to `user/{uid}` is equivalent to role assignment.** Anything able to
+  influence that document's `groups` field can influence a signed token that every relying
+  party then treats as verified identity.
+- **A claim outlives the document.** Deleting or cleaning up `user/{uid}` does not retract
+  a claim already minted into a token.
+- This is what turned the §1 escalation from "a stray field in a document" into "a signed
+  assertion of privilege", and it is why `groups` is in `serverOnlyFields`.
+
+Keep security rules default-deny on `user/{uid}`.
+
+### De-provisioning is not immediate unless the consumer checks
+
+Two distinct failure modes were found in this path, both now fixed — understand them before
+touching it:
+
+1. **Stale claims.** Claims were rebuilt from `userDoc`, the **pre-write** snapshot, so
+   published claims lagged by one update: a removal left the removed group in the token
+   indefinitely, and the first grant published nothing. Always derive the resulting state
+   locally rather than reading back a snapshot taken before the write.
+2. **No revocation.** The `revokeRefreshTokens` call after `setCustomUserClaims` was
+   commented out, so a de-provisioned user kept a validly-signed token with the **old**
+   claims until natural expiry. It now fires when authority is withdrawn (`remove`) or an
+   existing role is replaced. A pure grant does not revoke — the new claim applies at the
+   next refresh, and forcing re-authentication there is a UX cost with no security benefit.
+   Because roles are opaque strings the library cannot rank them, so any change to an
+   existing value is treated as potentially a downgrade.
+
+> ⚠️ **Revoking refresh tokens does not invalidate outstanding ID tokens.** They remain
+> cryptographically valid until they expire (up to an hour) unless the relying party calls
+> `getAuth().verifyIdToken(token, true)`. A fix here without that flag on the consumer side
+> produces *false confidence*, not immediate de-provisioning. Document both halves, always.
 
 ## 8. Evidence standards for security changes
 

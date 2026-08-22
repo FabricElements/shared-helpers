@@ -77,13 +77,26 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
 
 - **`User.Helper.create` filters its input.** Only the fields in
   `User.creatableProfileFields` are persisted to the new `user/{uid}` document.
-  Authorization state (`role`, `group`, `groups`), credentials (`password`) and
-  server-managed bookkeeping are dropped, and the new account always starts with the
+  Authorization state (`role`, `group`, `groups`), billing/provider identity (`bcId`,
+  `bsId`, `bsiId`, `bst`, `but`, `buq`), the `account` tenancy pointer, credentials
+  (`password`) and server-managed bookkeeping are dropped — the full excluded set is
+  exported as `User.serverOnlyFields`. The new account always starts with the
   server-assigned role `'user'`. Use `User.Helper.sanitizeProfile` to apply the same
   filter at your own call sites. See the [migration note](CHANGELOG.md) if you previously
   relied on extra fields being written.
 - **`User.Helper.createDocument` does *not* filter.** It is the low-level writer for
-  server-authored objects. Never hand it an unvalidated request body.
+  server-authored objects, and the sanctioned way to seed a server-only field such as
+  `bcId` once your server knows the correct value. Never hand it an unvalidated request
+  body.
+- **Role changes write Firebase Auth custom claims.** `User.Helper.updateRole` and
+  `User.Helper.remove` copy the user's `groups` map into custom claims, which are embedded
+  in every ID token and presented to relying parties as verified identity. **Treat write
+  access to `user/{uid}` as equivalent to role assignment** and keep your security rules
+  default-deny on that path.
+- **De-provisioning needs `checkRevoked` on your side.** Withdrawing or replacing a role
+  revokes the user's refresh tokens, but already-issued ID tokens stay valid until they
+  expire (up to an hour) unless you verify with `getAuth().verifyIdToken(token, true)`.
+  Treat claim removal as eventually consistent.
 - **`Media.Helper.saveFromUrl` validates the URL** through
   `outboundUrl.assertSafeOutboundUrl`, re-validates every redirect hop, applies a timeout,
   and caps the response size. Private, loopback, link-local and cloud metadata addresses
