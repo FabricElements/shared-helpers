@@ -7,7 +7,7 @@
 import {BigQuery} from '@google-cloud/bigquery';
 import {adapt, managedwriter} from '@google-cloud/bigquery-storage';
 import {logger} from 'firebase-functions/v2';
-import {validateBigQueryIdentifier} from './bigquery-identifier.js';
+import {validateBigQueryDataset, validateBigQueryTable} from './bigquery-identifier.js';
 
 /**
  * Supported BigQuery column types that require explicit client-side coercion
@@ -130,8 +130,8 @@ export class BigQueryStreamWriter {
     if (!options.table) throw new Error('table is required');
     // Both values are interpolated into a BigQuery resource path, which cannot be
     // parameterised; validate them before they are ever used to build one.
-    validateBigQueryIdentifier(options.dataset, 'dataset');
-    validateBigQueryIdentifier(options.table, 'table');
+    validateBigQueryDataset(options.dataset, 'dataset');
+    validateBigQueryTable(options.table, 'table');
     this.dataset = options.dataset;
     this.table = options.table;
     this.maxBatchSize = options.maxBatchSize ?? 500;
