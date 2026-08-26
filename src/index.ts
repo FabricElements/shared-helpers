@@ -11,7 +11,7 @@
  */
 import apiRequest from './api-request.js';
 import backup from './backup.js';
-import {validateBigQueryIdentifier} from './bigquery-identifier.js';
+import {validateBigQueryColumn, validateBigQueryDataset, validateBigQueryIdentifier, validateBigQueryTable} from './bigquery-identifier.js';
 import {BigQueryStreamWriter} from './bigquery-stream-writer.js';
 import checkNumber from './check-number.js';
 import cleaner from './cleaner.js';
@@ -46,6 +46,9 @@ export {
   specialCharToRegular,
   strings,
   validateUrl,
+  validateBigQueryColumn,
+  validateBigQueryDataset,
   validateBigQueryIdentifier,
+  validateBigQueryTable,
   regex,
 };

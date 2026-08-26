@@ -4,7 +4,7 @@
  */
 import {BigQuery} from '@google-cloud/bigquery';
 import {logger} from 'firebase-functions/v2';
-import {validateBigQueryIdentifier as validateIdentifier} from './bigquery-identifier.js';
+import {validateBigQueryColumn, validateBigQueryDataset, validateBigQueryTable} from './bigquery-identifier.js';
 
 const bigquery = new BigQuery();
 
@@ -38,10 +38,10 @@ const query = (filter: {
   if (!filter.dataset) {
     throw new Error('Dataset or Table not defined');
   }
-  validateIdentifier(filter.dataset, 'dataset');
-  validateIdentifier(filter.table, 'table');
-  validateIdentifier(filter.timestamp, 'timestamp');
-  if (filter.column) validateIdentifier(filter.column, 'column');
+  validateBigQueryDataset(filter.dataset, 'dataset');
+  validateBigQueryTable(filter.table, 'table');
+  validateBigQueryColumn(filter.timestamp, 'timestamp');
+  if (filter.column) validateBigQueryColumn(filter.column, 'column');
   return `DELETE
           FROM \`${filter.dataset}.${filter.table}\`
           WHERE STRUCT(id,
