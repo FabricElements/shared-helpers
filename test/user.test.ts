@@ -329,12 +329,11 @@ describe('User.Helper role changes — custom claims and token revocation', () =
     expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
   });
 
-  it('does not revoke on a pure grant of a group the user did not hold', async () => {
+  it('revokes refresh tokens on a pure grant of a group the user did not hold', async () => {
     await User.Helper.updateRole({id: 'uid-1', group: 'tenant-b', role: 'admin'}, 'https://example.com');
-    // Positive control: the grant was published, so the absence of a revoke below
-    // reflects the grant path and not a call that never happened.
+    // Positive control: the grant was published.
     expect(publishedClaims().groups['tenant-b']).toBe('admin');
-    expect(mockRevokeRefreshTokens).not.toHaveBeenCalled();
+    expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
   });
 
   it('preserves other group memberships when one is removed', async () => {
@@ -350,6 +349,54 @@ describe('User.Helper role changes — custom claims and token revocation', () =
     mockGetDocument.mockResolvedValue({id: 'uid-1'});
     await User.Helper.updateRole({id: 'uid-1', group: 'tenant-a', role: 'admin'}, 'https://example.com');
     expect(publishedClaims().groups).toEqual({'tenant-a': 'admin'});
-    expect(mockRevokeRefreshTokens).not.toHaveBeenCalled();
+    expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
+  });
+
+  it('revokes refresh tokens when a new group grant is the first entry (pure grant)', async () => {
+    mockGetUser.mockResolvedValue({uid: 'uid-1', email: 'ada@example.com', phoneNumber: null, customClaims: {}});
+    mockGetDocument.mockResolvedValue({id: 'uid-1'});
+    await User.Helper.updateRole({id: 'uid-1', group: 'tenant-b', role: 'editor'}, 'https://example.com');
+    expect(publishedClaims().groups['tenant-b']).toBe('editor');
+    expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
+  });
+
+  it('revokes refresh tokens when an existing group role value is changed', async () => {
+    // tenant-a is already admin; changing it to viewer is a replacement.
+    await User.Helper.updateRole({id: 'uid-1', group: 'tenant-a', role: 'viewer'}, 'https://example.com');
+    expect(publishedClaims().groups['tenant-a']).toBe('viewer');
+    expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
+  });
+
+  it('revokes refresh tokens when a group is removed', async () => {
+    await User.Helper.remove({id: 'uid-1', group: 'tenant-a'});
+    expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
+  });
+
+  it('revokes refresh tokens when a top-level role is set', async () => {
+    mockGetUser.mockResolvedValue({uid: 'uid-1', email: 'ada@example.com', phoneNumber: null, customClaims: {}});
+    mockGetDocument.mockResolvedValue({id: 'uid-1'});
+    await User.Helper.updateRole({id: 'uid-1', role: 'admin'}, 'https://example.com');
+    expect(publishedClaims().role).toBe('admin');
+    expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
+  });
+
+  it('throws and does not call setCustomUserClaims when the claims payload exceeds 1000 bytes', async () => {
+    // Build a groups map large enough that JSON.stringify exceeds 1000 bytes.
+    // Each entry ~30-40 bytes; 40 entries is well over the limit.
+    const largeGroups: Record<string, string> = {};
+    for (let i = 0; i < 40; i++) {
+      largeGroups[`tenant-group-${String(i).padStart(3, '0')}`] = 'admin';
+    }
+    mockGetUser.mockResolvedValue({
+      uid: 'uid-1',
+      email: 'ada@example.com',
+      phoneNumber: null,
+      customClaims: {groups: largeGroups},
+    });
+    mockGetDocument.mockResolvedValue({id: 'uid-1', groups: largeGroups});
+    await expect(
+      User.Helper.updateRole({id: 'uid-1', group: 'tenant-group-new', role: 'editor'}, 'https://example.com'),
+    ).rejects.toThrow(/exceeds the Firebase limit/);
+    expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
   });
 });
