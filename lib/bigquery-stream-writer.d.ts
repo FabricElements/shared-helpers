@@ -64,13 +64,22 @@ export interface BigQueryStreamWriterOptions {
  * process-wide singleton per table, which keeps the gRPC channel warm across
  * Cloud Run requests on the same container instance.
  *
- * ### Backpressure &amp; chunked loads
+ * ### Backpressure, buffering, and flush-failure policy
  * Rows are accumulated in an in-memory buffer and flushed as a single batch
  * once {@link BigQueryStreamWriterOptions.maxBatchSize} rows are queued (or after
  * {@link BigQueryStreamWriterOptions.flushIntervalMs}). Each flush `await`s the
  * `PendingWrite` result before returning, so callers that `await` their writes
- * observe natural backpressure: a slow BigQuery backend slows the producer
- * instead of letting the buffer grow unbounded.
+ * observe natural backpressure from the BigQuery backend.
+ *
+ * When a flush fails (network error, transient BigQuery outage, etc.) the
+ * unwritten batch is restored to the front of the in-memory buffer so that the
+ * rows survive the next retry. To prevent unbounded memory growth during a
+ * sustained outage, the combined buffer (restored batch + any new rows added
+ * during the await) is capped at `4 × maxBatchSize` rows. If the cap would be
+ * exceeded, the oldest rows are dropped first and a `logger.error` is emitted
+ * detailing the drop count and the cap in effect. Silent data loss and silent
+ * unbounded growth are both treated as unacceptable; the bounded-drop policy is
+ * the deliberate tradeoff between them.
  *
  * The destination project is taken from the resolved table metadata, which the
  * Cloud Run runtime provides automatically — callers only supply `dataset` and
@@ -136,6 +145,10 @@ export declare class BigQueryStreamWriter {
      * so concurrent callers share a single initialisation and a single gRPC
      * channel.
      *
+     * If initialisation fails the memoised promise is cleared so the next call
+     * can retry; a permanently-failed `initPromise` would otherwise wedge the
+     * instance and prevent recovery (or a clean `close()`).
+     *
      * @returns {Promise<managedwriter.JSONWriter>} The ready, reusable JSON writer.
      * @throws {Error} When table metadata cannot be read or the stream connection fails.
      */
@@ -166,10 +179,18 @@ export declare class BigQueryStreamWriter {
      * awaits the result, providing backpressure. Inspects the gRPC response and
      * throws when the server reports a failure.
      *
+     * **On write failure** the unwritten batch is restored to the front of the
+     * buffer (preserving row order) so callers can retry. To prevent unbounded
+     * memory growth during a sustained outage, the total buffer after restoration
+     * is capped at `4 × maxBatchSize` rows. When the cap is exceeded the oldest
+     * rows (front of the restored buffer) are dropped first and a `logger.error`
+     * is emitted with the drop count; the error from the write failure is still
+     * re-thrown so the caller knows the flush did not succeed.
+     *
      * @returns {Promise<void>} Resolves when the batch is committed, or immediately
      *   when the buffer is empty.
-     * @throws {Error} When the Storage Write API returns a `response.error` status
-     *   or per-row `rowErrors`.
+     * @throws {Error} When the Storage Write API returns a `response.error` status,
+     *   per-row `rowErrors`, or when the underlying write call throws.
      */
     flush(): Promise<void>;
     /**
@@ -182,13 +203,20 @@ export declare class BigQueryStreamWriter {
      */
     discard(): void;
     /**
-     * Flushes any remaining buffered rows, then tears down the long-lived writer
-     * and client. Call during graceful shutdown; subsequent writes lazily
-     * re-establish the connection.
+     * Flushes any remaining buffered rows, tears down the long-lived writer and
+     * client, and removes this instance from the process-wide singleton cache so
+     * the object can be garbage-collected.
      *
-     * @returns {Promise<void>} Resolves once buffered rows are written and the
-     *   connection is closed.
-     * @throws {Error} Propagates any error raised by the final flush.
+     * The teardown (`finally` block) always runs — even when the final flush
+     * fails — so the gRPC connection is never abandoned and the cache entry is
+     * never leaked. Call during graceful shutdown; subsequent calls to
+     * {@link BigQueryStreamWriter.getInstance} with the same key will create a
+     * fresh instance and lazily re-establish the connection.
+     *
+     * @returns {Promise<void>} Resolves once buffered rows are written (or the
+     *   flush attempt completes) and the connection is closed.
+     * @throws {Error} Propagates any error raised by the final flush, after
+     *   teardown has completed.
      */
     close(): Promise<void>;
     /**
