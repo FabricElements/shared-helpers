@@ -8,6 +8,44 @@ Prior releases are tracked through Git history and GitHub Releases.
 
 ## [Unreleased]
 
+### ⚠ Breaking Changes
+
+- **`User.Helper.updateRole` / `User.Helper.remove` — refresh tokens are now
+  revoked on EVERY custom-claims change, not only when authority is reduced.**
+
+  Previously, adding a role or group (a pure grant) did not revoke the user's
+  refresh tokens; the new claim took effect silently on the next token refresh.
+  Removing or replacing a role or group did revoke.
+
+  The new behaviour revokes unconditionally whenever claims are written.  This
+  means clients will be signed out immediately after any role or group change —
+  including a grant — and must obtain a fresh token before continuing.
+
+  **Why:** A token minted before a grant lacks the new claim.  Any service that
+  derives authorization from token claims (rather than re-checking Firestore on
+  every request) would silently deny the newly-granted authority until the token
+  expired naturally.  Revoking on grants ensures the token the client holds
+  always reflects the current claims in both directions.
+
+  **Migration:** Clients must handle the HTTP 401 / token-revoked error that
+  follows a role or group change and prompt for re-authentication (or
+  automatically call `getIdToken(/* forceRefresh */ true)` if your SDK supports
+  it).  There is no server-side code change required beyond updating any client
+  error-handling logic that assumed grants were transparent.
+
+- **`User.Helper.updateRole` / `User.Helper.remove` — a custom-claims payload
+  larger than 1,000 bytes (the Firebase platform limit) now throws an `Error`
+  instead of forwarding the oversized payload to `setCustomUserClaims`.**
+
+  The error message names the actual byte size and the limit, and states that
+  the group set is too large to publish as claims.  `setCustomUserClaims` is
+  never called when the size guard fires, so claims are left untouched.
+
+  **Migration:** Keep each user's group count within the limit.  The practical
+  ceiling depends on key and value lengths; roughly 26–30 short group entries
+  is near the limit.  Callers that catch errors from `updateRole` / `remove`
+  should handle the new size-exceeded case explicitly.
+
 ### Fixed
 
 - **`BigQueryStreamWriter` — `close()` now removes the instance from the

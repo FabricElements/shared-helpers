@@ -49,6 +49,10 @@ export declare const getUrlAndGs: (filename: string) => {
  * content must be buffered in memory before processing (e.g., image
  * transformation with `sharp`).
  *
+ * On error the stream is destroyed (via `stream.destroy()`) and all listeners
+ * registered by this function are removed, so the stream resource is released
+ * and no further `data` or `end` events can fire into the closed-over buffer.
+ *
  * @param {any} stream - Any Node.js Readable stream emitting `Buffer` or `string` chunks.
  * @returns {Promise<Buffer>} A Promise resolving to a `Buffer` containing all concatenated chunks.
  * @throws Rejects with the stream's error event payload if the stream errors.
