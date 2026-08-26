@@ -6,6 +6,59 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Prior releases are tracked through Git history and GitHub Releases.
 
+## [Unreleased]
+
+### Fixed
+
+- **`BigQueryStreamWriter` — `close()` now removes the instance from the
+  process-wide singleton cache (`instances` Map) in its `finally` block.**
+  Previously `close()` tore down the gRPC connection but left the dead object
+  in the cache, preventing garbage collection and causing `getInstance` to
+  return a wedged instance after teardown.  The deletion is unconditional (in
+  `finally`) so it runs even when the final flush fails.
+
+- **`BigQueryStreamWriter.flush()` — failed batches are restored with a
+  bounded retention cap instead of being silently dropped.**
+  When a write fails the unwritten batch is restored to the front of the
+  in-memory buffer (using `batch.concat(this.buffer)` to avoid the
+  `RangeError: Maximum call stack size exceeded` that spread-based unshift
+  produces on large arrays) so a subsequent flush or retry can attempt
+  delivery.  To prevent unbounded memory growth during a sustained BigQuery
+  outage the combined buffer is capped at `4 × maxBatchSize` rows; when the
+  cap is exceeded the oldest rows are dropped first and a `logger.error` is
+  emitted with the drop count and cap.
+
+- **`BigQueryStreamWriter.ensureWriter()` — `initPromise` is cleared on
+  initialisation failure, allowing retry.**
+  A failing metadata or gRPC connection setup left a rejected, permanently
+  memoised `initPromise`.  Every subsequent call re-rejected from the cached
+  promise, making the instance unrecoverable without calling `close()`, and
+  `close()` itself would re-throw before completing teardown.  The `.catch()`
+  handler now clears `initPromise` before re-throwing so the next call can
+  attempt re-initialisation, and `close()` can always reach its `finally`
+  block.
+
+- **`streamToBuffer` (`global.ts`) — stream is destroyed on error and
+  listeners are cleaned up.**
+  The previous implementation called `reject` on the `error` event but did
+  not remove the registered `data` / `end` listeners or call
+  `stream.destroy()`.  On streams that emit further events after an error the
+  `buffers` array kept accumulating chunks in the closed-over scope, and the
+  underlying stream resource was not released.  The error handler now
+  removes all three listeners before destroying the stream.
+
+### Added
+
+- **Subpath exports for heavy standalone modules** (`package.json`).
+  Three new entries are added to the `exports` map so consumers can import
+  only what they need without paying the full barrel-load cost:
+  - `@fabricelements/shared-helpers/bigquery-stream-writer`
+  - `@fabricelements/shared-helpers/firestore-helper`
+  - `@fabricelements/shared-helpers/bigquery-identifier`
+
+  These are **additive** — the root barrel (`"."`) is unchanged and all
+  existing imports remain valid.
+
 ## [2.0.0] - 2026-08-22
 
 ### Security
