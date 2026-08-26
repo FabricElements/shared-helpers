@@ -83,6 +83,10 @@ export const getUrlAndGs = (filename: string): { gs: string, url: string } => {
  * content must be buffered in memory before processing (e.g., image
  * transformation with `sharp`).
  *
+ * On error the stream is destroyed (via `stream.destroy()`) and all listeners
+ * registered by this function are removed, so the stream resource is released
+ * and no further `data` or `end` events can fire into the closed-over buffer.
+ *
  * @param {any} stream - Any Node.js Readable stream emitting `Buffer` or `string` chunks.
  * @returns {Promise<Buffer>} A Promise resolving to a `Buffer` containing all concatenated chunks.
  * @throws Rejects with the stream's error event payload if the stream errors.
@@ -90,8 +94,19 @@ export const getUrlAndGs = (filename: string): { gs: string, url: string } => {
 export const streamToBuffer = (stream: any): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
     const buffers = [];
-    stream.on('error', reject);
-    stream.on('data', (data: any) => buffers.push(data));
-    stream.on('end', () => resolve(Buffer.concat(buffers)));
+    const onData = (data: any) => buffers.push(data);
+    const onEnd = () => resolve(Buffer.concat(buffers));
+    const onError = (err: any) => {
+      // Remove all listeners registered by this function before destroying so
+      // no further data/end events fire into the accumulated buffers array.
+      stream.removeListener('data', onData);
+      stream.removeListener('end', onEnd);
+      stream.removeListener('error', onError);
+      stream.destroy();
+      reject(err);
+    };
+    stream.on('error', onError);
+    stream.on('data', onData);
+    stream.on('end', onEnd);
   });
 };

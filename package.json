@@ -21,7 +21,10 @@
   "exports": {
     ".": "./lib/index.js",
     "./user": "./lib/user.js",
-    "./media": "./lib/media.js"
+    "./media": "./lib/media.js",
+    "./bigquery-stream-writer": "./lib/bigquery-stream-writer.js",
+    "./firestore-helper": "./lib/firestore-helper.js",
+    "./bigquery-identifier": "./lib/bigquery-identifier.js"
   },
   "dependencies": {
     "@google-cloud/bigquery": "^8.3.1",
