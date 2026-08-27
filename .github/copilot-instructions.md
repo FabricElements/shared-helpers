@@ -310,3 +310,48 @@ attacker-controlled URLs (SSRF); build `RegExp` or Firestore queries/field paths
 untrusted input; make real network/cloud calls in tests; modify `src/` just to ease testing;
 add `eslint-disable`/`@ts-ignore` directives; commit DB writes without validation; rewrite
 or line-wrap URLs in comments.
+
+---
+
+## Model Usage Policy (GitHub Copilot Agent Orchestration)
+
+### Tiered Model Strategy
+
+This repository follows a local-first, cost-aware model orchestration policy for all
+GitHub Copilot agent sessions and automated workflows.
+
+#### Tier 1 — Local Ollama (Default for all coding tasks)
+- **Code completions & edits:** `qwen2.5-coder:14b` via `http://localhost:11434/v1`
+- **Agentic workflows & multi-step tasks:** `devstral` via `http://localhost:11434/v1`
+- Use local models for: file edits, code generation, refactoring, test writing,
+  documentation, PR descriptions, and any task completable with a ~32K context window.
+
+#### Tier 2 — Cloud Escalation (Only when local is insufficient)
+- **Orchestrator / complex reasoning:** Claude Opus (cloud) — for planning multi-repo
+  changes, architectural decisions, or tasks requiring >32K context.
+- **Boost / unblocked tasks:** Claude Sonnet (cloud) — when local model produces
+  incorrect output after 2 retries, or task requires browsing/external tool calls.
+
+### Rules for Child Sessions
+- Default to Tier 1 (local Ollama) unless the task explicitly requires cloud.
+- Never use cloud models for tasks that fit within a 14B model's capability.
+- If escalating to cloud, log the reason in the PR description or commit message.
+- Keep sessions small and focused — one branch, one PR per session.
+
+### Orchestration Flow
+```
+User Request
+    │
+    ▼
+Claude Opus (orchestrator) ──► breaks into subtasks
+    │
+    ├──► Simple coding task ──► qwen2.5-coder:14b (local)
+    ├──► Agentic workflow   ──► devstral (local)
+    └──► Complex reasoning  ──► Claude Sonnet (cloud, escalation only)
+```
+
+### Local Endpoint Configuration
+- **Ollama API:** `http://localhost:11434`
+- **OpenAI-compatible endpoint:** `http://localhost:11434/v1`
+- **Models directory:** `/Volumes/e-external/models`
+- **Available models:** `qwen2.5-coder:14b`, `devstral`
