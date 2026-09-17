@@ -1,38 +1,34 @@
-# Paid Orchestrator Session Kickoff Template
+# Orchestrator Session Kickoff Template
 
-Copy and customize this for your orchestrator session kickoff.
+Before proceeding:
 
-## Orchestration Plan Template
+1. Load `.github/instructions/model-usage-policy.instructions.md`.
+2. Analyze the requested work and break it into task groups.
+3. For each group, identify complexity, suitable execution capability, ownership
+   boundaries, and escalation triggers.
+4. Present the complete plan to the user and wait for approval.
 
-Before proceeding, you MUST:
-1. Load the full Model Usage Policy from `.github/instructions/model-usage-policy.instructions.md`
-2. Analyze the requested work and break it into task groups
-3. For each group, estimate:
-   - Complexity (small/medium/heavy)
-   - Suitable model (local 7B/14B vs paid)
-   - Time budget (2-4 min small, 5-8 min medium, 8-10 min heavy)
-   - Escalation triggers
-4. Present the complete plan to the user and wait for approval
+## Routing
 
-## Cost-First Routing
-- **Paid orchestrator** (you): planning, coordination, complex decisions
-- **Local child sessions**: fast deterministic work (code edits, tests, commits) within time budgets using model ID `devstral-64k:latest`
-- **Escalation to paid**: if local exceeds 10 min or fails twice
+- Use a capable orchestrator for planning, coordination, and complex decisions.
+- Use local child sessions for deterministic work only when the scope is bounded and
+  the available capability is reliable.
+- Escalate when local execution is unreliable, blocked, or insufficient.
 
-## Key Rules
-- Never use local models unless task is deterministic and time-bounded
-- Never claim local models weren't used due to missing specification
-- Child session prompts must be raw requests plus the minimally necessary context only; never include MCP server data, plugins, tool metadata, or large instruction dumps
-- Never add co-author trailers — work is attributed to the human user
-- Track all child sessions: commit SHAs, timing, estimated human hours, actual cost
-- Daily cap for stainlessai/colchis: 10 hours/day estimated human effort (shared)
+## Key rules
 
-## Your Kickoff
+- Child prompts contain only the raw request and minimum necessary repository context.
+- Never include MCP data, plugins, tool metadata, or large instruction dumps.
+- Never add co-author trailers or AI/agent attribution.
+- Track child branches, commit results, validation results, and blockers.
 
-[INSERT YOUR SPECIFIC TASK/CONTEXT HERE]
+## Kickoff
 
-### Done Criteria
-- All task groups approved
-- Each task has clear scope, acceptance criteria, and model assignment
-- Child sessions are ready to be spawned
-- Summary table with timing/cost estimates
+[INSERT SPECIFIC TASK AND CONTEXT HERE]
+
+### Done criteria
+
+- All task groups are approved.
+- Each task has clear scope, acceptance criteria, and capability assignment.
+- Child sessions are ready to be spawned.
+- Outputs and validation evidence are recorded.
