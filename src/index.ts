@@ -15,6 +15,7 @@ import {validateBigQueryColumn, validateBigQueryDataset, validateBigQueryIdentif
 import {BigQueryStreamWriter} from './bigquery-stream-writer.js';
 import checkNumber from './check-number.js';
 import cleaner from './cleaner.js';
+import {FilterHelper} from './filter-helper.js';
 import {FirestoreHelper} from './firestore-helper.js';
 import * as global from './global.js';
 import hashId from './hash-id.js';
@@ -36,6 +37,7 @@ export {
   checkNumber,
   cleaner,
   interfaces,
+  FilterHelper,
   FirestoreHelper,
   global,
   hashId,

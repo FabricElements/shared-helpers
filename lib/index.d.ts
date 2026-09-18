@@ -15,6 +15,7 @@ import { validateBigQueryColumn, validateBigQueryDataset, validateBigQueryIdenti
 import { BigQueryStreamWriter } from './bigquery-stream-writer.js';
 import checkNumber from './check-number.js';
 import cleaner from './cleaner.js';
+import { FilterHelper } from './filter-helper.js';
 import { FirestoreHelper } from './firestore-helper.js';
 import * as global from './global.js';
 import hashId from './hash-id.js';
@@ -27,4 +28,4 @@ import replaceMessageText from './replace-message-text.js';
 import specialCharToRegular from './special-char-to-regular.js';
 import * as strings from './strings.js';
 import validateUrl from './validate-url.js';
-export { apiRequest, backup, BigQueryStreamWriter, checkNumber, cleaner, interfaces, FirestoreHelper, global, hashId, messageQueueSpeed, outboundUrl, pubSubEvent, replaceMessageText, specialCharToRegular, strings, validateUrl, validateBigQueryColumn, validateBigQueryDataset, validateBigQueryIdentifier, validateBigQueryTable, regex, };
+export { apiRequest, backup, BigQueryStreamWriter, checkNumber, cleaner, interfaces, FilterHelper, FirestoreHelper, global, hashId, messageQueueSpeed, outboundUrl, pubSubEvent, replaceMessageText, specialCharToRegular, strings, validateUrl, validateBigQueryColumn, validateBigQueryDataset, validateBigQueryIdentifier, validateBigQueryTable, regex, };

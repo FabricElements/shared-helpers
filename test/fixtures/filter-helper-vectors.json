@@ -1,0 +1,82 @@
+{
+  "dartCommit": "e03ff636333f157e485bff022582c8a267240b9e",
+  "dartPackageVersion": "3.0.1",
+  "note": "Frozen wire-format vectors for the fabric_flutter FilterHelper payload. Each `encoded` value is base64(utf8(json)) exactly as Dart's FilterHelper.encode emits it, including the `id, type, operator, value, index` key order produced by json_serializable. Temporal values carry the full ISO 8601 string with a trailing Z, because FilterData._valueToJson calls DateTime.toIso8601String() for date, dateTime, and timestamp alike. Regenerate these only when the Dart source above changes, and update dartCommit/dartPackageVersion together with src/filter-helper.ts.",
+  "vectors": [
+    {
+      "json": "[{\"id\":\"status\",\"type\":\"string\",\"operator\":\"equal\",\"value\":\"active\",\"index\":0}]",
+      "encoded": "W3siaWQiOiJzdGF0dXMiLCJ0eXBlIjoic3RyaW5nIiwib3BlcmF0b3IiOiJlcXVhbCIsInZhbHVlIjoiYWN0aXZlIiwiaW5kZXgiOjB9XQ==",
+      "name": "equalString"
+    },
+    {
+      "json": "[{\"id\":\"created\",\"type\":\"dateTime\",\"operator\":\"between\",\"value\":[\"2024-01-01T00:00:00.000Z\",\"2024-02-01T00:00:00.000Z\"],\"index\":1}]",
+      "encoded": "W3siaWQiOiJjcmVhdGVkIiwidHlwZSI6ImRhdGVUaW1lIiwib3BlcmF0b3IiOiJiZXR3ZWVuIiwidmFsdWUiOlsiMjAyNC0wMS0wMVQwMDowMDowMC4wMDBaIiwiMjAyNC0wMi0wMVQwMDowMDowMC4wMDBaIl0sImluZGV4IjoxfV0=",
+      "name": "betweenDateTime"
+    },
+    {
+      "json": "[{\"id\":\"date_field\",\"type\":\"date\",\"operator\":\"equal\",\"value\":\"2024-06-15T00:00:00.000Z\",\"index\":0}]",
+      "encoded": "W3siaWQiOiJkYXRlX2ZpZWxkIiwidHlwZSI6ImRhdGUiLCJvcGVyYXRvciI6ImVxdWFsIiwidmFsdWUiOiIyMDI0LTA2LTE1VDAwOjAwOjAwLjAwMFoiLCJpbmRleCI6MH1d",
+      "name": "equalDate"
+    },
+    {
+      "json": "[{\"id\":\"range\",\"type\":\"date\",\"operator\":\"between\",\"value\":[\"2024-01-01T00:00:00.000Z\",\"2024-12-31T00:00:00.000Z\"],\"index\":0}]",
+      "encoded": "W3siaWQiOiJyYW5nZSIsInR5cGUiOiJkYXRlIiwib3BlcmF0b3IiOiJiZXR3ZWVuIiwidmFsdWUiOlsiMjAyNC0wMS0wMVQwMDowMDowMC4wMDBaIiwiMjAyNC0xMi0zMVQwMDowMDowMC4wMDBaIl0sImluZGV4IjowfV0=",
+      "name": "betweenDate"
+    },
+    {
+      "json": "[{\"id\":\"date_field\",\"type\":\"date\",\"operator\":\"equal\",\"value\":\"2024-12-31T23:59:59.000Z\",\"index\":0}]",
+      "encoded": "W3siaWQiOiJkYXRlX2ZpZWxkIiwidHlwZSI6ImRhdGUiLCJvcGVyYXRvciI6ImVxdWFsIiwidmFsdWUiOiIyMDI0LTEyLTMxVDIzOjU5OjU5LjAwMFoiLCJpbmRleCI6MH1d",
+      "name": "dateEndOfDay"
+    },
+    {
+      "json": "[{\"id\":\"country\",\"type\":\"string\",\"operator\":\"whereIn\",\"value\":[\"US\",\"MX\"],\"index\":0}]",
+      "encoded": "W3siaWQiOiJjb3VudHJ5IiwidHlwZSI6InN0cmluZyIsIm9wZXJhdG9yIjoid2hlcmVJbiIsInZhbHVlIjpbIlVTIiwiTVgiXSwiaW5kZXgiOjB9XQ==",
+      "name": "whereInStrings"
+    },
+    {
+      "json": "[{\"id\":\"sort\",\"type\":\"string\",\"operator\":\"sort\",\"value\":[\"created\",\"desc\"],\"index\":2}]",
+      "encoded": "W3siaWQiOiJzb3J0IiwidHlwZSI6InN0cmluZyIsIm9wZXJhdG9yIjoic29ydCIsInZhbHVlIjpbImNyZWF0ZWQiLCJkZXNjIl0sImluZGV4IjoyfV0=",
+      "name": "sortPair"
+    },
+    {
+      "json": "[{\"id\":\"sort\",\"type\":\"string\",\"operator\":\"sort\",\"value\":null,\"index\":0}]",
+      "encoded": "W3siaWQiOiJzb3J0IiwidHlwZSI6InN0cmluZyIsIm9wZXJhdG9yIjoic29ydCIsInZhbHVlIjpudWxsLCJpbmRleCI6MH1d",
+      "name": "sortCleared"
+    },
+    {
+      "json": "[{\"id\":\"status\",\"type\":\"string\",\"operator\":\"equal\",\"value\":null,\"index\":0}]",
+      "encoded": "W3siaWQiOiJzdGF0dXMiLCJ0eXBlIjoic3RyaW5nIiwib3BlcmF0b3IiOiJlcXVhbCIsInZhbHVlIjpudWxsLCJpbmRleCI6MH1d",
+      "name": "clearedNullValue"
+    },
+    {
+      "json": "[{\"id\":\"created\",\"type\":\"dateTime\",\"operator\":\"between\",\"value\":[],\"index\":0}]",
+      "encoded": "W3siaWQiOiJjcmVhdGVkIiwidHlwZSI6ImRhdGVUaW1lIiwib3BlcmF0b3IiOiJiZXR3ZWVuIiwidmFsdWUiOltdLCJpbmRleCI6MH1d",
+      "name": "clearedEmptyList"
+    },
+    {
+      "json": "[{\"id\":\"created\",\"type\":\"dateTime\",\"operator\":\"between\",\"value\":[null,\"2024-02-01T00:00:00.000Z\"],\"index\":0}]",
+      "encoded": "W3siaWQiOiJjcmVhdGVkIiwidHlwZSI6ImRhdGVUaW1lIiwib3BlcmF0b3IiOiJiZXR3ZWVuIiwidmFsdWUiOltudWxsLCIyMDI0LTAyLTAxVDAwOjAwOjAwLjAwMFoiXSwiaW5kZXgiOjB9XQ==",
+      "name": "partialBetween"
+    },
+    {
+      "json": "[{\"id\":\"status\",\"type\":\"string\",\"operator\":\"any\",\"value\":\"active\",\"index\":0}]",
+      "encoded": "W3siaWQiOiJzdGF0dXMiLCJ0eXBlIjoic3RyaW5nIiwib3BlcmF0b3IiOiJhbnkiLCJ2YWx1ZSI6ImFjdGl2ZSIsImluZGV4IjowfV0=",
+      "name": "anyOperator"
+    },
+    {
+      "json": "[{\"id\":\"status\",\"type\":\"string\",\"operator\":\"equal\",\"value\":\"active\",\"index\":1},{\"id\":\"amount\",\"type\":\"double\",\"operator\":\"greaterThan\",\"value\":10.5,\"index\":0}]",
+      "encoded": "W3siaWQiOiJzdGF0dXMiLCJ0eXBlIjoic3RyaW5nIiwib3BlcmF0b3IiOiJlcXVhbCIsInZhbHVlIjoiYWN0aXZlIiwiaW5kZXgiOjF9LHsiaWQiOiJhbW91bnQiLCJ0eXBlIjoiZG91YmxlIiwib3BlcmF0b3IiOiJncmVhdGVyVGhhbiIsInZhbHVlIjoxMC41LCJpbmRleCI6MH1d",
+      "name": "multiEntry"
+    },
+    {
+      "json": "[{\"id\":\"name\",\"type\":\"string\",\"operator\":\"contains\",\"value\":\"100% pure_gold\",\"index\":0}]",
+      "encoded": "W3siaWQiOiJuYW1lIiwidHlwZSI6InN0cmluZyIsIm9wZXJhdG9yIjoiY29udGFpbnMiLCJ2YWx1ZSI6IjEwMCUgcHVyZV9nb2xkIiwiaW5kZXgiOjB9XQ==",
+      "name": "containsText"
+    },
+    {
+      "encoded": "U0VMRUNUICogRlJPTSBgcC5kLnRgIFdIRVJFIHN0YXR1cyA9ICdhY3RpdmUn",
+      "json": "SELECT * FROM `p.d.t` WHERE status = 'active'",
+      "name": "legacySql"
+    }
+  ]
+}

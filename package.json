@@ -24,6 +24,7 @@
     "./media": "./lib/media.js",
     "./bigquery-stream-writer": "./lib/bigquery-stream-writer.js",
     "./firestore-helper": "./lib/firestore-helper.js",
+    "./filter-helper": "./lib/filter-helper.js",
     "./bigquery-identifier": "./lib/bigquery-identifier.js"
   },
   "dependencies": {

@@ -87,11 +87,65 @@ Prior releases are tracked through Git history and GitHub Releases.
 
 ### Added
 
+- **`FilterHelper` — server-side decoder and parameterized query builder for the
+  `fabric_flutter` report filter grammar** (`src/filter-helper.ts`, exported from the
+  root barrel and as `@fabricelements/shared-helpers/filter-helper`).
+
+  Decodes the base64 JSON payload produced by the Dart `FilterHelper` in
+  [`fabric_flutter`](https://github.com/FabricElements/fabric_flutter) `3.0.1` and turns
+  validated entries into a BigQuery fragment built entirely from server-declared
+  columns and bind parameters.
+
+  Public surface: `FilterOperator`, `FilterOrder` and `InputDataType` enums mirroring
+  the Dart members verbatim; `InterfaceFilterData`, `InterfaceFilterField`,
+  `InterfaceFilterDecodeOptions`, `InterfaceFilterQueryFragment`; and
+  `FilterHelper.Helper` with `decode`, `fromJSON`, `toJSON`, `encode`, `filterById`,
+  `valueFromId`, `toQueryFragment` and `decodeToQueryFragment`.
+
+  **Security contract:**
+  - The payload carries **no SQL text and no table name** — only declarative
+    `{id, type, operator, value, index}` entries. The caller selects the target table
+    from its own server-side configuration.
+  - Every `id` must resolve through the caller-supplied `allowedFields` allow-list;
+    the real column name comes from that declaration and is checked with
+    `validateBigQueryColumn`. A payload identifier is never interpolated.
+  - Values are always bound as query parameters (`@f0`, `@f1`, …) and never
+    concatenated into SQL. `contains` compiles to `STRPOS`, not `LIKE`, so `%` and `_`
+    in user input cannot widen a match.
+  - `operator`, `type` and sort direction are validated against closed enums, and
+    entry keys against an allow-list, so a smuggled `table`, `dataset`, `sql`,
+    `__proto__` or `constructor` key is rejected rather than stripped.
+  - A payload whose JSON root is not an array — including the legacy `toSQLEncoded`
+    raw-SQL format — is rejected with no fallback.
+  - Caller-facing errors are generic (`Invalid filter payload`,
+    `Invalid filter field configuration`); detail is attached to `Error.cause`.
+
+  **Temporal values.** The Dart wire format carries a full ISO 8601 timestamp for
+  every temporal type, because `FilterData._valueToJson` calls
+  `DateTime.toIso8601String()` for `date`, `dateTime` and `timestamp` alike. The Dart
+  SQL path then narrows `InputDataType.date` to `yyyy-MM-dd` after converting to UTC.
+  This decoder is the SQL side, so it performs the same narrowing at bind time, keyed
+  off the **server-declared** `paramType` rather than the caller-supplied `type`:
+  `DATE` binds `YYYY-MM-DD`, `DATETIME` binds a local-form literal with no zone
+  designator, and `TIMESTAMP` binds the full instant. A temporal parameter whose value
+  is not an ISO 8601 literal is rejected rather than coerced, because `Date.parse`
+  otherwise accepts loose input such as `June 15, 2024`.
+
+  **Encode inclusion rule.** An entry is serialized only when it carries both a value
+  and an operator. The two Dart entry points historically disagreed — `FilterData.toJson`
+  gated on `value != null` while `FilterHelper.encode` gated on `operator != null` — so
+  each could emit an entry the other discarded. Both sides now apply the conjunction,
+  which is the only rule under which `encode` and `decode` are lossless with respect to
+  one another: a null value is never meaningful, and an operator-less entry cannot compile
+  to a predicate, so it would be dropped by `decode` and the payload would shrink on the
+  next round-trip.
+
 - **Subpath exports for heavy standalone modules** (`package.json`).
-  Three new entries are added to the `exports` map so consumers can import
+  Four new entries are added to the `exports` map so consumers can import
   only what they need without paying the full barrel-load cost:
   - `@fabricelements/shared-helpers/bigquery-stream-writer`
   - `@fabricelements/shared-helpers/firestore-helper`
+  - `@fabricelements/shared-helpers/filter-helper`
   - `@fabricelements/shared-helpers/bigquery-identifier`
 
   These are **additive** — the root barrel (`"."`) is unchanged and all

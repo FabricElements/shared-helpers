@@ -46,7 +46,8 @@ function wired into Hosting rewrites in `firebase.json`).
 ### Public API surface
 
 The package entry point (`src/index.ts`) re-exports the following helpers.
-Subpath exports `./user` and `./media` are also exposed via `package.json`.
+Subpath exports (`./user`, `./media`, `./bigquery-stream-writer`, `./firestore-helper`,
+`./filter-helper`, `./bigquery-identifier`) are also exposed via `package.json`.
 
 | Helper                 | Source                                                           | Purpose                                                        |
 |------------------------|------------------------------------------------------------------|----------------------------------------------------------------|
@@ -55,6 +56,7 @@ Subpath exports `./user` and `./media` are also exposed via `package.json`.
 | `BigQueryStreamWriter` | [src/bigquery-stream-writer.ts](src/bigquery-stream-writer.ts)   | Stream rows into BigQuery via the Storage Write API.           |
 | `checkNumber`          | [src/check-number.ts](src/check-number.ts)                       | Validate and format phone numbers.                             |
 | `cleaner`              | [src/cleaner.ts](src/cleaner.ts)                                 | BigQuery database cleanup.                                     |
+| `FilterHelper`         | [src/filter-helper.ts](src/filter-helper.ts)                     | Decode `fabric_flutter` report filters into parameterized BigQuery fragments. |
 | `FirestoreHelper`      | [src/firestore-helper.ts](src/firestore-helper.ts)               | Google Cloud Firestore access helpers.                         |
 | `global`               | [src/global.ts](src/global.ts)                                   | Basic and reusable helpers.                                    |
 | `hashId`               | [src/hash-id.ts](src/hash-id.ts)                                 | Generate a random hash id (4+ characters).                     |
@@ -106,6 +108,43 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
 - **`checkNumber` is a best-effort formatter**, not an authorization or anti-abuse control.
 - **`FirestoreHelper` interpolates the `collection`/`document` names it is given.** Never
   pass untrusted identifiers to it.
+- **`FilterHelper` is a trust boundary, and `allowedFields` is the whole boundary.** The
+  encoded payload is attacker-controlled. Every `id` must resolve through the
+  `allowedFields` allow-list you supply, and the real column name comes from *your*
+  declaration — never from the payload. A field you list is a field any caller can filter
+  and sort on, so list only what the report is allowed to expose.
+- **`FilterHelper` payloads never contain SQL or a table name.** They carry only
+  declarative `{id, type, operator, value, index}` entries. Your code selects the target
+  table from its own configuration, keyed by an explicit report-type parameter. A payload
+  whose JSON root is not an array — including the legacy `toSQLEncoded` raw-SQL format —
+  is rejected outright, with no fallback.
+- **`FilterHelper` binds every value.** `toQueryFragment` returns `where` / `orderBy`
+  strings containing only server-declared columns, fixed operator text, and generated
+  placeholders (`@f0`, `@f1`, …), plus a `params`/`types` pair for the BigQuery client.
+  Pass them through as parameters; never inline `params` into the SQL text. `contains`
+  compiles to `STRPOS`, not `LIKE`, so `%` and `_` cannot widen a match.
+  `where` and `orderBy` are empty strings when nothing matched — **omit the `WHERE` /
+  `ORDER BY` keyword yourself** rather than emitting a bare one.
+- **`FilterHelper` grammars are closed.** `operator`, `type` (the Dart `InputDataType`
+  enum) and sort direction are validated against fixed member lists, and entry keys
+  against an allow-list. Adding a member to the Dart enum requires adding it here too,
+  or those payloads will be rejected.
+- **`FilterHelper` payloads must be percent-encoded in URLs.** Base64 is validated
+  canonically, so a `+` that a query parser turns into a space is rejected rather than
+  silently repaired.
+- **`FilterHelper` narrows temporal values using your `paramType`, not the payload.**
+  The Dart wire format sends a full ISO 8601 timestamp for `date`, `dateTime` and
+  `timestamp` alike, so the decoder narrows at bind time from the `paramType` you
+  declare: `DATE` binds `YYYY-MM-DD` (converted to UTC first, so an offset timestamp can
+  roll to the next day, exactly as Dart's `toUtc()` does), `DATETIME` drops the zone
+  designator, and `TIMESTAMP` keeps the full instant. Declare the `paramType` that
+  matches your column, or BigQuery will reject the bound parameter. A temporal value
+  that is not an ISO 8601 literal is rejected rather than coerced.
+- **`FilterHelper.encode` only emits entries that its own decoder accepts.** An entry
+  needs both a value and an operator, so `encode` and `decode` are lossless with respect
+  to one another. A null value is never meaningful, and an operator-less entry cannot
+  compile to a predicate, so emitting one would produce a payload that silently shrinks
+  on the next round-trip.
 
 ------
 
