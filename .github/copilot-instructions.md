@@ -39,6 +39,23 @@ that generated `lib/` output matches `src/`; it does not publish or release. Thi
 repository therefore treats deployment, publishing, and release operations as outside
 normal agent scope.
 
+## §0.3 Multi-Repo / Multi-Session Guardrail (Critical)
+
+- Every commit, push, and pull request must target the exact repository the current
+  task explicitly names — never a different repository, even one visited earlier in
+  the same orchestrated workflow. Before any git commit, push, or pull-request
+  creation, confirm the working directory's remote matches the task's named
+  repository; stop instead of proceeding if they do not match.
+- When orchestrating or spawning child sessions across repositories, state explicitly
+  which repository each session is scoped to commit, push, or open a pull request in.
+  A child session must never act in a repository it was not explicitly told to use for
+  that task.
+- A task naming one specific repository authorizes action in that repository only —
+  not "for consistency," not because a sibling checkout had leftover changes, and not
+  because the same fix "probably applies there too."
+- If it is unclear which repository an instruction applies to, ask before acting
+  rather than guessing from context or the repository currently in use.
+
 Deep-dive, path-scoped rules live in [`.github/instructions/`](instructions/) and are
 applied automatically by their `applyTo` globs:
 
@@ -334,7 +351,9 @@ use `async`/`await`; keep triggers thin and delegate to `Helper` domain logic; a
 callers before privileged work; validate and fail closed on invalid input; sanitize
 user-influenced storage/query paths; validate before DB writes; log via
 `firebase-functions` `logger`; bound network I/O with timeouts; mirror `src/` in `test/` and
-stub all external I/O; preserve README URLs/badges; run lint + build + test.
+stub all external I/O; preserve README URLs/badges; verify the git remote/repository
+matches the task's named target before every commit, push, or pull-request creation;
+run lint + build + test.
 
 **Don't:** read or modify `/lib` (incl. for test context); hand-edit build output; emit
 CommonJS; depend on `node-fetch` (use native `fetch`); use banned JSDoc types
@@ -344,7 +363,8 @@ authenticated endpoints; leak stack traces or internal config to callers; `fetch
 attacker-controlled URLs (SSRF); build `RegExp` or Firestore queries/field paths from
 untrusted input; make real network/cloud calls in tests; modify `src/` just to ease testing;
 add `eslint-disable`/`@ts-ignore` directives; commit DB writes without validation; rewrite
-or line-wrap URLs in comments.
+or line-wrap URLs in comments; commit, push, or open a pull request in any repository
+other than the one explicitly named for that action.
 
 ---
 
