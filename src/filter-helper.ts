@@ -244,6 +244,12 @@ export namespace FilterHelper {
      * An `id` that is not present is rejected.  Supply a `Map` or a plain object; a
      * plain object is read with an own-property check so inherited keys can never
      * resolve.
+     *
+     * This decides **which identifiers are addressable**, not **which filters a given
+     * caller may use**.  The map is static per report type, so it cannot express a
+     * per-caller rule such as "this column is visible only to a platform admin."  Run
+     * any such authorization check over the decoded entries yourself, after `decode`
+     * and before building a fragment.
      */
     allowedFields: ReadonlyMap<string, InterfaceFilterField> | Readonly<Record<string, InterfaceFilterField>>;
     /** Maximum number of elements in a `whereIn` list. Defaults to `100`. */

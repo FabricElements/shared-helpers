@@ -108,11 +108,17 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
 - **`checkNumber` is a best-effort formatter**, not an authorization or anti-abuse control.
 - **`FirestoreHelper` interpolates the `collection`/`document` names it is given.** Never
   pass untrusted identifiers to it.
-- **`FilterHelper` is a trust boundary, and `allowedFields` is the whole boundary.** The
-  encoded payload is attacker-controlled. Every `id` must resolve through the
-  `allowedFields` allow-list you supply, and the real column name comes from *your*
-  declaration — never from the payload. A field you list is a field any caller can filter
-  and sort on, so list only what the report is allowed to expose.
+- **`FilterHelper` resolves identifiers; it does not authorize callers.** The encoded
+  payload is attacker-controlled, so every `id` must resolve through the `allowedFields`
+  map you supply, and the real column name comes from *your* declaration — never from the
+  payload. That makes `allowedFields` the boundary for **which identifiers are
+  addressable**, not for **which filters a given caller may use**. It is static per report
+  type, so it cannot express a per-caller rule such as "this column is visible only to a
+  platform admin." If some fields are privileged, run your own authorization check on the
+  decoded entries **after** `decode` and before building a fragment. Listing a field means
+  any caller who reaches the decoder can filter and sort on it. Declared `column` values
+  must satisfy `bigQueryColumnPattern` — letters, digits and underscores, **no dots** —
+  because each is emitted as a single backticked identifier.
 - **`FilterHelper` payloads never contain SQL or a table name.** They carry only
   declarative `{id, type, operator, value, index}` entries. Your code selects the target
   table from its own configuration, keyed by an explicit report-type parameter. A payload
@@ -129,6 +135,19 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
   enum) and sort direction are validated against fixed member lists, and entry keys
   against an allow-list. Adding a member to the Dart enum requires adding it here too,
   or those payloads will be rejected.
+- **`FilterHelper` implements the whole Dart operator grammar; your backend need not.**
+  `FilterOperator` mirrors Dart's enum member for member, so any payload `fabric_flutter`
+  can emit is decodable. Narrow it to the operators you actually have SQL for using the
+  per-field `operators` allow-list: a field declaring `operators: [FilterOperator.equal]`
+  rejects every other operator on that field. Prefer that over assuming a caller will not
+  send an operator you never implemented.
+- **`decode` and `toQueryFragment` are separate steps on purpose.** `decode` is
+  structural — it parses, validates the grammar, and resolves identifiers. It deliberately
+  does **not** canonicalize values. If your own schema canonicalizes (uppercasing a country
+  code, say), run it over the decoded entries and pass the canonicalized result to
+  `toQueryFragment`. In that case do not use the `decodeToQueryFragment` convenience: it
+  goes straight from payload to SQL and would skip your canonicalization, which does not
+  raise an error — it silently matches nothing.
 - **`FilterHelper` payloads must be percent-encoded in URLs.** Base64 is validated
   canonically, so a `+` that a query parser turns into a space is rejected rather than
   silently repaired.

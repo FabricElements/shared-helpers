@@ -109,6 +109,13 @@ Prior releases are tracked through Git history and GitHub Releases.
   - Every `id` must resolve through the caller-supplied `allowedFields` allow-list;
     the real column name comes from that declaration and is checked with
     `validateBigQueryColumn`. A payload identifier is never interpolated.
+  - `allowedFields` decides which identifiers are **addressable**, not which filters a
+    given caller may **use**. It is static per report type and cannot express a
+    per-caller rule, so authorization over privileged fields belongs in the caller,
+    after `decode` and before the fragment is built.
+  - `decode` is structural only and never canonicalizes values. Callers that
+    canonicalize (uppercasing a country code, for example) must do so between `decode`
+    and `toQueryFragment`, rather than using the `decodeToQueryFragment` convenience.
   - Values are always bound as query parameters (`@f0`, `@f1`, …) and never
     concatenated into SQL. `contains` compiles to `STRPOS`, not `LIKE`, so `%` and `_`
     in user input cannot widen a match.
