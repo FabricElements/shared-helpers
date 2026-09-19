@@ -752,3 +752,71 @@ describe('FilterHelper range bounds', () => {
     expect(Helper.decode(range('label', 'zebra', 'alpha'), {allowedFields: fields})).toHaveLength(1);
   });
 });
+
+/**
+ * A BigQuery column name cannot contain a period, so a dotted reference such as
+ * `sentiment.text` is always a path into a STRUCT rather than a literal column name.
+ * Payload ids are opaque lookup keys and have always allowed dots; only the declared
+ * column needs to opt in.
+ */
+describe('FilterHelper struct path columns', () => {
+  const dotted = encodePayload([
+    {id: 'sentiment.text', index: 0, operator: 'equal', type: 'string', value: 'happy'},
+  ]);
+
+  it('accepts a dotted payload id without any opt-in, and preserves it verbatim', () => {
+    const fields = {'sentiment.text': {column: 'flat_column', paramType: 'STRING'} as FilterHelper.InterfaceFilterField};
+    const decoded = Helper.decode(dotted, {allowedFields: fields});
+    expect(decoded[0].id).toBe('sentiment.text');
+    expect(Helper.toQueryFragment(decoded, {allowedFields: fields}).where).toBe('`flat_column` = @f0');
+  });
+
+  it('quotes each segment separately so BigQuery reads it as struct access', () => {
+    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+    const fragment = Helper.decodeToQueryFragment(dotted, {allowedFields: fields});
+    expect(fragment.where).toBe('`sentiment`.`text` = @f0');
+    expect(fragment.params).toEqual({f0: 'happy'});
+  });
+
+  it('still rejects a dotted column when the field has not opted in', () => {
+    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING'} as FilterHelper.InterfaceFilterField};
+    expect(() => Helper.decodeToQueryFragment(dotted, {allowedFields: fields})).toThrow('Invalid filter field configuration');
+  });
+
+  it('applies struct paths to sort targets too', () => {
+    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+    const encoded = encodePayload([
+      {id: 'sort', index: 0, operator: 'sort', type: 'string', value: ['sentiment.text', 'desc']},
+    ]);
+    expect(Helper.decodeToQueryFragment(encoded, {allowedFields: fields}).orderBy).toBe('`sentiment`.`text` DESC');
+  });
+
+  it('validates every segment, so an empty or malformed one is rejected', () => {
+    for (const column of ['sentiment.', '.text', 'sentiment..text', 'sentiment.te-xt', 'sentiment.1text']) {
+      const fields = {'sentiment.text': {column, paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+      expect(() => Helper.decodeToQueryFragment(dotted, {allowedFields: fields})).toThrow('Invalid filter field configuration');
+    }
+  });
+
+  it('rejects a backtick in a segment, so the quoting cannot be escaped', () => {
+    const fields = {'sentiment.text': {column: 'sentiment.te`xt', paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+    expect(() => Helper.decodeToQueryFragment(dotted, {allowedFields: fields})).toThrow('Invalid filter field configuration');
+  });
+
+  it('bounds how deep a declared path may go', () => {
+    const fields = {'sentiment.text': {column: 'a.b.c.d.e.f.g.h.i', paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+    let thrown: unknown;
+    try {
+      Helper.decodeToQueryFragment(dotted, {allowedFields: fields});
+    } catch (error) {
+      thrown = error;
+    }
+    expect((thrown as Error).message).toBe('Invalid filter field configuration');
+    expect(causeOf(thrown)?.message).toContain('struct path depth');
+  });
+
+  it('leaves an opted-in column with no dots as a single identifier', () => {
+    const fields = {'sentiment.text': {column: 'flat_column', paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+    expect(Helper.decodeToQueryFragment(dotted, {allowedFields: fields}).where).toBe('`flat_column` = @f0');
+  });
+});

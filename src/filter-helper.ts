@@ -226,7 +226,13 @@ export namespace FilterHelper {
    * operators the field accepts.
    */
   export interface InterfaceFilterField {
-    /** Real BigQuery column name. Validated with `validateBigQueryColumn` before use. */
+    /**
+     * Real BigQuery column backing this field.
+     *
+     * Normally a single column name, validated with `validateBigQueryColumn`. Set
+     * {@link InterfaceFilterField.structPath} to declare a dotted path into a `STRUCT`
+     * instead, in which case every segment is validated separately.
+     */
     column: string;
     /**
      * Whether a `between` range includes its upper bound.
@@ -245,6 +251,25 @@ export namespace FilterHelper {
     operators?: readonly FilterOperator[];
     /** BigQuery bind type used for this field's query parameters. */
     paramType: FilterParamType;
+    /**
+     * Whether {@link InterfaceFilterField.column} is a dotted path into a `STRUCT`.
+     *
+     * BigQuery column names cannot contain a period, so a dotted reference such as
+     * `sentiment.text` is always a path into a struct and never the literal name of a
+     * column. When this is `true` the declaration is split on `.`, each segment is
+     * validated as a column name in its own right, and the reference is emitted with
+     * every segment quoted separately — `` `sentiment`.`text` `` — which is how
+     * BigQuery addresses a struct field.
+     *
+     * It is opt-in so that a stray period in a field meant to name a single column
+     * stays a configuration error rather than silently becoming a path.  Leaving it
+     * unset preserves the previous behaviour exactly: a dotted `column` is rejected.
+     *
+     * This changes only how the *declared* column is read. Payload `id` values are
+     * opaque lookup keys and have always accepted dots, so a filter keyed on
+     * `sentiment.text` needs no renaming on the client.
+     */
+    structPath?: boolean;
   }
 
   /**
@@ -745,21 +770,39 @@ export namespace FilterHelper {
   };
 
   /**
-   * Resolves and validates the BigQuery column backing an allow-listed field.
+   * Maximum number of `.` separated segments accepted in a struct path column.
+   */
+  const maxColumnPathSegments = 8;
+
+  /**
+   * Resolves an allow-listed field to the quoted SQL reference for its column.
+   *
+   * A plain column is emitted as one backticked identifier. A field declaring
+   * `structPath` carries a dotted path into a `STRUCT`, which is validated one segment
+   * at a time and emitted with each segment quoted separately. BigQuery column names
+   * cannot contain a period, so a dotted reference is only ever a path into a struct,
+   * never the literal name of a column.
    *
    * @param {InterfaceFilterField} field - The server-side field declaration.
-   * @returns {string} The validated column name.
-   * @throws {Error} When the declared column is not a valid BigQuery column name.
+   * @returns {string} The backtick-quoted SQL reference.
+   * @throws {Error} When the declared column is not a valid BigQuery reference.
    */
   const resolveColumn = (field: InterfaceFilterField): string => {
-    try {
-      validateBigQueryColumn(field.column, 'filter column');
-    } catch (error: any) {
-      // The underlying validator echoes the offending value; re-throw generically so
-      // the detail stays in `cause` and never reaches the caller's message.
-      throw invalidField(`declared column failed BigQuery validation: ${error?.message ?? 'unknown error'}`);
+    if (typeof field.column !== 'string') throw invalidField('declared column must be a string');
+    // Split only when the declaration opts in, so a stray dot in a field that was meant
+    // to name a single column stays an error instead of silently becoming a path.
+    const segments = field.structPath === true ? field.column.split('.') : [field.column];
+    if (segments.length > maxColumnPathSegments) throw invalidField('declared column exceeds the maximum struct path depth');
+    for (const segment of segments) {
+      try {
+        validateBigQueryColumn(segment, 'filter column');
+      } catch (error: any) {
+        // The underlying validator echoes the offending value; re-throw generically so
+        // the detail stays in `cause` and never reaches the caller's message.
+        throw invalidField(`declared column failed BigQuery validation: ${error?.message ?? 'unknown error'}`);
+      }
     }
-    return field.column;
+    return segments.map((segment) => `\`${segment}\``).join('.');
   };
 
   /**
@@ -815,12 +858,12 @@ export namespace FilterHelper {
         const [target, direction] = entry.value as [string, FilterOrder];
         const field = resolveField(options.allowedFields, target);
         if (!field) throw invalidPayload('sort target is not an allowed field');
-        orderTerms.push(`\`${resolveColumn(field)}\` ${sortDirections[direction]}`);
+        orderTerms.push(`${resolveColumn(field)} ${sortDirections[direction]}`);
         continue;
       }
       const field = resolveField(options.allowedFields, entry.id);
       if (!field) throw invalidPayload('id is not an allowed field');
-      const column = `\`${resolveColumn(field)}\``;
+      const column = resolveColumn(field);
       if (entry.operator === FilterOperator.between) {
         const [lower, upper] = entry.value as (number | string)[];
         // Emitted as two comparisons rather than `BETWEEN` so the upper bound can be

@@ -152,6 +152,15 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
   nothing. Bounds are compared only when that is unambiguous — numeric pairs, and
   temporal pairs compared as instants so a zone offset cannot make an ordered range look
   reversed; anything else is left to your backend.
+- **A dotted column is a path into a `STRUCT`, and is opt-in.** A BigQuery column name
+  cannot contain a period, so a reference such as `sentiment.text` can only address a
+  field inside a struct. Declare `structPath: true` on that field and the column is split
+  on `.`, every segment is validated as a column name in its own right, and the reference
+  is emitted with each segment quoted separately — `` `sentiment`.`text` ``. It is opt-in
+  so a stray period in a field meant to name a single column stays a configuration error
+  instead of silently becoming a path. This concerns only the column *you* declare:
+  payload `id` values are opaque lookup keys and have always accepted dots, so a filter
+  keyed on `sentiment.text` needs no renaming on the client.
 - **Not every predicate belongs in `allowedFields`.** The map describes one column, one
   operator, one bound style. A predicate that spans columns, falls back for legacy rows,
   or exists to let the query engine prune partitions cannot be expressed in that shape,

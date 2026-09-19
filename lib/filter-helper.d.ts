@@ -173,7 +173,13 @@ export declare namespace FilterHelper {
      * operators the field accepts.
      */
     interface InterfaceFilterField {
-        /** Real BigQuery column name. Validated with `validateBigQueryColumn` before use. */
+        /**
+         * Real BigQuery column backing this field.
+         *
+         * Normally a single column name, validated with `validateBigQueryColumn`. Set
+         * {@link InterfaceFilterField.structPath} to declare a dotted path into a `STRUCT`
+         * instead, in which case every segment is validated separately.
+         */
         column: string;
         /**
          * Whether a `between` range includes its upper bound.
@@ -192,6 +198,25 @@ export declare namespace FilterHelper {
         operators?: readonly FilterOperator[];
         /** BigQuery bind type used for this field's query parameters. */
         paramType: FilterParamType;
+        /**
+         * Whether {@link InterfaceFilterField.column} is a dotted path into a `STRUCT`.
+         *
+         * BigQuery column names cannot contain a period, so a dotted reference such as
+         * `sentiment.text` is always a path into a struct and never the literal name of a
+         * column. When this is `true` the declaration is split on `.`, each segment is
+         * validated as a column name in its own right, and the reference is emitted with
+         * every segment quoted separately — `` `sentiment`.`text` `` — which is how
+         * BigQuery addresses a struct field.
+         *
+         * It is opt-in so that a stray period in a field meant to name a single column
+         * stays a configuration error rather than silently becoming a path.  Leaving it
+         * unset preserves the previous behaviour exactly: a dotted `column` is rejected.
+         *
+         * This changes only how the *declared* column is read. Payload `id` values are
+         * opaque lookup keys and have always accepted dots, so a filter keyed on
+         * `sentiment.text` needs no renaming on the client.
+         */
+        structPath?: boolean;
     }
     /**
      * Options controlling decoding and validation.

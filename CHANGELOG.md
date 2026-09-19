@@ -155,6 +155,19 @@ Prior releases are tracked through Git history and GitHub Releases.
   pairs, and temporal pairs compared as instants so a zone offset cannot make an ordered
   range look reversed.
 
+  **Struct path columns.** `InterfaceFilterField.structPath` declares that the field's
+  `column` is a dotted path into a `STRUCT` rather than the name of a single column. A
+  BigQuery column name cannot contain a period, so a dotted reference can only ever be
+  such a path. When set, the declaration is split on `.`, every segment is validated as a
+  column name in its own right through the same `validateBigQueryColumn` used elsewhere,
+  and the reference is emitted with each segment quoted separately —
+  `` `sentiment`.`text` ``. It is opt-in, so a dotted column on a field that has not
+  declared it is still rejected, and a stray period stays a configuration error instead of
+  silently becoming a path. The depth is bounded and an empty segment is rejected. This
+  affects only the server-declared column: payload `id` values are opaque lookup keys and
+  have always accepted dots, so an existing filter keyed on `sentiment.text` keeps working
+  unchanged and is never rewritten.
+
   **Encode inclusion rule.** An entry is serialized only when it carries both a value
   and an operator. The two Dart entry points historically disagreed — `FilterData.toJson`
   gated on `value != null` while `FilterHelper.encode` gated on `operator != null` — so
