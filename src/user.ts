@@ -11,6 +11,57 @@ import {FirestoreHelper} from './firestore-helper.js';
 import {Media} from './media.js';
 
 /**
+ * Compares two custom-claims payloads for deep structural equality.
+ *
+ * Used to decide whether a claims write — and the refresh-token revocation that
+ * accompanies it — can be skipped. Because skipping is only ever safe under exact
+ * equality, this reports `false` for any value it cannot positively prove equal,
+ * including values outside the JSON shape Firebase custom claims are limited to.
+ * Callers therefore fail toward revoking rather than toward skipping.
+ *
+ * Key insertion order is ignored, so `{a: 1, b: 2}` equals `{b: 2, a: 1}`.
+ *
+ * @param {unknown} a - First claims value to compare.
+ * @param {unknown} b - Second claims value to compare.
+ * @returns {boolean} `true` only when both values are provably deep-equal.
+ */
+const claimsEqual = (a: unknown, b: unknown): boolean => {
+  if (Object.is(a, b)) return true;
+  if (a === null || b === null) return false;
+  if (typeof a !== typeof b) return false;
+  if (typeof a !== 'object') return false;
+  const isArrayA = Array.isArray(a);
+  if (isArrayA !== Array.isArray(b)) return false;
+  if (isArrayA) {
+    const listA = a as unknown[];
+    const listB = b as unknown[];
+    if (listA.length !== listB.length) return false;
+    for (let i = 0; i < listA.length; i++) {
+      if (!claimsEqual(listA[i], listB[i])) return false;
+    }
+    return true;
+  }
+  /**
+   * Anything that is not a plain object — a Date, a Map, a class instance — cannot be
+   * compared field by field without guessing at its semantics, so it is reported as
+   * unequal and the caller revokes.
+   */
+  const prototypeA = Object.getPrototypeOf(a);
+  const prototypeB = Object.getPrototypeOf(b);
+  if (prototypeA !== Object.prototype && prototypeA !== null) return false;
+  if (prototypeB !== Object.prototype && prototypeB !== null) return false;
+  const recordA = a as Record<string, unknown>;
+  const recordB = b as Record<string, unknown>;
+  const keysA = Object.keys(recordA);
+  if (keysA.length !== Object.keys(recordB).length) return false;
+  for (const key of keysA) {
+    if (!Object.prototype.hasOwnProperty.call(recordB, key)) return false;
+    if (!claimsEqual(recordA[key], recordB[key])) return false;
+  }
+  return true;
+};
+
+/**
  * User namespace
  */
 export namespace User {
@@ -910,7 +961,25 @@ export namespace User {
         document: data.id,
       });
       userData.created = userDoc.created ?? timestamp;
-      let userClaims: any = userRecord.customClaims ?? {};
+      /**
+       * Snapshot the stored claims before deriving the next set, and derive into a copy.
+       * `userRecord.customClaims` is a live reference and the ungrouped `remove` branch
+       * below deletes from it in place, so reading it back afterwards would return the
+       * *derived* claims and make any comparison against it trivially equal — silently
+       * skipping revocation on the very path that most needs it.
+       *
+       * This is defence against a latent hazard, not an observed one: no public entry
+       * point can currently reach that branch, because `remove` only delegates here when
+       * grouped and both other callers pass `type: 'add'`. It is therefore deliberately
+       * not covered by a test, and mutation testing confirms restoring the alias changes
+       * no current behaviour. It is kept because the branch is one caller away from being
+       * live and the copy costs nothing.
+       *
+       * A shallow copy is sufficient: the only in-place claim mutation is the top-level
+       * `delete` below; every other update replaces `userClaims` wholesale.
+       */
+      const storedClaims: Record<string, any> = userRecord.customClaims ?? {};
+      let userClaims: any = {...storedClaims};
       let updateClaims = false;
       if (!grouped) {
         /**
@@ -975,6 +1044,25 @@ export namespace User {
           'groups': nextGroups,
         };
         updateClaims = true;
+      }
+      /**
+       * Re-granting a role the user already holds derives claims identical to the ones
+       * already stored. Writing them again would revoke every refresh token and sign the
+       * user out of all sessions for no change at all, and callables are retried in normal
+       * operation, so this no-op path is reached routinely.
+       *
+       * Skipping is safe **only** under exact equality: when the stored claims already
+       * match the derived ones, every token minted from them already carries the same
+       * authority, so no live token can disagree with the claims. Any difference —
+       * including one `claimsEqual` declines to prove absent — falls through to the write
+       * and revocation below. The comparison fails toward revoking, never toward skipping.
+       *
+       * The size guard below is unaffected: `setCustomUserClaims` enforces the same limit
+       * server-side, so stored claims are always within it, and an over-limit payload is
+       * therefore always a changed one that still reaches the check.
+       */
+      if (updateClaims && claimsEqual(storedClaims, userClaims)) {
+        updateClaims = false;
       }
       /**
        * Every custom-claims change revokes the user's refresh tokens so that no

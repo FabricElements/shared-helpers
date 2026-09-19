@@ -399,4 +399,93 @@ describe('User.Helper role changes — custom claims and token revocation', () =
     ).rejects.toThrow(/exceeds the Firebase limit/);
     expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
   });
+
+  describe('idempotent re-grants', () => {
+    /**
+     * A re-grant that derives claims identical to the stored ones must not write them
+     * again, because the write revokes every refresh token and signs the user out of all
+     * sessions. Callables are retried in normal operation, so this path is routine.
+     *
+     * Each "does not revoke" case below asserts a negative, which is exactly the shape
+     * that can pass vacuously — a method that threw early, or never reached the claims
+     * logic at all, would also never revoke. Every one therefore carries an in-test
+     * positive control (`mockGetUser`) proving the claims path really was entered, and is
+     * paired with an adjacent case that differs in one value and must still revoke. If
+     * you weaken the comparison, the paired case is the one that stays green; the
+     * "does not revoke" case is the load-bearing half.
+     */
+    it('does not revoke refresh tokens when a group re-grant matches the stored claims', async () => {
+      // Stored claims and document both already say tenant-a/admin; this grants it again.
+      await User.Helper.updateRole({id: 'uid-1', group: 'tenant-a', role: 'admin'}, 'https://example.com');
+      // Positive control: the claims path really was entered, so the negatives below mean something.
+      expect(mockGetUser).toHaveBeenCalledWith('uid-1');
+      expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
+      expect(mockRevokeRefreshTokens).not.toHaveBeenCalled();
+    });
+
+    it('still revokes when the same group is re-granted at a different role', async () => {
+      // Paired control for the case above: one value differs, so the write must happen.
+      await User.Helper.updateRole({id: 'uid-1', group: 'tenant-a', role: 'viewer'}, 'https://example.com');
+      expect(publishedClaims().groups['tenant-a']).toBe('viewer');
+      expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
+    });
+
+    it('does not revoke refresh tokens when a top-level role re-grant matches the stored claims', async () => {
+      mockGetUser.mockResolvedValue({uid: 'uid-1', email: 'ada@example.com', phoneNumber: null, customClaims: {role: 'admin'}});
+      mockGetDocument.mockResolvedValue({id: 'uid-1'});
+      await User.Helper.updateRole({id: 'uid-1', role: 'admin'}, 'https://example.com');
+      // Positive control: the claims path really was entered.
+      expect(mockGetUser).toHaveBeenCalledWith('uid-1');
+      expect(mockSetCustomUserClaims).not.toHaveBeenCalled();
+      expect(mockRevokeRefreshTokens).not.toHaveBeenCalled();
+    });
+
+    it('still revokes when a top-level role re-grant changes the role', async () => {
+      // Paired control for the case above.
+      mockGetUser.mockResolvedValue({uid: 'uid-1', email: 'ada@example.com', phoneNumber: null, customClaims: {role: 'admin'}});
+      mockGetDocument.mockResolvedValue({id: 'uid-1'});
+      await User.Helper.updateRole({id: 'uid-1', role: 'editor'}, 'https://example.com');
+      expect(publishedClaims().role).toBe('editor');
+      expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
+    });
+
+    it('treats stored and derived claims as equal regardless of key order', async () => {
+      /**
+       * The two group maps below hold the same entries in deliberately opposite insertion
+       * order. That difference is the entire mechanism of this test: a comparison written
+       * with `JSON.stringify` would see two different strings and revoke. Do not "tidy"
+       * these into a matching order — doing so makes the test unable to fail.
+       */
+      mockGetUser.mockResolvedValue({
+        uid: 'uid-1',
+        email: 'ada@example.com',
+        phoneNumber: null,
+        customClaims: {groups: {'tenant-b': 'viewer', 'tenant-a': 'admin'}},
+      });
+      mockGetDocument.mockResolvedValue({id: 'uid-1', groups: {'tenant-a': 'admin', 'tenant-b': 'viewer'}});
+      await User.Helper.updateRole({id: 'uid-1', group: 'tenant-a', role: 'admin'}, 'https://example.com');
+      // Positive control: the claims path really was entered.
+      expect(mockGetUser).toHaveBeenCalledWith('uid-1');
+      expect(mockRevokeRefreshTokens).not.toHaveBeenCalled();
+    });
+
+    it('still revokes when a group is withdrawn from claims that already hold it', async () => {
+      /**
+       * Withdrawal is the case where skipping would be most damaging: the user keeps
+       * authority they were meant to lose until their token expires on its own.
+       *
+       * Scope note, so this is not mistaken for more than it is: this case does NOT pin
+       * the defensive copy of the stored claims in `roleUpdateCall`. That copy guards an
+       * aliasing hazard on the ungrouped-remove branch, which no public entry point can
+       * reach today (`remove` only delegates to `roleUpdateCall` when grouped; `add` and
+       * `updateRole` always pass `type: 'add'`), so no test driving the public API can
+       * make that branch execute. Verified by mutation: restoring the alias leaves this
+       * case green. If ungrouped remove is ever wired up, the copy becomes load-bearing
+       * and needs its own test.
+       */
+      await User.Helper.remove({id: 'uid-1', group: 'tenant-a'});
+      expect(publishedClaims().groups['tenant-a']).toBeUndefined();
+      expect(mockRevokeRefreshTokens).toHaveBeenCalledWith('uid-1');
+    });
+  });
 });
