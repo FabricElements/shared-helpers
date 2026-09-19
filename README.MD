@@ -131,6 +131,14 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
   compiles to `STRPOS`, not `LIKE`, so `%` and `_` cannot widen a match.
   `where` and `orderBy` are empty strings when nothing matched — **omit the `WHERE` /
   `ORDER BY` keyword yourself** rather than emitting a bare one.
+- **Placeholder names are `f` followed by digits, and that is a contract.** They come from
+  the entry's position, never from payload text, so a caller cannot influence them. This
+  matters if you splice the fragment into a template you then post-process with your own
+  textual token substitution over the same `@` sigil: such substitution matches
+  substrings rather than whole tokens, so a replacement key that prefixes a generated
+  name would splice a value into the SQL text and turn a bound parameter into raw
+  interpolation. Keep your own substitution keys clear of `f<digits>`. Binding protects
+  values, not identifiers.
 - **`FilterHelper` grammars are closed.** `operator`, `type` (the Dart `InputDataType`
   enum) and sort direction are validated against fixed member lists, and entry keys
   against an allow-list. Adding a member to the Dart enum requires adding it here too,

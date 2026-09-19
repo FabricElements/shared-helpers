@@ -923,3 +923,43 @@ describe('FilterHelper validate only fields', () => {
     expect(Helper.decodeToQueryFragment(sibling, options).where).toBe('`plain_column` = @f0');
   });
 });
+
+/**
+ * Generated parameter names are part of the fragment contract. A consumer may splice the
+ * fragment into a larger template that it then post-processes with textual token
+ * substitution over the same `@` sigil BigQuery uses for bind parameters. Such a
+ * substitution matches substrings, not whole tokens, so a replacement key that prefixes a
+ * generated name would splice a value into the SQL text and silently turn a bound
+ * parameter into raw interpolation. Names are therefore `f` followed by digits, derived
+ * from position only, never from payload text.
+ */
+describe('FilterHelper parameter naming contract', () => {
+  const payload = encodePayload([
+    {id: 'status', index: 0, operator: 'equal', type: 'string', value: 'active'},
+    {id: 'country', index: 1, operator: 'equal', type: 'string', value: 'MX'},
+    {id: 'name', index: 2, operator: 'contains', type: 'string', value: 'ada'},
+    {id: 'amount', index: 3, operator: 'between', type: 'double', value: [1, 2]},
+  ]);
+
+  it('names every parameter f followed by digits', () => {
+    const {params} = Helper.decodeToQueryFragment(payload, {allowedFields});
+    const names = Object.keys(params);
+    expect(names.length).toBeGreaterThan(1);
+    for (const name of names) expect(name).toMatch(/^f\d+$/);
+  });
+
+  it('never derives a parameter name from payload text', () => {
+    const {params} = Helper.decodeToQueryFragment(payload, {allowedFields});
+    expect(Object.keys(params)).toEqual(['f0', 'f1', 'f2', 'f3', 'f4']);
+    expect(Object.values(params)).toEqual(['active', 'MX', 'ada', 1, 2]);
+  });
+
+  it('keeps parameter names clear of common substitution prefixes', () => {
+    const {params} = Helper.decodeToQueryFragment(payload, {allowedFields});
+    for (const name of Object.keys(params)) {
+      for (const reserved of ['account', 'filter', 'return', 'order']) {
+        expect(name.indexOf(reserved)).toBe(-1);
+      }
+    }
+  });
+});
