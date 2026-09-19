@@ -713,6 +713,11 @@ describe('FilterHelper range bounds', () => {
   });
 
   it('rejects a reversed temporal range', () => {
+    // Both bounds carry the same offset, so text order and instant order agree and this
+    // case alone cannot tell the two comparisons apart. The discriminating fixtures are
+    // 'compares instants, so an offset cannot make an ordered range look reversed' below
+    // and 'orders between bounds as instants rather than as text'; do not normalise their
+    // mixed offsets away, or nothing here would fail if the comparison became lexical.
     let thrown: unknown;
     try {
       Helper.decode(range('closed', '2024-02-01T00:00:00.000Z', '2024-01-01T00:00:00.000Z'), rangeOptions);
