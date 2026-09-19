@@ -142,6 +142,14 @@ Prior releases are tracked through Git history and GitHub Releases.
   is not an ISO 8601 literal is rejected rather than coerced, because `Date.parse`
   otherwise accepts loose input such as `June 15, 2024`.
 
+  **Validate-only fields.** `InterfaceFilterField.column` is optional. A caller that
+  already owns a predicate table mapping each filter to a hand-written SQL fragment can
+  use `decode` purely as the untrusted-input boundary — parsing, operator allow-listing
+  and value validation — and build SQL itself, without declaring a column it will never
+  use. `toQueryFragment` throws `Invalid filter field configuration` if it is asked to
+  build a fragment for such a field, so an incomplete declaration fails loudly instead of
+  dropping the predicate and widening the result set.
+
   **Range bounds.** `InterfaceFilterField.betweenBounds` selects whether a `between`
   includes its upper bound. The default `'closed'` emits
   `` `col` >= @f0 AND `col` <= @f1 ``, matching the Dart SQL builder, which emits

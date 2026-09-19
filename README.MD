@@ -179,6 +179,13 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
   `toQueryFragment`. In that case do not use the `decodeToQueryFragment` convenience: it
   goes straight from payload to SQL and would skip your canonicalization, which does not
   raise an error — it silently matches nothing.
+- **You can use `decode` on its own.** If you already own a predicate table mapping each
+  filter to a hand-written SQL fragment, `decode` is still useful as the untrusted-input
+  boundary: it parses the payload, enforces the operator allow-list and value shapes, and
+  hands back typed entries you then feed to your own builder. A field declared for that
+  purpose may omit `column` entirely, which keeps a column name out of a declaration that
+  never emits SQL. `toQueryFragment` throws if it is later asked to build a fragment for
+  such a field, rather than dropping the predicate and quietly widening the result set.
 - **`FilterHelper` payloads must be percent-encoded in URLs.** Base64 is validated
   canonically, so a `+` that a query parser turns into a space is rejected rather than
   silently repaired.

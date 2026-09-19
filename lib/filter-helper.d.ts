@@ -179,8 +179,15 @@ export declare namespace FilterHelper {
          * Normally a single column name, validated with `validateBigQueryColumn`. Set
          * {@link InterfaceFilterField.structPath} to declare a dotted path into a `STRUCT`
          * instead, in which case every segment is validated separately.
+         *
+         * Optional, because a caller may use `decode` purely to validate an untrusted
+         * payload and then build SQL from its own predicate table, never calling
+         * `toQueryFragment`. Omitting it keeps a real column name out of a declaration that
+         * does not need one. Omit it only in that case: `toQueryFragment` throws when it
+         * needs a column this field never declared, rather than silently dropping the
+         * predicate and widening the result set.
          */
-        column: string;
+        column?: string;
         /**
          * Whether a `between` range includes its upper bound.
          *

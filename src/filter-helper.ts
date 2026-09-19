@@ -232,8 +232,15 @@ export namespace FilterHelper {
      * Normally a single column name, validated with `validateBigQueryColumn`. Set
      * {@link InterfaceFilterField.structPath} to declare a dotted path into a `STRUCT`
      * instead, in which case every segment is validated separately.
+     *
+     * Optional, because a caller may use `decode` purely to validate an untrusted
+     * payload and then build SQL from its own predicate table, never calling
+     * `toQueryFragment`. Omitting it keeps a real column name out of a declaration that
+     * does not need one. Omit it only in that case: `toQueryFragment` throws when it
+     * needs a column this field never declared, rather than silently dropping the
+     * predicate and widening the result set.
      */
-    column: string;
+    column?: string;
     /**
      * Whether a `between` range includes its upper bound.
      *
@@ -788,6 +795,9 @@ export namespace FilterHelper {
    * @throws {Error} When the declared column is not a valid BigQuery reference.
    */
   const resolveColumn = (field: InterfaceFilterField): string => {
+    // Distinguished from a wrong type so a validate-only declaration that is then used
+    // to build SQL reports the actual mistake.
+    if (field.column === undefined) throw invalidField('declared column is required to build a query fragment');
     if (typeof field.column !== 'string') throw invalidField('declared column must be a string');
     // Split only when the declaration opts in, so a stray dot in a field that was meant
     // to name a single column stays an error instead of silently becoming a path.

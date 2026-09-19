@@ -875,3 +875,51 @@ describe('FilterHelper multi operator fields', () => {
     expect(Helper.decode(payload, options)).toHaveLength(1);
   });
 });
+
+/**
+ * A caller may use `decode` purely as the untrusted-input boundary and then build SQL
+ * from its own predicate table. Such a declaration has no column to give, and forcing a
+ * placeholder would put an invented or real column name into a config that never needs
+ * one.
+ */
+describe('FilterHelper validate only fields', () => {
+  const fields: Record<string, FilterHelper.InterfaceFilterField> = {
+    plain: {column: 'plain_column', paramType: 'STRING'},
+    validated: {operators: [FilterHelper.FilterOperator.equal], paramType: 'STRING'},
+  };
+  const options: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: fields};
+  const payload = encodePayload([{id: 'validated', index: 0, operator: 'equal', type: 'string', value: 'ok'}]);
+
+  it('decodes a field that declares no column', () => {
+    expect(Helper.decode(payload, options)).toEqual([
+      {id: 'validated', operator: 'equal', type: 'string', value: 'ok', index: 0},
+    ]);
+  });
+
+  it('still enforces the operator allow-list without a column', () => {
+    const refused = encodePayload([{id: 'validated', index: 0, operator: 'contains', type: 'string', value: 'ok'}]);
+    let thrown: unknown;
+    try {
+      Helper.decode(refused, options);
+    } catch (error) {
+      thrown = error;
+    }
+    expect((thrown as Error).message).toBe('Invalid filter payload');
+  });
+
+  it('refuses to build a fragment for a field that declares no column', () => {
+    let thrown: unknown;
+    try {
+      Helper.decodeToQueryFragment(payload, options);
+    } catch (error) {
+      thrown = error;
+    }
+    expect((thrown as Error).message).toBe('Invalid filter field configuration');
+    expect(causeOf(thrown)?.message).toContain('required to build a query fragment');
+  });
+
+  it('builds a fragment for sibling fields that do declare a column', () => {
+    const sibling = encodePayload([{id: 'plain', index: 0, operator: 'equal', type: 'string', value: 'ok'}]);
+    expect(Helper.decodeToQueryFragment(sibling, options).where).toBe('`plain_column` = @f0');
+  });
+});
