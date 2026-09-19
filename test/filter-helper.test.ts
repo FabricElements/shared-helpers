@@ -1097,3 +1097,35 @@ describe('FilterHelper operator allow-list has no implicit default', () => {
     expect(FilterHelper.Helper.decode(sortPayload, {allowedFields: with_})).toHaveLength(1);
   });
 });
+
+describe('FilterHelper refuses a sort entry payload-wide', () => {
+  // The two existing sort rejection fixtures each send a payload holding only the sort
+  // entry, so they pin that an unlisted target throws but cannot show what else goes with
+  // it. `decode` is all-or-nothing: one refused entry discards the entries that already
+  // parsed, so a consumer whose allow-list declares no sortable field loses filtering
+  // rather than ordering. Softening this to drop the offending entry has to stay a
+  // deliberate change, not a quiet one.
+  const allowedFields: Record<string, FilterHelper.InterfaceFilterField> = {
+    direction: {operators: [FilterOperator.equal], paramType: 'STRING'},
+  };
+
+  it('discards filters that parsed when a sort target is not allow-listed', () => {
+    const mixed = encodePayload([
+      {id: 'direction', index: 0, operator: 'equal', type: 'string', value: 'outbound'},
+      {id: 'sort', index: 1, operator: 'sort', type: 'string', value: ['total', 'desc']},
+    ]);
+    expect(() => Helper.decode(mixed, {allowedFields})).toThrow('Invalid filter payload');
+  });
+
+  it('keeps the rest of the payload while the sort pair is still incomplete', () => {
+    // The state before a reader picks a column. It is dropped rather than refused, which
+    // is why the rejection above stays latent until the first sort is actually chosen.
+    const pending = encodePayload([
+      {id: 'direction', index: 0, operator: 'equal', type: 'string', value: 'outbound'},
+      {id: 'sort', index: 1, operator: 'sort', type: 'string', value: [null, null]},
+    ]);
+    expect(Helper.decode(pending, {allowedFields})).toEqual([
+      {id: 'direction', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'outbound'},
+    ]);
+  });
+});
