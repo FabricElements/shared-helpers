@@ -187,13 +187,22 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
   `toQueryFragment`. In that case do not use the `decodeToQueryFragment` convenience: it
   goes straight from payload to SQL and would skip your canonicalization, which does not
   raise an error — it silently matches nothing.
-- **You can use `decode` on its own.** If you already own a predicate table mapping each
-  filter to a hand-written SQL fragment, `decode` is still useful as the untrusted-input
-  boundary: it parses the payload, enforces the operator allow-list and value shapes, and
-  hands back typed entries you then feed to your own builder. A field declared for that
-  purpose may omit `column` entirely, which keeps a column name out of a declaration that
-  never emits SQL. `toQueryFragment` throws if it is later asked to build a fragment for
-  such a field, rather than dropping the predicate and quietly widening the result set.
+- **Owning your own SQL is a first-class integration, not a fallback.** If you already have
+  a predicate table mapping each filter to a hand-written SQL fragment, `decode` is the
+  whole of what you need from this module: it parses the payload, enforces the operator
+  allow-list and value shapes, and hands back typed entries you feed to your own builder.
+  A field declared for that purpose may omit `column` entirely, which keeps column names
+  out of a declaration that never emits SQL. `toQueryFragment` throws if it is later asked
+  to build a fragment for such a field, rather than dropping the predicate and quietly
+  widening the result set.
+- **`toQueryFragment` emits one predicate per entry, over one column.** That is a
+  deliberate ceiling, and some predicates sit above it: one spanning several columns, one
+  embedding a literal in the SQL, a disjunction rather than a comparison, or one that binds
+  the *same* placeholder twice — the per-entry `@f0`, `@f1`, … scheme has no way to say
+  "reuse that parameter in the other branch". Such predicates are often shaped that way for
+  a reason worth preserving (keeping a bare comparison so the engine can still prune
+  partitions, say), so do not flatten one to fit this builder. Use `decode` alone and emit
+  it yourself.
 - **`FilterHelper` payloads must be percent-encoded in URLs.** Base64 is validated
   canonically, so a `+` that a query parser turns into a space is rejected rather than
   silently repaired.

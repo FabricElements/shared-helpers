@@ -148,7 +148,11 @@ Prior releases are tracked through Git history and GitHub Releases.
   and value validation — and build SQL itself, without declaring a column it will never
   use. `toQueryFragment` throws `Invalid filter field configuration` if it is asked to
   build a fragment for such a field, so an incomplete declaration fails loudly instead of
-  dropping the predicate and widening the result set.
+  dropping the predicate and widening the result set. This is a first-class integration
+  rather than a fallback: `toQueryFragment` emits one predicate per entry over one column,
+  so a predicate spanning several columns, embedding a SQL literal, forming a disjunction,
+  or binding the same placeholder twice cannot be expressed through it. Own that SQL
+  yourself instead of flattening it to fit.
 
   **Range bounds.** `InterfaceFilterField.betweenBounds` selects whether a `between`
   includes its upper bound. The default `'closed'` emits
