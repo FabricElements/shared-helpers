@@ -820,3 +820,58 @@ describe('FilterHelper struct path columns', () => {
     expect(Helper.decodeToQueryFragment(dotted, {allowedFields: fields}).where).toBe('`flat_column` = @f0');
   });
 });
+
+/**
+ * A field may allow several operators at once. The timestamp column a report filters on
+ * is the real case: it accepts an open-ended `greaterThanOrEqual` carrying a single
+ * value, and a two-value half-open `between`. Declaring `betweenBounds` must not narrow
+ * the field to ranges only, because an encoder that already emits the single-value form
+ * would then have its payloads rejected.
+ */
+describe('FilterHelper multi operator fields', () => {
+  const fields: Record<string, FilterHelper.InterfaceFilterField> = {
+    created: {
+      betweenBounds: 'halfOpen',
+      column: 'event_time',
+      operators: [FilterHelper.FilterOperator.greaterThanOrEqual, FilterHelper.FilterOperator.between],
+      paramType: 'TIMESTAMP',
+    },
+  };
+  const options: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: fields};
+
+  it('accepts an open-ended greaterThanOrEqual carrying a single value', () => {
+    const payload = encodePayload([
+      {id: 'created', index: 0, operator: 'greaterThanOrEqual', type: 'dateTime', value: '2024-01-01T00:00:00.000Z'},
+    ]);
+    const fragment = Helper.decodeToQueryFragment(payload, options);
+    expect(fragment.where).toBe('`event_time` >= @f0');
+    expect(fragment.params.f0).toBe('2024-01-01T00:00:00.000Z');
+  });
+
+  it('accepts a half-open between on the same field', () => {
+    const payload = encodePayload([
+      {id: 'created', index: 0, operator: 'between', type: 'dateTime', value: ['2024-01-01T00:00:00.000Z', '2024-02-01T00:00:00.000Z']},
+    ]);
+    expect(Helper.decodeToQueryFragment(payload, options).where).toBe('`event_time` >= @f0 AND `event_time` < @f1');
+  });
+
+  it('still refuses an operator the field does not list', () => {
+    const payload = encodePayload([
+      {id: 'created', index: 0, operator: 'lessThan', type: 'dateTime', value: '2024-01-01T00:00:00.000Z'},
+    ]);
+    let thrown: unknown;
+    try {
+      Helper.decode(payload, options);
+    } catch (error) {
+      thrown = error;
+    }
+    expect((thrown as Error).message).toBe('Invalid filter payload');
+  });
+
+  it('does not apply range validation to the single value form', () => {
+    const payload = encodePayload([
+      {id: 'created', index: 0, operator: 'greaterThanOrEqual', type: 'dateTime', value: '2024-02-01T00:00:00.000Z'},
+    ]);
+    expect(Helper.decode(payload, options)).toHaveLength(1);
+  });
+});

@@ -148,7 +148,10 @@ Prior releases are tracked through Git history and GitHub Releases.
   `>= lower and <= upper` rather than `BETWEEN`, and its in-memory matcher. `'halfOpen'`
   emits `` `col` >= @f0 AND `col` < @f1 ``, which is what lets consecutive ranges tile a
   timeline without a boundary row falling into two adjacent buckets. The style is
-  declared per field by the server and cannot be influenced by the payload. `decode`
+  declared per field by the server and cannot be influenced by the payload, and declaring
+  it does not narrow the field to ranges: a field may list `greaterThanOrEqual` and
+  `between` together, so an open-ended single value and a two-value range are both
+  accepted on the same column. `decode`
   rejects a reversed range, and rejects equal bounds under `'halfOpen'` because
   `[x, x)` selects nothing, while leaving them valid under `'closed'`, where `[x, x]`
   selects a single point. Bounds are only compared when that is unambiguous: numeric

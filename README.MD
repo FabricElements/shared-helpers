@@ -139,15 +139,20 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
   `FilterOperator` mirrors Dart's enum member for member, so any payload `fabric_flutter`
   can emit is decodable. Narrow it to the operators you actually have SQL for using the
   per-field `operators` allow-list: a field declaring `operators: [FilterOperator.equal]`
-  rejects every other operator on that field. Prefer that over assuming a caller will not
-  send an operator you never implemented.
+  rejects every other operator on that field. A field may list several — a timestamp
+  column typically accepts both an open-ended `FilterOperator.greaterThanOrEqual`
+  carrying a single value and a two-value `FilterOperator.between`, and listing only the
+  range operator would reject the single-value form an encoder already emits. Prefer the
+  allow-list over assuming a caller will not send an operator you never implemented.
 - **`FilterHelper` lets you choose whether a `between` includes its upper bound.**
   Declare `betweenBounds` per field: the default `'closed'` emits
   `` `col` >= @f0 AND `col` <= @f1 ``, matching the Dart SQL builder and its in-memory
   matcher, while `'halfOpen'` emits `` `col` >= @f0 AND `col` < @f1 ``. Half-open is what
   you want when consecutive ranges tile a timeline — adjacent day, week or month buckets
   then meet without the boundary row being counted in both. The style is a property of
-  the column, declared by you; a payload cannot change it. `decode` also rejects a
+  the column, declared by you; a payload cannot change it. Declaring it does not restrict
+  the field to ranges — a field may still accept a single-value operator alongside
+  `between`. `decode` also rejects a
   reversed range, and rejects equal bounds under `'halfOpen'` because `[x, x)` selects
   nothing. Bounds are compared only when that is unambiguous — numeric pairs, and
   temporal pairs compared as instants so a zone offset cannot make an ordered range look
