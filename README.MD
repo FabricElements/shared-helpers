@@ -141,6 +141,23 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
   per-field `operators` allow-list: a field declaring `operators: [FilterOperator.equal]`
   rejects every other operator on that field. Prefer that over assuming a caller will not
   send an operator you never implemented.
+- **`FilterHelper` lets you choose whether a `between` includes its upper bound.**
+  Declare `betweenBounds` per field: the default `'closed'` emits
+  `` `col` >= @f0 AND `col` <= @f1 ``, matching the Dart SQL builder and its in-memory
+  matcher, while `'halfOpen'` emits `` `col` >= @f0 AND `col` < @f1 ``. Half-open is what
+  you want when consecutive ranges tile a timeline — adjacent day, week or month buckets
+  then meet without the boundary row being counted in both. The style is a property of
+  the column, declared by you; a payload cannot change it. `decode` also rejects a
+  reversed range, and rejects equal bounds under `'halfOpen'` because `[x, x)` selects
+  nothing. Bounds are compared only when that is unambiguous — numeric pairs, and
+  temporal pairs compared as instants so a zone offset cannot make an ordered range look
+  reversed; anything else is left to your backend.
+- **Not every predicate belongs in `allowedFields`.** The map describes one column, one
+  operator, one bound style. A predicate that spans columns, falls back for legacy rows,
+  or exists to let the query engine prune partitions cannot be expressed in that shape,
+  and forcing it in would change which rows match or how much the query scans. Keep such
+  parameters on your own request schema, outside the allow-list, and combine them with
+  the fragment this returns.
 - **`decode` and `toQueryFragment` are separate steps on purpose.** `decode` is
   structural — it parses, validates the grammar, and resolves identifiers. It deliberately
   does **not** canonicalize values. If your own schema canonicalizes (uppercasing a country

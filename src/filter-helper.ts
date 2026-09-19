@@ -228,6 +228,19 @@ export namespace FilterHelper {
   export interface InterfaceFilterField {
     /** Real BigQuery column name. Validated with `validateBigQueryColumn` before use. */
     column: string;
+    /**
+     * Whether a `between` range includes its upper bound.
+     *
+     * `'closed'` (the default) emits `>= lower AND <= upper`, matching the Dart
+     * `FilterHelper` SQL builder and its in-memory matcher.  `'halfOpen'` emits
+     * `>= lower AND < upper`, which is what a backend wants when consecutive ranges
+     * tile a timeline: adjacent day, week or month buckets meet without the boundary
+     * row being counted in both.
+     *
+     * Declare this per field; it is a property of the column's intended semantics, not
+     * of the payload, so a caller cannot change it.
+     */
+    betweenBounds?: 'closed' | 'halfOpen';
     /** Operators permitted for this field. When omitted, every operator is permitted. */
     operators?: readonly FilterOperator[];
     /** BigQuery bind type used for this field's query parameters. */
@@ -480,6 +493,47 @@ export namespace FilterHelper {
   const temporalParamTypes: readonly string[] = Object.freeze(['DATE', 'DATETIME', 'TIMESTAMP']);
 
   /**
+   * Rejects a `between` range whose bounds cannot describe a non-empty interval.
+   *
+   * Only bounds this can compare unambiguously are checked: numeric pairs, and
+   * temporal pairs that are ISO 8601 literals, which are compared as instants so that
+   * a zone offset cannot make an ordered range look reversed.  Anything else is left
+   * to the backend, because guessing a collation here would reject valid queries.
+   *
+   * A reversed range is always rejected.  Equal bounds are rejected only under
+   * `halfOpen` bounds, where `[x, x)` selects nothing; under closed bounds `[x, x]`
+   * legitimately selects the single point `x`.
+   *
+   * @param {(number | string)[]} bounds - The validated two-element range.
+   * @param {InterfaceFilterField} field - The server-side field declaration.
+   * @param {number} position - Index of the entry, used only in the error detail.
+   * @throws {Error} When the range is reversed, or empty under half-open bounds.
+   */
+  const assertOrderedRange = (bounds: (number | string)[], field: InterfaceFilterField, position: number): void => {
+    const [lower, upper] = bounds;
+    let low: number;
+    let high: number;
+    if (typeof lower === 'number' && typeof upper === 'number') {
+      low = lower;
+      high = upper;
+    } else if (
+      temporalParamTypes.indexOf(field.paramType) !== -1
+      && typeof lower === 'string' && typeof upper === 'string'
+      && iso8601Pattern.test(lower) && iso8601Pattern.test(upper)
+    ) {
+      low = Date.parse(lower);
+      high = Date.parse(upper);
+      if (Number.isNaN(low) || Number.isNaN(high)) return;
+    } else {
+      return;
+    }
+    if (low > high) throw invalidPayload(`filter entry ${position}: between bounds are reversed`);
+    if (low === high && field.betweenBounds === 'halfOpen') {
+      throw invalidPayload(`filter entry ${position}: between bounds describe an empty half-open range`);
+    }
+  };
+
+  /**
    * Normalises an ISO 8601 value to the literal form BigQuery accepts for `paramType`.
    *
    * The Dart wire format always carries a full ISO 8601 timestamp, even for
@@ -637,8 +691,9 @@ export namespace FilterHelper {
 
     // A sort entry addresses its target through `value[0]`; the Dart UI stores the
     // literal id `'sort'`, which is a pseudo-field and is never resolved as a column.
+    let field: InterfaceFilterField | undefined;
     if (operator !== FilterOperator.sort) {
-      const field = resolveField(options.allowedFields, rawId);
+      field = resolveField(options.allowedFields, rawId);
       if (!field) throw invalidPayload(`filter entry ${position}: id is not an allowed field`);
       if (field.operators && field.operators.indexOf(operator) === -1) {
         throw invalidPayload(`filter entry ${position}: operator is not permitted for the requested field`);
@@ -675,6 +730,12 @@ export namespace FilterHelper {
       ? validateSortValue(rawValue, position, options)
       : validateOperatorValue(rawValue, operator, position, maxValueLength, maxArrayLength);
     if (value === null) return null;
+
+    // Checked here rather than at fragment time so an unusable range is refused by the
+    // earliest server-side gate, before the caller's own schema or BigQuery see it.
+    if (operator === FilterOperator.between && field) {
+      assertOrderedRange(value as (number | string)[], field, position);
+    }
 
     // Built key by key from validated locals. The parsed payload is never spread, so a
     // `__proto__` or `constructor` key cannot ride along into the result.
@@ -762,7 +823,11 @@ export namespace FilterHelper {
       const column = `\`${resolveColumn(field)}\``;
       if (entry.operator === FilterOperator.between) {
         const [lower, upper] = entry.value as (number | string)[];
-        predicates.push(`${column} BETWEEN ${bind(lower, field.paramType)} AND ${bind(upper, field.paramType)}`);
+        // Emitted as two comparisons rather than `BETWEEN` so the upper bound can be
+        // exclusive, and so the shape matches the Dart SQL builder, which also emits
+        // `>= lower and <= upper`.
+        const upperOperator = field.betweenBounds === 'halfOpen' ? '<' : '<=';
+        predicates.push(`${column} >= ${bind(lower, field.paramType)} AND ${column} ${upperOperator} ${bind(upper, field.paramType)}`);
         continue;
       }
       if (entry.operator === FilterOperator.whereIn) {

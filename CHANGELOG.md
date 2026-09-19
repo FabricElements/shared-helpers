@@ -113,6 +113,10 @@ Prior releases are tracked through Git history and GitHub Releases.
     given caller may **use**. It is static per report type and cannot express a
     per-caller rule, so authorization over privileged fields belongs in the caller,
     after `decode` and before the fragment is built.
+  - `allowedFields` describes one column, one operator, one bound style per entry. A
+    predicate that spans columns, falls back for legacy rows, or exists so the query
+    engine can prune partitions cannot be expressed in that shape and belongs on the
+    caller's own request schema, outside the allow-list.
   - `decode` is structural only and never canonicalizes values. Callers that
     canonicalize (uppercasing a country code, for example) must do so between `decode`
     and `toQueryFragment`, rather than using the `decodeToQueryFragment` convenience.
@@ -137,6 +141,19 @@ Prior releases are tracked through Git history and GitHub Releases.
   designator, and `TIMESTAMP` binds the full instant. A temporal parameter whose value
   is not an ISO 8601 literal is rejected rather than coerced, because `Date.parse`
   otherwise accepts loose input such as `June 15, 2024`.
+
+  **Range bounds.** `InterfaceFilterField.betweenBounds` selects whether a `between`
+  includes its upper bound. The default `'closed'` emits
+  `` `col` >= @f0 AND `col` <= @f1 ``, matching the Dart SQL builder, which emits
+  `>= lower and <= upper` rather than `BETWEEN`, and its in-memory matcher. `'halfOpen'`
+  emits `` `col` >= @f0 AND `col` < @f1 ``, which is what lets consecutive ranges tile a
+  timeline without a boundary row falling into two adjacent buckets. The style is
+  declared per field by the server and cannot be influenced by the payload. `decode`
+  rejects a reversed range, and rejects equal bounds under `'halfOpen'` because
+  `[x, x)` selects nothing, while leaving them valid under `'closed'`, where `[x, x]`
+  selects a single point. Bounds are only compared when that is unambiguous: numeric
+  pairs, and temporal pairs compared as instants so a zone offset cannot make an ordered
+  range look reversed.
 
   **Encode inclusion rule.** An entry is serialized only when it carries both a value
   and an operator. The two Dart entry points historically disagreed — `FilterData.toJson`

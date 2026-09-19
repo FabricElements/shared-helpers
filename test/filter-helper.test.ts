@@ -343,7 +343,7 @@ describe('FilterHelper.Helper.decodeToQueryFragment', () => {
 
   it('builds a parameterised range predicate', () => {
     const fragment = Helper.decodeToQueryFragment(vector('betweenDateTime'), options);
-    expect(fragment.where).toBe('`created_at` BETWEEN @f0 AND @f1');
+    expect(fragment.where).toBe('`created_at` >= @f0 AND `created_at` <= @f1');
     expect(fragment.types).toEqual({f0: 'TIMESTAMP', f1: 'TIMESTAMP'});
   });
 
@@ -607,7 +607,7 @@ describe('Dart parity: FilterHelper.valueFromType date formatting', () => {
 
   it('should narrow both bounds of a date between range', () => {
     const fragment = Helper.decodeToQueryFragment(vector('betweenDate'), temporalOptions);
-    expect(fragment.where).toBe('`event_date` BETWEEN @f0 AND @f1');
+    expect(fragment.where).toBe('`event_date` >= @f0 AND `event_date` <= @f1');
     expect(fragment.params).toEqual({f0: '2024-01-01', f1: '2024-12-31'});
   });
 
@@ -677,5 +677,78 @@ describe('Dart parity: encode inclusion rule', () => {
     expect(Helper.toJSON(entries)).toHaveLength(1);
     expect(decoded.map((item) => item.id)).toEqual(['country']);
     expect(Helper.decode(Helper.encode(decoded), options)).toEqual(decoded);
+  });
+});
+
+/**
+ * The backend tiles report timelines with consecutive ranges, so whether the upper
+ * bound is inclusive decides if a boundary row is counted once or twice.  The bound
+ * style is declared per field by the server, never carried in the payload.
+ */
+describe('FilterHelper range bounds', () => {
+  const rangeFields: Record<string, FilterHelper.InterfaceFilterField> = {
+    closed: {column: 'created_at', paramType: 'TIMESTAMP'},
+    counter: {betweenBounds: 'halfOpen', column: 'hit_count', paramType: 'INT64'},
+    tiled: {betweenBounds: 'halfOpen', column: 'created_at', paramType: 'TIMESTAMP'},
+  };
+  const rangeOptions: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: rangeFields};
+
+  const range = (id: string, lower: unknown, upper: unknown): string => encodePayload([
+    {id, index: 0, operator: 'between', type: 'dateTime', value: [lower, upper]},
+  ]);
+
+  it('closes both bounds by default, matching the Dart SQL builder', () => {
+    const fragment = Helper.decodeToQueryFragment(range('closed', '2024-01-01T00:00:00.000Z', '2024-02-01T00:00:00.000Z'), rangeOptions);
+    expect(fragment.where).toBe('`created_at` >= @f0 AND `created_at` <= @f1');
+  });
+
+  it('excludes the upper bound when the field declares half-open bounds', () => {
+    const fragment = Helper.decodeToQueryFragment(range('tiled', '2024-01-01T00:00:00.000Z', '2024-02-01T00:00:00.000Z'), rangeOptions);
+    expect(fragment.where).toBe('`created_at` >= @f0 AND `created_at` < @f1');
+  });
+
+  it('rejects a reversed temporal range', () => {
+    let thrown: unknown;
+    try {
+      Helper.decode(range('closed', '2024-02-01T00:00:00.000Z', '2024-01-01T00:00:00.000Z'), rangeOptions);
+    } catch (error) {
+      thrown = error;
+    }
+    expect((thrown as Error).message).toBe('Invalid filter payload');
+    expect(causeOf(thrown)?.message).toContain('reversed');
+  });
+
+  it('compares instants, so an offset cannot make an ordered range look reversed', () => {
+    // 2024-01-01T01:00:00+02:00 is 23:00Z on 2023-12-31, earlier than the upper bound,
+    // even though it sorts after it as text.
+    const fragment = Helper.decodeToQueryFragment(range('closed', '2024-01-01T01:00:00.000+02:00', '2024-01-01T00:00:00.000Z'), rangeOptions);
+    expect(fragment.where).toBe('`created_at` >= @f0 AND `created_at` <= @f1');
+  });
+
+  it('accepts equal bounds under closed bounds, which select a single point', () => {
+    const fragment = Helper.decodeToQueryFragment(range('closed', '2024-01-01T00:00:00.000Z', '2024-01-01T00:00:00.000Z'), rangeOptions);
+    expect(fragment.where).toBe('`created_at` >= @f0 AND `created_at` <= @f1');
+  });
+
+  it('rejects equal bounds under half-open bounds, which select nothing', () => {
+    let thrown: unknown;
+    try {
+      Helper.decode(range('tiled', '2024-01-01T00:00:00.000Z', '2024-01-01T00:00:00.000Z'), rangeOptions);
+    } catch (error) {
+      thrown = error;
+    }
+    expect((thrown as Error).message).toBe('Invalid filter payload');
+    expect(causeOf(thrown)?.message).toContain('empty half-open range');
+  });
+
+  it('applies the same ordering rules to numeric bounds', () => {
+    expect(() => Helper.decode(range('counter', 10, 1), rangeOptions)).toThrow('Invalid filter payload');
+    expect(() => Helper.decode(range('counter', 5, 5), rangeOptions)).toThrow('Invalid filter payload');
+    expect(Helper.decode(range('counter', 1, 10), rangeOptions)).toHaveLength(1);
+  });
+
+  it('leaves bounds it cannot compare unambiguously to the backend', () => {
+    const fields: Record<string, FilterHelper.InterfaceFilterField> = {label: {column: 'label', paramType: 'STRING'}};
+    expect(Helper.decode(range('label', 'zebra', 'alpha'), {allowedFields: fields})).toHaveLength(1);
   });
 });

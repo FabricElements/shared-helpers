@@ -175,6 +175,19 @@ export declare namespace FilterHelper {
     interface InterfaceFilterField {
         /** Real BigQuery column name. Validated with `validateBigQueryColumn` before use. */
         column: string;
+        /**
+         * Whether a `between` range includes its upper bound.
+         *
+         * `'closed'` (the default) emits `>= lower AND <= upper`, matching the Dart
+         * `FilterHelper` SQL builder and its in-memory matcher.  `'halfOpen'` emits
+         * `>= lower AND < upper`, which is what a backend wants when consecutive ranges
+         * tile a timeline: adjacent day, week or month buckets meet without the boundary
+         * row being counted in both.
+         *
+         * Declare this per field; it is a property of the column's intended semantics, not
+         * of the payload, so a caller cannot change it.
+         */
+        betweenBounds?: 'closed' | 'halfOpen';
         /** Operators permitted for this field. When omitted, every operator is permitted. */
         operators?: readonly FilterOperator[];
         /** BigQuery bind type used for this field's query parameters. */
