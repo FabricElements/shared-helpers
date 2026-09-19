@@ -90,7 +90,7 @@ export namespace FilterHelper {
     lessThan = 'lessThan',
     /** Matches values less than or equal to the provided bound. */
     lessThanOrEqual = 'lessThanOrEqual',
-    /** Matches values that fall within a two-sided, inclusive range. */
+    /** Matches values within a range whose upper bound may be inclusive or exclusive. */
     between = 'between',
     /** Matches any value without applying an additional constraint. Emits no predicate. */
     any = 'any',

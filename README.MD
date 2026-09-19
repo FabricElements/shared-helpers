@@ -195,6 +195,16 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
   out of a declaration that never emits SQL. `toQueryFragment` throws if it is later asked
   to build a fragment for such a field, rather than dropping the predicate and quietly
   widening the result set.
+- **`decode` does not parse temporal literals, so validate them yourself on that path.**
+  A value bound to a `DATE`, `DATETIME` or `TIMESTAMP` field is checked for type and
+  length like any other, but it is only parsed as ISO 8601 when a query fragment is
+  built, because that is the point at which BigQuery's literal form actually matters.
+  `decode` therefore returns a temporal value **byte for byte as it arrived**, offset and
+  all, and a malformed one reaches you as an ordinary bounded string. If you build your
+  own SQL, keep your own date validation — it is load bearing, not belt and braces. The
+  one exception is a `between` range, whose bounds are compared as instants at decode
+  time so a reversed or empty range is refused early; bounds that do not parse are left
+  for your own validator rather than being guessed at.
 - **`toQueryFragment` emits one predicate per entry, over one column.** That is a
   deliberate ceiling, and some predicates sit above it: one spanning several columns, one
   embedding a literal in the SQL, a disjunction rather than a comparison, or one that binds

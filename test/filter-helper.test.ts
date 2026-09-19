@@ -963,3 +963,67 @@ describe('FilterHelper parameter naming contract', () => {
     }
   });
 });
+
+/**
+ * Pins where a temporal value is normalised, and where it is not.
+ *
+ * A consumer that owns its own SQL calls `decode` and never `toQueryFragment`, so it
+ * matters which layer rewrites an offset timestamp. `decode` preserves the literal it
+ * received, byte for byte, and only the fragment builder converts to the UTC form
+ * BigQuery wants. A consumer can therefore assert string identity across `decode`, but
+ * must assert instant identity across `toQueryFragment`.
+ */
+describe('FilterHelper temporal normalisation boundary', () => {
+  const offsetValue = '2026-09-18T00:00:00.000-05:00';
+  const offsetPayload = encodePayload([
+    {id: 'created', type: 'date', operator: 'greaterThanOrEqual', value: offsetValue, index: 0},
+  ]);
+
+  it('returns an offset timestamp from decode byte for byte', () => {
+    const [entry] = FilterHelper.Helper.decode(offsetPayload, {allowedFields});
+    expect(entry.value).toBe(offsetValue);
+  });
+
+  it('converts an offset timestamp to UTC when a fragment is built', () => {
+    const fragment = FilterHelper.Helper.toQueryFragment(
+      FilterHelper.Helper.decode(offsetPayload, {allowedFields}),
+      {allowedFields},
+    );
+    expect(fragment.params.f0).toBe('2026-09-18T05:00:00.000Z');
+    expect(fragment.types.f0).toBe('TIMESTAMP');
+  });
+
+  it('never narrows a TIMESTAMP field to a calendar date', () => {
+    const fragment = FilterHelper.Helper.toQueryFragment(
+      FilterHelper.Helper.decode(offsetPayload, {allowedFields}),
+      {allowedFields},
+    );
+    // Narrowing is chosen by the declared paramType alone, never by the value's shape.
+    expect(fragment.params.f0).not.toBe('2026-09-18');
+    expect(String(fragment.params.f0)).toContain('T');
+  });
+
+  it('orders between bounds as instants rather than as text', () => {
+    // Lexically the lower bound sorts first, but it is the later instant, so a range
+    // that text comparison would accept has to be refused.
+    const reversed = encodePayload([
+      {
+        id: 'created',
+        type: 'date',
+        operator: 'between',
+        value: ['2026-09-18T00:00:00.000-05:00', '2026-09-18T04:00:00.000Z'],
+        index: 0,
+      },
+    ]);
+    expect(() => FilterHelper.Helper.decode(reversed, {allowedFields})).toThrow('Invalid filter payload');
+  });
+
+  it('leaves an unparseable temporal literal for the caller to reject', () => {
+    const malformed = encodePayload([
+      {id: 'created', type: 'date', operator: 'equal', value: 'not-a-date', index: 0},
+    ]);
+    const [entry] = FilterHelper.Helper.decode(malformed, {allowedFields});
+    expect(entry.value).toBe('not-a-date');
+    expect(() => FilterHelper.Helper.toQueryFragment([entry], {allowedFields})).toThrow('Invalid filter payload');
+  });
+});
