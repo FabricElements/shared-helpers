@@ -222,8 +222,8 @@ export namespace FilterHelper {
    * Server-side declaration of one filterable field.
    *
    * This declaration is the entire trust boundary of the module: it maps an opaque
-   * payload `id` onto a real column, fixes the bind type, and optionally narrows which
-   * operators the field accepts.
+   * payload `id` onto a real column, fixes the bind type, and names the operators the
+   * field accepts.
    */
   export interface InterfaceFilterField {
     /**
@@ -254,8 +254,21 @@ export namespace FilterHelper {
      * of the payload, so a caller cannot change it.
      */
     betweenBounds?: 'closed' | 'halfOpen';
-    /** Operators permitted for this field. When omitted, every operator is permitted. */
-    operators?: readonly FilterOperator[];
+    /**
+     * Operators this field accepts.
+     *
+     * Required, and with no implicit default: a field permits exactly the operators it
+     * names and nothing else. An omitted list once meant *every* operator, which made
+     * the safe declaration the verbose one and let a field silently accept operators
+     * its owner had no handling for. That matters most for a consumer that validates
+     * with `decode` but emits its own SQL from a predicate table — an operator it
+     * cannot express still has to be refused here, because nothing downstream will
+     * refuse it.
+     *
+     * Pass `Object.values(FilterOperator)` to genuinely accept all of them; an empty
+     * array accepts none. Either way the decision is written down rather than inferred.
+     */
+    operators: readonly FilterOperator[];
     /** BigQuery bind type used for this field's query parameters. */
     paramType: FilterParamType;
     /**
@@ -459,7 +472,24 @@ export namespace FilterHelper {
   };
 
   /**
-   * Validates a scalar filter value and enforces the string length bound.
+   * Reports whether a field permits an operator, refusing an unusable declaration.
+   *
+   * `operators` is a required part of the declaration, but this module is published as
+   * compiled JavaScript and a caller without TypeScript can still omit it. Checking it
+   * here turns that into a clear configuration error rather than a `TypeError` raised
+   * from inside the decoder.
+   *
+   * @param {InterfaceFilterField} field - The server-side field declaration.
+   * @param {FilterOperator} operator - The operator carried by the payload entry.
+   * @returns {boolean} Whether the field accepts the operator.
+   * @throws {Error} When the declaration omits its operator list.
+   */
+  const permitsOperator = (field: InterfaceFilterField, operator: FilterOperator): boolean => {
+    if (!Array.isArray(field.operators)) throw invalidField('declared field must list the operators it accepts');
+    return field.operators.indexOf(operator) !== -1;
+  };
+
+  /**
    *
    * @param {unknown} value - The candidate value.
    * @param {number} position - Index of the entry, used only in the error detail.
@@ -627,7 +657,7 @@ export namespace FilterHelper {
     if (forbiddenKeys.indexOf(target) !== -1) throw invalidPayload(`filter entry ${position}: sort target uses a reserved key`);
     const field = resolveField(options.allowedFields, target);
     if (!field) throw invalidPayload(`filter entry ${position}: sort target is not an allowed field`);
-    if (field.operators && field.operators.indexOf(FilterOperator.sort) === -1) {
+    if (!permitsOperator(field, FilterOperator.sort)) {
       throw invalidPayload(`filter entry ${position}: sort is not permitted for the requested field`);
     }
     if (typeof direction !== 'string' || filterOrders.indexOf(direction) === -1) {
@@ -727,7 +757,7 @@ export namespace FilterHelper {
     if (operator !== FilterOperator.sort) {
       field = resolveField(options.allowedFields, rawId);
       if (!field) throw invalidPayload(`filter entry ${position}: id is not an allowed field`);
-      if (field.operators && field.operators.indexOf(operator) === -1) {
+      if (!permitsOperator(field, operator)) {
         throw invalidPayload(`filter entry ${position}: operator is not permitted for the requested field`);
       }
     }

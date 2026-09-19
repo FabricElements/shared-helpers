@@ -70,12 +70,17 @@ const encodeRaw = (json: string): string => Buffer.from(json, 'utf8').toString('
  */
 const causeOf = (error: unknown): Error | undefined => (error as Error & {cause?: Error}).cause;
 
+/** Every operator, for fixtures whose subject is not the operator allow-list. */
+const allOperators: readonly FilterHelper.FilterOperator[] = Object.freeze(
+  Object.values(FilterHelper.FilterOperator),
+);
+
 const allowedFields: Record<string, FilterHelper.InterfaceFilterField> = {
-  amount: {column: 'amount_total', paramType: 'FLOAT64'},
-  country: {column: 'country_code', paramType: 'STRING'},
-  created: {column: 'created_at', paramType: 'TIMESTAMP'},
-  name: {column: 'display_name', paramType: 'STRING'},
-  status: {column: 'status', paramType: 'STRING'},
+  amount: {column: 'amount_total', paramType: 'FLOAT64', operators: allOperators},
+  country: {column: 'country_code', paramType: 'STRING', operators: allOperators},
+  created: {column: 'created_at', paramType: 'TIMESTAMP', operators: allOperators},
+  name: {column: 'display_name', paramType: 'STRING', operators: allOperators},
+  status: {column: 'status', paramType: 'STRING', operators: allOperators},
 };
 
 const options: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields};
@@ -316,7 +321,7 @@ describe('FilterHelper.Helper.decode rejected payloads', () => {
     expect(() => Helper.decode(vector('equalString'), {} as FilterHelper.InterfaceFilterDecodeOptions))
       .toThrow('Invalid filter field configuration');
     const badColumn: FilterHelper.InterfaceFilterDecodeOptions = {
-      allowedFields: {status: {column: 'status`; DROP TABLE t; --', paramType: 'STRING'}},
+      allowedFields: {status: {column: 'status`; DROP TABLE t; --', paramType: 'STRING', operators: allOperators}},
     };
     expect(() => Helper.decodeToQueryFragment(vector('equalString'), badColumn))
       .toThrow('Invalid filter field configuration');
@@ -485,11 +490,11 @@ describe('FilterHelper.Helper lookups', () => {
 // ---------------------------------------------------------------------------
 
 const temporalFields: Record<string, FilterHelper.InterfaceFilterField> = {
-  date_field: {column: 'date_field', paramType: 'DATE'},
-  name: {column: 'display_name', paramType: 'STRING'},
-  range: {column: 'event_date', paramType: 'DATE'},
-  seen: {column: 'seen_at', paramType: 'DATETIME'},
-  stamp: {column: 'created_at', paramType: 'TIMESTAMP'},
+  date_field: {column: 'date_field', paramType: 'DATE', operators: allOperators},
+  name: {column: 'display_name', paramType: 'STRING', operators: allOperators},
+  range: {column: 'event_date', paramType: 'DATE', operators: allOperators},
+  seen: {column: 'seen_at', paramType: 'DATETIME', operators: allOperators},
+  stamp: {column: 'created_at', paramType: 'TIMESTAMP', operators: allOperators},
 };
 
 const temporalOptions: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: temporalFields};
@@ -687,9 +692,9 @@ describe('Dart parity: encode inclusion rule', () => {
  */
 describe('FilterHelper range bounds', () => {
   const rangeFields: Record<string, FilterHelper.InterfaceFilterField> = {
-    closed: {column: 'created_at', paramType: 'TIMESTAMP'},
-    counter: {betweenBounds: 'halfOpen', column: 'hit_count', paramType: 'INT64'},
-    tiled: {betweenBounds: 'halfOpen', column: 'created_at', paramType: 'TIMESTAMP'},
+    closed: {column: 'created_at', paramType: 'TIMESTAMP', operators: allOperators},
+    counter: {betweenBounds: 'halfOpen', column: 'hit_count', paramType: 'INT64', operators: allOperators},
+    tiled: {betweenBounds: 'halfOpen', column: 'created_at', paramType: 'TIMESTAMP', operators: allOperators},
   };
   const rangeOptions: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: rangeFields};
 
@@ -748,7 +753,7 @@ describe('FilterHelper range bounds', () => {
   });
 
   it('leaves bounds it cannot compare unambiguously to the backend', () => {
-    const fields: Record<string, FilterHelper.InterfaceFilterField> = {label: {column: 'label', paramType: 'STRING'}};
+    const fields: Record<string, FilterHelper.InterfaceFilterField> = {label: {column: 'label', paramType: 'STRING', operators: allOperators}};
     expect(Helper.decode(range('label', 'zebra', 'alpha'), {allowedFields: fields})).toHaveLength(1);
   });
 });
@@ -765,26 +770,26 @@ describe('FilterHelper struct path columns', () => {
   ]);
 
   it('accepts a dotted payload id without any opt-in, and preserves it verbatim', () => {
-    const fields = {'sentiment.text': {column: 'flat_column', paramType: 'STRING'} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'flat_column', paramType: 'STRING', operators: allOperators} as FilterHelper.InterfaceFilterField};
     const decoded = Helper.decode(dotted, {allowedFields: fields});
     expect(decoded[0].id).toBe('sentiment.text');
     expect(Helper.toQueryFragment(decoded, {allowedFields: fields}).where).toBe('`flat_column` = @f0');
   });
 
   it('quotes each segment separately so BigQuery reads it as struct access', () => {
-    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
     const fragment = Helper.decodeToQueryFragment(dotted, {allowedFields: fields});
     expect(fragment.where).toBe('`sentiment`.`text` = @f0');
     expect(fragment.params).toEqual({f0: 'happy'});
   });
 
   it('still rejects a dotted column when the field has not opted in', () => {
-    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING'} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', operators: allOperators} as FilterHelper.InterfaceFilterField};
     expect(() => Helper.decodeToQueryFragment(dotted, {allowedFields: fields})).toThrow('Invalid filter field configuration');
   });
 
   it('applies struct paths to sort targets too', () => {
-    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
     const encoded = encodePayload([
       {id: 'sort', index: 0, operator: 'sort', type: 'string', value: ['sentiment.text', 'desc']},
     ]);
@@ -793,18 +798,18 @@ describe('FilterHelper struct path columns', () => {
 
   it('validates every segment, so an empty or malformed one is rejected', () => {
     for (const column of ['sentiment.', '.text', 'sentiment..text', 'sentiment.te-xt', 'sentiment.1text']) {
-      const fields = {'sentiment.text': {column, paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+      const fields = {'sentiment.text': {column, paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
       expect(() => Helper.decodeToQueryFragment(dotted, {allowedFields: fields})).toThrow('Invalid filter field configuration');
     }
   });
 
   it('rejects a backtick in a segment, so the quoting cannot be escaped', () => {
-    const fields = {'sentiment.text': {column: 'sentiment.te`xt', paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'sentiment.te`xt', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
     expect(() => Helper.decodeToQueryFragment(dotted, {allowedFields: fields})).toThrow('Invalid filter field configuration');
   });
 
   it('bounds how deep a declared path may go', () => {
-    const fields = {'sentiment.text': {column: 'a.b.c.d.e.f.g.h.i', paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'a.b.c.d.e.f.g.h.i', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
     let thrown: unknown;
     try {
       Helper.decodeToQueryFragment(dotted, {allowedFields: fields});
@@ -816,7 +821,7 @@ describe('FilterHelper struct path columns', () => {
   });
 
   it('leaves an opted-in column with no dots as a single identifier', () => {
-    const fields = {'sentiment.text': {column: 'flat_column', paramType: 'STRING', structPath: true} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'flat_column', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
     expect(Helper.decodeToQueryFragment(dotted, {allowedFields: fields}).where).toBe('`flat_column` = @f0');
   });
 });
@@ -884,7 +889,7 @@ describe('FilterHelper multi operator fields', () => {
  */
 describe('FilterHelper validate only fields', () => {
   const fields: Record<string, FilterHelper.InterfaceFilterField> = {
-    plain: {column: 'plain_column', paramType: 'STRING'},
+    plain: {column: 'plain_column', paramType: 'STRING', operators: allOperators},
     validated: {operators: [FilterHelper.FilterOperator.equal], paramType: 'STRING'},
   };
   const options: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: fields};
@@ -1025,5 +1030,65 @@ describe('FilterHelper temporal normalisation boundary', () => {
     const [entry] = FilterHelper.Helper.decode(malformed, {allowedFields});
     expect(entry.value).toBe('not-a-date');
     expect(() => FilterHelper.Helper.toQueryFragment([entry], {allowedFields})).toThrow('Invalid filter payload');
+  });
+});
+
+/**
+ * Pins that a field permits exactly the operators it names.
+ *
+ * The operator list carries no implicit default. A consumer that validates with
+ * `decode` but emits its own SQL has to be able to refuse an operator it cannot
+ * express, because nothing downstream of this module will refuse it for them.
+ */
+describe('FilterHelper operator allow-list has no implicit default', () => {
+  const payloadFor = (operator: string): string => encodePayload([
+    {id: 'label', index: 0, operator, type: 'string', value: 'x'},
+  ]);
+
+  it('refuses an operator the field does not name', () => {
+    const fields: Record<string, FilterHelper.InterfaceFilterField> = {
+      label: {column: 'label', operators: [FilterHelper.FilterOperator.equal], paramType: 'STRING'},
+    };
+    expect(() => FilterHelper.Helper.decode(payloadFor('contains'), {allowedFields: fields}))
+      .toThrow('Invalid filter payload');
+    expect(FilterHelper.Helper.decode(payloadFor('equal'), {allowedFields: fields})).toHaveLength(1);
+  });
+
+  it('accepts nothing when the field names no operators', () => {
+    const fields: Record<string, FilterHelper.InterfaceFilterField> = {
+      label: {column: 'label', operators: [], paramType: 'STRING'},
+    };
+    expect(() => FilterHelper.Helper.decode(payloadFor('equal'), {allowedFields: fields}))
+      .toThrow('Invalid filter payload');
+  });
+
+  it('accepts every operator only when the field says so explicitly', () => {
+    const fields: Record<string, FilterHelper.InterfaceFilterField> = {
+      label: {column: 'label', operators: allOperators, paramType: 'STRING'},
+    };
+    expect(FilterHelper.Helper.decode(payloadFor('contains'), {allowedFields: fields})).toHaveLength(1);
+  });
+
+  it('reports a missing operator list as a configuration error', () => {
+    // A JavaScript caller can omit a required property that TypeScript would demand,
+    // so the omission has to surface as a declaration fault rather than a TypeError.
+    const fields = {label: {column: 'label', paramType: 'STRING'}} as unknown as Record<string, FilterHelper.InterfaceFilterField>;
+    expect(() => FilterHelper.Helper.decode(payloadFor('equal'), {allowedFields: fields}))
+      .toThrow('Invalid filter field configuration');
+  });
+
+  it('requires a sort target to name the sort operator', () => {
+    const sortPayload = encodePayload([
+      {id: 'sort', index: 0, operator: 'sort', type: 'string', value: ['label', 'asc']},
+    ]);
+    const without: Record<string, FilterHelper.InterfaceFilterField> = {
+      label: {column: 'label', operators: [FilterHelper.FilterOperator.equal], paramType: 'STRING'},
+    };
+    expect(() => FilterHelper.Helper.decode(sortPayload, {allowedFields: without}))
+      .toThrow('Invalid filter payload');
+    const with_: Record<string, FilterHelper.InterfaceFilterField> = {
+      label: {column: 'label', operators: [FilterHelper.FilterOperator.sort], paramType: 'STRING'},
+    };
+    expect(FilterHelper.Helper.decode(sortPayload, {allowedFields: with_})).toHaveLength(1);
   });
 });

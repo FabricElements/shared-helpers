@@ -145,13 +145,18 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
   or those payloads will be rejected.
 - **`FilterHelper` implements the whole Dart operator grammar; your backend need not.**
   `FilterOperator` mirrors Dart's enum member for member, so any payload `fabric_flutter`
-  can emit is decodable. Narrow it to the operators you actually have SQL for using the
-  per-field `operators` allow-list: a field declaring `operators: [FilterOperator.equal]`
-  rejects every other operator on that field. A field may list several — a timestamp
+  can emit is decodable. Each field then names the operators it accepts, and `operators`
+  is required with no implicit default — a field declaring
+  `operators: [FilterOperator.equal]` rejects every other operator on that field, and
+  there is no way to leave the question unanswered. Pass
+  `Object.values(FilterOperator)` to accept all of them; an empty array accepts none.
+  This matters most if you validate with `decode` but emit SQL from your own predicate
+  table: nothing downstream of this module will refuse an operator you never
+  implemented, so a `FilterOperator.contains` you silently treat as an equality is a
+  confidently wrong result rather than an error. A field may list several — a timestamp
   column typically accepts both an open-ended `FilterOperator.greaterThanOrEqual`
   carrying a single value and a two-value `FilterOperator.between`, and listing only the
-  range operator would reject the single-value form an encoder already emits. Prefer the
-  allow-list over assuming a caller will not send an operator you never implemented.
+  range operator would reject the single-value form an encoder already emits.
 - **`FilterHelper` lets you choose whether a `between` includes its upper bound.**
   Declare `betweenBounds` per field: the default `'closed'` emits
   `` `col` >= @f0 AND `col` <= @f1 ``, matching the Dart SQL builder and its in-memory

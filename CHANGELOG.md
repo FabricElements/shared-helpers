@@ -142,6 +142,18 @@ Prior releases are tracked through Git history and GitHub Releases.
   is not an ISO 8601 literal is rejected rather than coerced, because `Date.parse`
   otherwise accepts loose input such as `June 15, 2024`.
 
+  **Operator allow-list.** `InterfaceFilterField.operators` is required and has no
+  implicit default: a field permits exactly the operators it names. Pass
+  `Object.values(FilterOperator)` to accept all of them, or an empty array to accept
+  none. The omission case is a declaration fault, reported as
+  `Invalid filter field configuration` rather than a `TypeError`, so a JavaScript caller
+  that skips the property is told what is wrong. This is load bearing for the
+  validate-only integration below: `FilterOperator` carries the full Dart grammar, a
+  backend usually implements a fraction of it, and nothing downstream of `decode`
+  re-checks the operator. A field that quietly accepted every operator would hand such a
+  backend a `contains` it has no SQL for, which — because the operator survives on each
+  decoded entry — is a caller's substring request answered with an equality result.
+
   **Validate-only fields.** `InterfaceFilterField.column` is optional. A caller that
   already owns a predicate table mapping each filter to a hand-written SQL fragment can
   use `decode` purely as the untrusted-input boundary — parsing, operator allow-listing

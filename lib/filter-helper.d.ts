@@ -169,8 +169,8 @@ export declare namespace FilterHelper {
      * Server-side declaration of one filterable field.
      *
      * This declaration is the entire trust boundary of the module: it maps an opaque
-     * payload `id` onto a real column, fixes the bind type, and optionally narrows which
-     * operators the field accepts.
+     * payload `id` onto a real column, fixes the bind type, and names the operators the
+     * field accepts.
      */
     interface InterfaceFilterField {
         /**
@@ -201,8 +201,21 @@ export declare namespace FilterHelper {
          * of the payload, so a caller cannot change it.
          */
         betweenBounds?: 'closed' | 'halfOpen';
-        /** Operators permitted for this field. When omitted, every operator is permitted. */
-        operators?: readonly FilterOperator[];
+        /**
+         * Operators this field accepts.
+         *
+         * Required, and with no implicit default: a field permits exactly the operators it
+         * names and nothing else. An omitted list once meant *every* operator, which made
+         * the safe declaration the verbose one and let a field silently accept operators
+         * its owner had no handling for. That matters most for a consumer that validates
+         * with `decode` but emits its own SQL from a predicate table — an operator it
+         * cannot express still has to be refused here, because nothing downstream will
+         * refuse it.
+         *
+         * Pass `Object.values(FilterOperator)` to genuinely accept all of them; an empty
+         * array accepts none. Either way the decision is written down rather than inferred.
+         */
+        operators: readonly FilterOperator[];
         /** BigQuery bind type used for this field's query parameters. */
         paramType: FilterParamType;
         /**
