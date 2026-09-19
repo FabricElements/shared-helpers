@@ -118,7 +118,9 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
   decoded entries **after** `decode` and before building a fragment. Listing a field means
   any caller who reaches the decoder can filter and sort on it. Declared `column` values
   must satisfy `bigQueryColumnPattern` — letters, digits and underscores, **no dots** —
-  because each is emitted as a single backticked identifier.
+  because each is emitted as a single backticked identifier, unless the field opts into
+  `structPath` (below), which validates each dot-separated segment against that same
+  pattern instead.
 - **`FilterHelper` payloads never contain SQL or a table name.** They carry only
   declarative `{id, type, operator, value, index}` entries. Your code selects the target
   table from its own configuration, keyed by an explicit report-type parameter. A payload
