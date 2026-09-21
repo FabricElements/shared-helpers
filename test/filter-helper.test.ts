@@ -75,7 +75,7 @@ const allOperators: readonly FilterHelper.FilterOperator[] = Object.freeze(
   Object.values(FilterHelper.FilterOperator),
 );
 
-const allowedFields: Record<string, FilterHelper.InterfaceFilterField> = {
+const allowedFields: Record<string, FilterHelper.FilterField> = {
   amount: {column: 'amount_total', paramType: 'FLOAT64', operators: allOperators},
   country: {column: 'country_code', paramType: 'STRING', operators: allOperators},
   created: {column: 'created_at', paramType: 'TIMESTAMP', operators: allOperators},
@@ -83,7 +83,7 @@ const allowedFields: Record<string, FilterHelper.InterfaceFilterField> = {
   status: {column: 'status', paramType: 'STRING', operators: allOperators},
 };
 
-const options: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields};
+const options: FilterHelper.FilterDecodeOptions = {allowedFields};
 
 // ---------------------------------------------------------------------------
 // Dart provenance
@@ -258,7 +258,7 @@ describe('FilterHelper.Helper.decode rejected payloads', () => {
   });
 
   it('rejects an operator the field declaration does not permit', () => {
-    const narrowed: FilterHelper.InterfaceFilterDecodeOptions = {
+    const narrowed: FilterHelper.FilterDecodeOptions = {
       allowedFields: {status: {column: 'status', operators: [FilterOperator.equal], paramType: 'STRING'}},
     };
     expect(Helper.decode(vector('equalString'), narrowed)).toHaveLength(1);
@@ -318,9 +318,9 @@ describe('FilterHelper.Helper.decode rejected payloads', () => {
   });
 
   it('rejects a missing or invalid field declaration', () => {
-    expect(() => Helper.decode(vector('equalString'), {} as FilterHelper.InterfaceFilterDecodeOptions))
+    expect(() => Helper.decode(vector('equalString'), {} as FilterHelper.FilterDecodeOptions))
       .toThrow('Invalid filter field configuration');
-    const badColumn: FilterHelper.InterfaceFilterDecodeOptions = {
+    const badColumn: FilterHelper.FilterDecodeOptions = {
       allowedFields: {status: {column: 'status`; DROP TABLE t; --', paramType: 'STRING', operators: allOperators}},
     };
     expect(() => Helper.decodeToQueryFragment(vector('equalString'), badColumn))
@@ -413,7 +413,7 @@ describe('FilterHelper.Helper.decodeToQueryFragment', () => {
       operator: FilterOperator.equal,
       type: InputDataType.string,
       value: 'a',
-    }] as FilterHelper.InterfaceFilterData[];
+    }] as FilterHelper.FilterData[];
     expect(() => Helper.toQueryFragment(entries, options)).toThrow('Invalid filter payload');
   });
 });
@@ -441,7 +441,7 @@ describe('FilterHelper.Helper serialization', () => {
       operator: FilterOperator.equal,
       type: InputDataType.string,
       value: null,
-    }] as unknown as FilterHelper.InterfaceFilterData[];
+    }] as unknown as FilterHelper.FilterData[];
     expect(Helper.toJSON(entries)).toEqual([]);
     expect(Helper.encode(entries)).toBeNull();
     expect(Helper.encode([])).toBeNull();
@@ -489,7 +489,7 @@ describe('FilterHelper.Helper lookups', () => {
 // repository is traceable to the other.
 // ---------------------------------------------------------------------------
 
-const temporalFields: Record<string, FilterHelper.InterfaceFilterField> = {
+const temporalFields: Record<string, FilterHelper.FilterField> = {
   date_field: {column: 'date_field', paramType: 'DATE', operators: allOperators},
   name: {column: 'display_name', paramType: 'STRING', operators: allOperators},
   range: {column: 'event_date', paramType: 'DATE', operators: allOperators},
@@ -497,7 +497,7 @@ const temporalFields: Record<string, FilterHelper.InterfaceFilterField> = {
   stamp: {column: 'created_at', paramType: 'TIMESTAMP', operators: allOperators},
 };
 
-const temporalOptions: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: temporalFields};
+const temporalOptions: FilterHelper.FilterDecodeOptions = {allowedFields: temporalFields};
 
 describe('Dart parity: FilterOperator', () => {
   it('should contain all expected enum values', () => {
@@ -659,14 +659,14 @@ describe('Dart parity: encode inclusion rule', () => {
     const entries = [
       {id: 'status', index: 0, operator: null, type: InputDataType.string, value: 'active'},
       {id: 'name', index: 0, operator: FilterOperator.contains, type: InputDataType.string, value: 'ada'},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     expect(Helper.toJSON(entries).map((item) => item.id)).toEqual(['name']);
   });
 
   it('drops an entry that has an operator but no value', () => {
     const entries = [
       {id: 'status', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: null},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     expect(Helper.toJSON(entries)).toEqual([]);
     expect(Helper.encode(entries)).toBeNull();
   });
@@ -677,7 +677,7 @@ describe('Dart parity: encode inclusion rule', () => {
     const entries = [
       {id: 'status', index: 0, operator: null, type: InputDataType.string, value: 'active'},
       {id: 'country', index: 0, operator: FilterOperator.whereIn, type: InputDataType.string, value: ['US']},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     const decoded = Helper.decode(Helper.encode(entries), options);
     expect(Helper.toJSON(entries)).toHaveLength(1);
     expect(decoded.map((item) => item.id)).toEqual(['country']);
@@ -691,12 +691,12 @@ describe('Dart parity: encode inclusion rule', () => {
  * style is declared per field by the server, never carried in the payload.
  */
 describe('FilterHelper range bounds', () => {
-  const rangeFields: Record<string, FilterHelper.InterfaceFilterField> = {
+  const rangeFields: Record<string, FilterHelper.FilterField> = {
     closed: {column: 'created_at', paramType: 'TIMESTAMP', operators: allOperators},
     counter: {betweenBounds: 'halfOpen', column: 'hit_count', paramType: 'INT64', operators: allOperators},
     tiled: {betweenBounds: 'halfOpen', column: 'created_at', paramType: 'TIMESTAMP', operators: allOperators},
   };
-  const rangeOptions: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: rangeFields};
+  const rangeOptions: FilterHelper.FilterDecodeOptions = {allowedFields: rangeFields};
 
   const range = (id: string, lower: unknown, upper: unknown): string => encodePayload([
     {id, index: 0, operator: 'between', type: 'dateTime', value: [lower, upper]},
@@ -758,7 +758,7 @@ describe('FilterHelper range bounds', () => {
   });
 
   it('leaves bounds it cannot compare unambiguously to the backend', () => {
-    const fields: Record<string, FilterHelper.InterfaceFilterField> = {label: {column: 'label', paramType: 'STRING', operators: allOperators}};
+    const fields: Record<string, FilterHelper.FilterField> = {label: {column: 'label', paramType: 'STRING', operators: allOperators}};
     expect(Helper.decode(range('label', 'zebra', 'alpha'), {allowedFields: fields})).toHaveLength(1);
   });
 });
@@ -775,26 +775,26 @@ describe('FilterHelper struct path columns', () => {
   ]);
 
   it('accepts a dotted payload id without any opt-in, and preserves it verbatim', () => {
-    const fields = {'sentiment.text': {column: 'flat_column', paramType: 'STRING', operators: allOperators} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'flat_column', paramType: 'STRING', operators: allOperators} as FilterHelper.FilterField};
     const decoded = Helper.decode(dotted, {allowedFields: fields});
     expect(decoded[0].id).toBe('sentiment.text');
     expect(Helper.toQueryFragment(decoded, {allowedFields: fields}).where).toBe('`flat_column` = @f0');
   });
 
   it('quotes each segment separately so BigQuery reads it as struct access', () => {
-    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.FilterField};
     const fragment = Helper.decodeToQueryFragment(dotted, {allowedFields: fields});
     expect(fragment.where).toBe('`sentiment`.`text` = @f0');
     expect(fragment.params).toEqual({f0: 'happy'});
   });
 
   it('still rejects a dotted column when the field has not opted in', () => {
-    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', operators: allOperators} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', operators: allOperators} as FilterHelper.FilterField};
     expect(() => Helper.decodeToQueryFragment(dotted, {allowedFields: fields})).toThrow('Invalid filter field configuration');
   });
 
   it('applies struct paths to sort targets too', () => {
-    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'sentiment.text', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.FilterField};
     const encoded = encodePayload([
       {id: 'sort', index: 0, operator: 'sort', type: 'string', value: ['sentiment.text', 'desc']},
     ]);
@@ -803,18 +803,18 @@ describe('FilterHelper struct path columns', () => {
 
   it('validates every segment, so an empty or malformed one is rejected', () => {
     for (const column of ['sentiment.', '.text', 'sentiment..text', 'sentiment.te-xt', 'sentiment.1text']) {
-      const fields = {'sentiment.text': {column, paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
+      const fields = {'sentiment.text': {column, paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.FilterField};
       expect(() => Helper.decodeToQueryFragment(dotted, {allowedFields: fields})).toThrow('Invalid filter field configuration');
     }
   });
 
   it('rejects a backtick in a segment, so the quoting cannot be escaped', () => {
-    const fields = {'sentiment.text': {column: 'sentiment.te`xt', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'sentiment.te`xt', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.FilterField};
     expect(() => Helper.decodeToQueryFragment(dotted, {allowedFields: fields})).toThrow('Invalid filter field configuration');
   });
 
   it('bounds how deep a declared path may go', () => {
-    const fields = {'sentiment.text': {column: 'a.b.c.d.e.f.g.h.i', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'a.b.c.d.e.f.g.h.i', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.FilterField};
     let thrown: unknown;
     try {
       Helper.decodeToQueryFragment(dotted, {allowedFields: fields});
@@ -826,7 +826,7 @@ describe('FilterHelper struct path columns', () => {
   });
 
   it('leaves an opted-in column with no dots as a single identifier', () => {
-    const fields = {'sentiment.text': {column: 'flat_column', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.InterfaceFilterField};
+    const fields = {'sentiment.text': {column: 'flat_column', paramType: 'STRING', structPath: true, operators: allOperators} as FilterHelper.FilterField};
     expect(Helper.decodeToQueryFragment(dotted, {allowedFields: fields}).where).toBe('`flat_column` = @f0');
   });
 });
@@ -839,7 +839,7 @@ describe('FilterHelper struct path columns', () => {
  * would then have its payloads rejected.
  */
 describe('FilterHelper multi operator fields', () => {
-  const fields: Record<string, FilterHelper.InterfaceFilterField> = {
+  const fields: Record<string, FilterHelper.FilterField> = {
     created: {
       betweenBounds: 'halfOpen',
       column: 'event_time',
@@ -847,7 +847,7 @@ describe('FilterHelper multi operator fields', () => {
       paramType: 'TIMESTAMP',
     },
   };
-  const options: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: fields};
+  const options: FilterHelper.FilterDecodeOptions = {allowedFields: fields};
 
   it('accepts an open-ended greaterThanOrEqual carrying a single value', () => {
     const payload = encodePayload([
@@ -893,11 +893,11 @@ describe('FilterHelper multi operator fields', () => {
  * one.
  */
 describe('FilterHelper validate only fields', () => {
-  const fields: Record<string, FilterHelper.InterfaceFilterField> = {
+  const fields: Record<string, FilterHelper.FilterField> = {
     plain: {column: 'plain_column', paramType: 'STRING', operators: allOperators},
     validated: {operators: [FilterHelper.FilterOperator.equal], paramType: 'STRING'},
   };
-  const options: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: fields};
+  const options: FilterHelper.FilterDecodeOptions = {allowedFields: fields};
   const payload = encodePayload([{id: 'validated', index: 0, operator: 'equal', type: 'string', value: 'ok'}]);
 
   it('decodes a field that declares no column', () => {
@@ -1051,7 +1051,7 @@ describe('FilterHelper operator allow-list has no implicit default', () => {
   ]);
 
   it('refuses an operator the field does not name', () => {
-    const fields: Record<string, FilterHelper.InterfaceFilterField> = {
+    const fields: Record<string, FilterHelper.FilterField> = {
       label: {column: 'label', operators: [FilterHelper.FilterOperator.equal], paramType: 'STRING'},
     };
     expect(() => FilterHelper.Helper.decode(payloadFor('contains'), {allowedFields: fields}))
@@ -1060,7 +1060,7 @@ describe('FilterHelper operator allow-list has no implicit default', () => {
   });
 
   it('accepts nothing when the field names no operators', () => {
-    const fields: Record<string, FilterHelper.InterfaceFilterField> = {
+    const fields: Record<string, FilterHelper.FilterField> = {
       label: {column: 'label', operators: [], paramType: 'STRING'},
     };
     expect(() => FilterHelper.Helper.decode(payloadFor('equal'), {allowedFields: fields}))
@@ -1068,7 +1068,7 @@ describe('FilterHelper operator allow-list has no implicit default', () => {
   });
 
   it('accepts every operator only when the field says so explicitly', () => {
-    const fields: Record<string, FilterHelper.InterfaceFilterField> = {
+    const fields: Record<string, FilterHelper.FilterField> = {
       label: {column: 'label', operators: allOperators, paramType: 'STRING'},
     };
     expect(FilterHelper.Helper.decode(payloadFor('contains'), {allowedFields: fields})).toHaveLength(1);
@@ -1077,7 +1077,7 @@ describe('FilterHelper operator allow-list has no implicit default', () => {
   it('reports a missing operator list as a configuration error', () => {
     // A JavaScript caller can omit a required property that TypeScript would demand,
     // so the omission has to surface as a declaration fault rather than a TypeError.
-    const fields = {label: {column: 'label', paramType: 'STRING'}} as unknown as Record<string, FilterHelper.InterfaceFilterField>;
+    const fields = {label: {column: 'label', paramType: 'STRING'}} as unknown as Record<string, FilterHelper.FilterField>;
     expect(() => FilterHelper.Helper.decode(payloadFor('equal'), {allowedFields: fields}))
       .toThrow('Invalid filter field configuration');
   });
@@ -1086,12 +1086,12 @@ describe('FilterHelper operator allow-list has no implicit default', () => {
     const sortPayload = encodePayload([
       {id: 'sort', index: 0, operator: 'sort', type: 'string', value: ['label', 'asc']},
     ]);
-    const without: Record<string, FilterHelper.InterfaceFilterField> = {
+    const without: Record<string, FilterHelper.FilterField> = {
       label: {column: 'label', operators: [FilterHelper.FilterOperator.equal], paramType: 'STRING'},
     };
     expect(() => FilterHelper.Helper.decode(sortPayload, {allowedFields: without}))
       .toThrow('Invalid filter payload');
-    const with_: Record<string, FilterHelper.InterfaceFilterField> = {
+    const with_: Record<string, FilterHelper.FilterField> = {
       label: {column: 'label', operators: [FilterHelper.FilterOperator.sort], paramType: 'STRING'},
     };
     expect(FilterHelper.Helper.decode(sortPayload, {allowedFields: with_})).toHaveLength(1);
@@ -1105,7 +1105,7 @@ describe('FilterHelper refuses a sort entry payload-wide', () => {
   // parsed, so a consumer whose allow-list declares no sortable field loses filtering
   // rather than ordering. Softening this to drop the offending entry has to stay a
   // deliberate change, not a quiet one.
-  const allowedFields: Record<string, FilterHelper.InterfaceFilterField> = {
+  const allowedFields: Record<string, FilterHelper.FilterField> = {
     direction: {operators: [FilterOperator.equal], paramType: 'STRING'},
   };
 
@@ -1139,13 +1139,13 @@ describe('FilterHelper refuses a sort entry payload-wide', () => {
  * `whereIn`/`between` literals stay bare; `name`/`country` are strings so escaping is
  * observable; `created` is a BigQuery `TIMESTAMP` column.
  */
-const sqlFields: Record<string, FilterHelper.InterfaceFilterField> = {
+const sqlFields: Record<string, FilterHelper.FilterField> = {
   amount: {column: 'amount_total', paramType: 'FLOAT64', operators: allOperators},
   country: {column: 'country_code', paramType: 'STRING', operators: allOperators},
   created: {column: 'created_at', paramType: 'TIMESTAMP', operators: allOperators},
   name: {column: 'display_name', paramType: 'STRING', operators: allOperators},
 };
-const sqlOptions: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: sqlFields};
+const sqlOptions: FilterHelper.FilterDecodeOptions = {allowedFields: sqlFields};
 
 describe('Dart parity: Helper.toSQL', () => {
   it('builds a bare SELECT when there are no active filters', () => {
@@ -1193,10 +1193,10 @@ describe('Dart parity: Helper.toSQL', () => {
   });
 
   it('renders a half-open upper bound when the field declares it', () => {
-    const halfOpenFields: Record<string, FilterHelper.InterfaceFilterField> = {
+    const halfOpenFields: Record<string, FilterHelper.FilterField> = {
       amount: {betweenBounds: 'halfOpen', column: 'amount_total', paramType: 'FLOAT64', operators: allOperators},
     };
-    const halfOpenOptions: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: halfOpenFields};
+    const halfOpenOptions: FilterHelper.FilterDecodeOptions = {allowedFields: halfOpenFields};
     const filters = Helper.decode(encodePayload([
       {id: 'amount', index: 0, operator: 'between', type: 'double', value: [10, 20]},
     ]), halfOpenOptions);
@@ -1341,7 +1341,7 @@ describe('Dart parity: Helper.filterIdsValue', () => {
       {id: 'status', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'active'},
       {id: 'status', index: 1, operator: FilterOperator.equal, type: InputDataType.string, value: 'closed'},
       {id: 'region', index: 2, operator: FilterOperator.any, type: InputDataType.string, value: 'us'},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     const map = Helper.filterIdsValue(filters);
     expect(map.get('status')).toBe('active');
     expect(map.get('region')).toBe('us');
@@ -1353,7 +1353,7 @@ describe('Dart parity: Helper.filter', () => {
   const filters = [
     {id: 'status', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'active'},
     {id: 'region', index: 1, operator: FilterOperator.any, type: InputDataType.string, value: null},
-  ] as unknown as FilterHelper.InterfaceFilterData[];
+  ] as unknown as FilterHelper.FilterData[];
 
   it('keeps every entry, including any-operator placeholders, by default', () => {
     expect(Helper.filter(filters).map((entry) => entry.id)).toEqual(['status', 'region']);
@@ -1367,7 +1367,7 @@ describe('Dart parity: Helper.filter', () => {
 describe('Dart parity: Helper.merge', () => {
   const base = [
     {id: 'status', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'active'},
-  ] as unknown as FilterHelper.InterfaceFilterData[];
+  ] as unknown as FilterHelper.FilterData[];
 
   it('appends an update whose id is not yet present', () => {
     const merged = Helper.merge(base, [
@@ -1402,7 +1402,7 @@ describe('Dart parity: Helper.formatJSON', () => {
   it('parses declared fields per their InputDataType and leaves other keys alone', () => {
     const filters = [
       {id: 'age', index: 0, operator: FilterOperator.equal, type: InputDataType.int, value: 1},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     const rows = Helper.formatJSON(filters, [{age: '42', name: 'ada'}]);
     expect(rows).toEqual([{age: 42, name: 'ada'}]);
   });
@@ -1410,7 +1410,7 @@ describe('Dart parity: Helper.formatJSON', () => {
   it('formats each element of an array value element-wise', () => {
     const filters = [
       {id: 'scores', index: 0, operator: FilterOperator.whereIn, type: InputDataType.int, value: []},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     expect(Helper.formatJSON(filters, [{scores: ['1', '2']}])).toEqual([{scores: [1, 2]}]);
   });
 });
@@ -1429,7 +1429,7 @@ describe('Dart parity: Helper.filterJSON', () => {
   it('keeps only rows matching every active non-sort entry', () => {
     const filters = [
       {id: 'country', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'US'},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     expect(Helper.filterJSON(filters, rows).map((row) => row.name)).toEqual(['ada', null]);
   });
 
@@ -1443,7 +1443,7 @@ describe('Dart parity: Helper.filterJSON', () => {
     const filters = [
       {id: 'country', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'US'},
       {id: 'name', index: 1, operator: FilterOperator.equal, type: InputDataType.string, value: null},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     expect(Helper.filterJSON(filters, rows)).toEqual([]);
   });
 
@@ -1454,14 +1454,14 @@ describe('Dart parity: Helper.filterJSON', () => {
     const scoreRows = [{score: 1}, {score: 21}, {score: 2}];
     const filters = [
       {id: 'score', index: 0, operator: FilterOperator.whereIn, type: InputDataType.int, value: [1]},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     expect(Helper.filterJSON(filters, scoreRows).map((row) => row.score)).toEqual([1]);
   });
 
   it('sorts by the declared sort target and direction without requiring a matching non-sort entry', () => {
     const filters = [
       {id: 'sort', index: 0, operator: FilterOperator.sort, type: InputDataType.string, value: ['score', FilterOrder.desc]},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     expect(Helper.filterJSON(filters, rows).map((row) => row.score)).toEqual([10, 7, 5]);
   });
 
@@ -1469,7 +1469,7 @@ describe('Dart parity: Helper.filterJSON', () => {
     const filters = [
       {id: 'country', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'US'},
       {id: 'sort', index: 1, operator: FilterOperator.sort, type: InputDataType.string, value: ['score', FilterOrder.asc]},
-    ] as unknown as FilterHelper.InterfaceFilterData[];
+    ] as unknown as FilterHelper.FilterData[];
     expect(Helper.filterJSON(filters, rows).map((row) => row.score)).toEqual([7, 10]);
   });
 });

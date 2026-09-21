@@ -143,17 +143,19 @@ Follow the conventions already present in `src/`. Consistency is enforced by rev
 | Test files | mirror source + `.test.ts` | `test/pubsub-event.test.ts` |
 | Namespaces | `PascalCase` | `FirestoreHelper`, `User`, `Media` |
 | Classes | `PascalCase` (domain classes named `Helper` inside a namespace) | `FirestoreHelper.Helper`, `BigQueryStreamWriter` |
-| Interfaces | **`Interface`-prefixed** `PascalCase` | `InterfaceAPIRequest`, `InterfaceFirestoreQuery`, `User.Interface` |
+| Interfaces | Plain `PascalCase`, no `Interface` prefix | `FilterData`, `FilterField`, `FilterDecodeOptions` |
 | Type aliases | `camelCase` for value-shaped unions; `PascalCase` for domain types | `fetchResponse`, `linkType`; `BigQueryRow`, `BigQueryFieldType` |
 | Enums + members | `PascalCase` enum, lowercase members mirroring external strings | `Media.ImageSize`, `AvailableOutputFormats.webp` |
 | Functions / consts / vars | `camelCase` | `checkNumber`, `replaceMessageText` |
 | Private statics / helpers | leading underscore | `_getDocument`, `_length` |
 | Exported default fn modules | file exports a single `export default` fn; the barrel names it | `import pubSubEvent from './pubsub-event.js'` |
 
-- **Prefer `Interface`-prefixed names for public interfaces** to match the dominant
-  codebase style. New option bags may follow the `SomethingOptions` shape only where a
-  sibling already does (`BigQueryStreamWriterOptions`); when in doubt, use the `Interface`
-  prefix.
+- **New interfaces use plain `PascalCase`, without an `Interface` prefix.** Existing
+  `Interface`-prefixed names (`InterfaceAPIRequest`, `InterfaceFirestoreQuery`,
+  `User.Interface`) are legacy and may be renamed opportunistically when a module is
+  otherwise being touched, but do not do a repo-wide rename unless explicitly asked —
+  it is a breaking public API change. New option bags may follow the `SomethingOptions`
+  shape where a sibling already does (`BigQueryStreamWriterOptions`).
 - Do not abbreviate domain terms inconsistently; reuse existing names
   (`collection`, `collectionGroup`, `reference`, `document`).
 

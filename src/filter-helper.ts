@@ -17,7 +17,7 @@
  *
  * Everything that reaches generated SQL is server-declared:
  *
- * - The column name comes from {@link FilterHelper.InterfaceFilterField.column} in the
+ * - The column name comes from {@link FilterHelper.FilterField.column} in the
  *   caller-supplied allow-list, never from the payload.
  * - The comparison operator comes from a frozen lookup table keyed by a closed enum.
  * - Every value is bound as a query parameter (`@f0`, `@f1`, …) and is never
@@ -220,7 +220,7 @@ export namespace FilterHelper {
    * also carries `label`, `enums`, `options`, `onChange`, and `group`, but all of those
    * are marked `includeToJson: false` and never appear on the wire.
    */
-  export interface InterfaceFilterData {
+  export interface FilterData {
     /**
      * Stable identifier of the filtered field.
      *
@@ -239,7 +239,7 @@ export namespace FilterHelper {
      *
      * This value is attacker-controlled and is retained only for round-trip fidelity
      * and logging.  **No security or binding decision depends on it** — BigQuery bind
-     * types come from {@link InterfaceFilterField.paramType}.  It is nonetheless
+     * types come from {@link FilterField.paramType}.  It is nonetheless
      * validated against the closed {@link InputDataType} grammar so an unrecognized
      * value cannot be stored or echoed.
      *
@@ -258,12 +258,12 @@ export namespace FilterHelper {
    * payload `id` onto a real column, fixes the bind type, and names the operators the
    * field accepts.
    */
-  export interface InterfaceFilterField {
+  export interface FilterField {
     /**
      * Real BigQuery column backing this field.
      *
      * Normally a single column name, validated with `validateBigQueryColumn`. Set
-     * {@link InterfaceFilterField.structPath} to declare a dotted path into a `STRUCT`
+     * {@link FilterField.structPath} to declare a dotted path into a `STRUCT`
      * instead, in which case every segment is validated separately.
      *
      * Optional, because a caller may use `decode` purely to validate an untrusted
@@ -305,7 +305,7 @@ export namespace FilterHelper {
     /** BigQuery bind type used for this field's query parameters. */
     paramType: FilterParamType;
     /**
-     * Whether {@link InterfaceFilterField.column} is a dotted path into a `STRUCT`.
+     * Whether {@link FilterField.column} is a dotted path into a `STRUCT`.
      *
      * BigQuery column names cannot contain a period, so a dotted reference such as
      * `sentiment.text` is always a path into a struct and never the literal name of a
@@ -328,7 +328,7 @@ export namespace FilterHelper {
   /**
    * Options controlling decoding and validation.
    */
-  export interface InterfaceFilterDecodeOptions {
+  export interface FilterDecodeOptions {
     /**
      * Allow-list of filterable fields, keyed by the payload `id`.
      *
@@ -342,7 +342,7 @@ export namespace FilterHelper {
      * any such authorization check over the decoded entries yourself, after `decode`
      * and before building a fragment.
      */
-    allowedFields: ReadonlyMap<string, InterfaceFilterField> | Readonly<Record<string, InterfaceFilterField>>;
+    allowedFields: ReadonlyMap<string, FilterField> | Readonly<Record<string, FilterField>>;
     /** Maximum number of elements in a `whereIn` list. Defaults to `100`. */
     maxArrayLength?: number;
     /** Maximum length of the encoded string, checked before decoding. Defaults to `8192`. */
@@ -360,7 +360,7 @@ export namespace FilterHelper {
    * text, and generated parameter placeholders.  No caller-supplied value ever appears
    * in either string.
    */
-  export interface InterfaceFilterQueryFragment {
+  export interface FilterQueryFragment {
     /**
      * Comma-separated `ORDER BY` terms without the `ORDER BY` keyword, or an empty
      * string when no sort entries were supplied.
@@ -490,17 +490,17 @@ export namespace FilterHelper {
    * Resolves a field declaration from the allow-list without consulting the prototype
    * chain.
    *
-   * @param {ReadonlyMap<string, InterfaceFilterField> | Readonly<Record<string, InterfaceFilterField>>} allowedFields - The allow-list.
+   * @param {ReadonlyMap<string, FilterField> | Readonly<Record<string, FilterField>>} allowedFields - The allow-list.
    * @param {string} id - The payload identifier to resolve.
-   * @returns {InterfaceFilterField | undefined} The declaration, or `undefined` when the id is not allow-listed.
+   * @returns {FilterField | undefined} The declaration, or `undefined` when the id is not allow-listed.
    */
   const resolveField = (
-    allowedFields: ReadonlyMap<string, InterfaceFilterField> | Readonly<Record<string, InterfaceFilterField>>,
+    allowedFields: ReadonlyMap<string, FilterField> | Readonly<Record<string, FilterField>>,
     id: string,
-  ): InterfaceFilterField | undefined => {
+  ): FilterField | undefined => {
     if (allowedFields instanceof Map) return allowedFields.get(id);
     return Object.prototype.hasOwnProperty.call(allowedFields, id)
-      ? (allowedFields as Record<string, InterfaceFilterField>)[id]
+      ? (allowedFields as Record<string, FilterField>)[id]
       : undefined;
   };
 
@@ -512,12 +512,12 @@ export namespace FilterHelper {
    * here turns that into a clear configuration error rather than a `TypeError` raised
    * from inside the decoder.
    *
-   * @param {InterfaceFilterField} field - The server-side field declaration.
+   * @param {FilterField} field - The server-side field declaration.
    * @param {FilterOperator} operator - The operator carried by the payload entry.
    * @returns {boolean} Whether the field accepts the operator.
    * @throws {Error} When the declaration omits its operator list.
    */
-  const permitsOperator = (field: InterfaceFilterField, operator: FilterOperator): boolean => {
+  const permitsOperator = (field: FilterField, operator: FilterOperator): boolean => {
     if (!Array.isArray(field.operators)) throw invalidField('declared field must list the operators it accepts');
     return field.operators.indexOf(operator) !== -1;
   };
@@ -600,11 +600,11 @@ export namespace FilterHelper {
    * legitimately selects the single point `x`.
    *
    * @param {(number | string)[]} bounds - The validated two-element range.
-   * @param {InterfaceFilterField} field - The server-side field declaration.
+   * @param {FilterField} field - The server-side field declaration.
    * @param {number} position - Index of the entry, used only in the error detail.
    * @throws {Error} When the range is reversed, or empty under half-open bounds.
    */
-  const assertOrderedRange = (bounds: (number | string)[], field: InterfaceFilterField, position: number): void => {
+  const assertOrderedRange = (bounds: (number | string)[], field: FilterField, position: number): void => {
     const [lower, upper] = bounds;
     let low: number;
     let high: number;
@@ -675,11 +675,11 @@ export namespace FilterHelper {
    *
    * @param {unknown} value - The serialized sort value.
    * @param {number} position - Index of the entry, used only in the error detail.
-   * @param {InterfaceFilterDecodeOptions} options - Decode options carrying the allow-list.
+   * @param {FilterDecodeOptions} options - Decode options carrying the allow-list.
    * @returns {[string, FilterOrder] | null} The validated pair, or `null` when the sort is incomplete.
    * @throws {Error} When the pair is malformed, the target is not allow-listed, or the direction is unknown.
    */
-  const validateSortValue = (value: unknown, position: number, options: InterfaceFilterDecodeOptions): [string, FilterOrder] | null => {
+  const validateSortValue = (value: unknown, position: number, options: FilterDecodeOptions): [string, FilterOrder] | null => {
     if (!Array.isArray(value)) throw invalidPayload(`filter entry ${position}: sort value must be a [field, direction] pair`);
     if (value.length !== 2) throw invalidPayload(`filter entry ${position}: sort value must contain exactly two elements`);
     const [target, direction] = value as unknown[];
@@ -745,7 +745,7 @@ export namespace FilterHelper {
   };
 
   /**
-   * Validates one raw entry and normalises it into an {@link InterfaceFilterData}.
+   * Validates one raw entry and normalises it into an {@link FilterData}.
    *
    * Entries that carry no constraint are dropped by returning `null`.  This mirrors the
    * Dart encoder, which emits cleared filters instead of removing them, and is not a
@@ -753,11 +753,11 @@ export namespace FilterHelper {
    *
    * @param {unknown} raw - The raw parsed entry.
    * @param {number} position - Index of the entry within the payload.
-   * @param {InterfaceFilterDecodeOptions} options - Decode options.
-   * @returns {InterfaceFilterData | null} The validated entry, or `null` when it should be dropped.
+   * @param {FilterDecodeOptions} options - Decode options.
+   * @returns {FilterData | null} The validated entry, or `null` when it should be dropped.
    * @throws {Error} When the entry is malformed or references a value that is not allow-listed.
    */
-  const validateEntry = (raw: unknown, position: number, options: InterfaceFilterDecodeOptions): InterfaceFilterData | null => {
+  const validateEntry = (raw: unknown, position: number, options: FilterDecodeOptions): FilterData | null => {
     if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
       throw invalidPayload(`filter entry ${position}: entry is not an object`);
     }
@@ -786,7 +786,7 @@ export namespace FilterHelper {
 
     // A sort entry addresses its target through `value[0]`; the Dart UI stores the
     // literal id `'sort'`, which is a pseudo-field and is never resolved as a column.
-    let field: InterfaceFilterField | undefined;
+    let field: FilterField | undefined;
     if (operator !== FilterOperator.sort) {
       field = resolveField(options.allowedFields, rawId);
       if (!field) throw invalidPayload(`filter entry ${position}: id is not an allowed field`);
@@ -834,7 +834,7 @@ export namespace FilterHelper {
 
     // Built key by key from validated locals. The parsed payload is never spread, so a
     // `__proto__` or `constructor` key cannot ride along into the result.
-    const result: InterfaceFilterData = {id: rawId, operator, type, value};
+    const result: FilterData = {id: rawId, operator, type, value};
     if (index !== undefined) result.index = index;
     return result;
   };
@@ -853,11 +853,11 @@ export namespace FilterHelper {
    * cannot contain a period, so a dotted reference is only ever a path into a struct,
    * never the literal name of a column.
    *
-   * @param {InterfaceFilterField} field - The server-side field declaration.
+   * @param {FilterField} field - The server-side field declaration.
    * @returns {string} The backtick-quoted SQL reference.
    * @throws {Error} When the declared column is not a valid BigQuery reference.
    */
-  const resolveColumn = (field: InterfaceFilterField): string => {
+  const resolveColumn = (field: FilterField): string => {
     // Distinguished from a wrong type so a validate-only declaration that is then used
     // to build SQL reports the actual mistake.
     if (field.column === undefined) throw invalidField('declared column is required to build a query fragment');
@@ -884,10 +884,10 @@ export namespace FilterHelper {
    * Entries are ordered by their `index` hint and tie-broken by their original
    * position, so a payload always produces byte-identical SQL.
    *
-   * @param {InterfaceFilterData[]} entries - The validated entries.
-   * @returns {InterfaceFilterData[]} A new, ordered array.
+   * @param {FilterData[]} entries - The validated entries.
+   * @returns {FilterData[]} A new, ordered array.
    */
-  const orderEntries = (entries: InterfaceFilterData[]): InterfaceFilterData[] => entries
+  const orderEntries = (entries: FilterData[]): FilterData[] => entries
     .map((entry, position) => ({entry, position}))
     .sort((a, b) => ((a.entry.index ?? 0) - (b.entry.index ?? 0)) || (a.position - b.position))
     .map((item) => item.entry);
@@ -898,12 +898,12 @@ export namespace FilterHelper {
    * Exposed on {@link Helper} as `decodeToQueryFragment`; kept here so `decode` and
    * `toQueryFragment` share a single validation path.
    *
-   * @param {InterfaceFilterData[]} entries - Already validated entries.
-   * @param {InterfaceFilterDecodeOptions} options - Decode options carrying the allow-list.
-   * @returns {InterfaceFilterQueryFragment} The parameterised fragment.
+   * @param {FilterData[]} entries - Already validated entries.
+   * @param {FilterDecodeOptions} options - Decode options carrying the allow-list.
+   * @returns {FilterQueryFragment} The parameterised fragment.
    * @throws {Error} When a declared column fails BigQuery validation.
    */
-  const buildFragment = (entries: InterfaceFilterData[], options: InterfaceFilterDecodeOptions): InterfaceFilterQueryFragment => {
+  const buildFragment = (entries: FilterData[], options: FilterDecodeOptions): FilterQueryFragment => {
     const predicates: string[] = [];
     const orderTerms: string[] = [];
     const params: Record<string, FilterValue> = {};
@@ -1095,8 +1095,8 @@ export namespace FilterHelper {
    * {@link comparisonOperatorFor}).
    */
   const buildLiteralFragment = (
-    entries: InterfaceFilterData[],
-    options: InterfaceFilterDecodeOptions,
+    entries: FilterData[],
+    options: FilterDecodeOptions,
     sqlQueryType: SQLQueryType,
   ): { orderBy: string; where: string } => {
     const predicates: string[] = [];
@@ -1220,7 +1220,7 @@ export namespace FilterHelper {
    * spuriously match a row value of `'21'`. Membership is the only correct reading of
    * "where in".
    */
-  const matchesFilterEntryValue = (rowValue: unknown, entry: InterfaceFilterData): boolean => {
+  const matchesFilterEntryValue = (rowValue: unknown, entry: FilterData): boolean => {
     switch (entry.operator) {
       case FilterOperator.equal:
         return rowValue === entry.value || String(rowValue) === String(entry.value);
@@ -1254,12 +1254,12 @@ export namespace FilterHelper {
    * Helper.merge}.
    *
    * The Dart `FilterData.operator` is nullable, so a Dart merge entry with a `null`
-   * operator "clears" (removes) the matching filter. `InterfaceFilterData.operator` is
+   * operator "clears" (removes) the matching filter. `FilterData.operator` is
    * required in this port, so the same intent is expressed by omitting `operator`
    * entirely: an update with no `operator` removes the matching `id` from the result
    * instead of leaving a filter entry that cannot represent "no constraint".
    */
-  export type FilterMergeEntry = Partial<InterfaceFilterData> & { id: string };
+  export type FilterMergeEntry = Partial<FilterData> & { id: string };
 
   /**
    * Decodes, validates, and converts the compact filter payload produced by the Dart
@@ -1274,11 +1274,11 @@ export namespace FilterHelper {
      * carry no constraint are dropped.
      *
      * @param {unknown} filters - The parsed payload. Must be an array.
-     * @param {InterfaceFilterDecodeOptions} options - Decode options carrying the field allow-list.
-     * @returns {InterfaceFilterData[]} The validated entries, in payload order.
+     * @param {FilterDecodeOptions} options - Decode options carrying the field allow-list.
+     * @returns {FilterData[]} The validated entries, in payload order.
      * @throws {Error} When the payload is not an array, exceeds its bounds, or contains a malformed or disallowed entry.
      */
-    public static fromJSON = (filters: unknown, options: InterfaceFilterDecodeOptions): InterfaceFilterData[] => {
+    public static fromJSON = (filters: unknown, options: FilterDecodeOptions): FilterData[] => {
       if (!options || !options.allowedFields) throw invalidField('decode options must supply an allowedFields allow-list');
       // The root must be an array. A legacy `toSQLEncoded` payload base64-decodes to raw
       // SQL text rather than a JSON array, so this check is the kill switch that keeps
@@ -1286,7 +1286,7 @@ export namespace FilterHelper {
       if (!Array.isArray(filters)) throw invalidPayload('payload root is not an array');
       const maxEntries = options.maxEntries ?? defaultMaxEntries;
       if (filters.length > maxEntries) throw invalidPayload('payload exceeds the maximum number of entries');
-      const response: InterfaceFilterData[] = [];
+      const response: FilterData[] = [];
       for (let position = 0; position < filters.length; position += 1) {
         const entry = validateEntry(filters[position], position, options);
         if (entry) response.push(entry);
@@ -1307,11 +1307,11 @@ export namespace FilterHelper {
      * silently repaired.
      *
      * @param {string | null | undefined} filters - The base64 payload.
-     * @param {InterfaceFilterDecodeOptions} options - Decode options carrying the field allow-list.
-     * @returns {InterfaceFilterData[]} The validated entries.
+     * @param {FilterDecodeOptions} options - Decode options carrying the field allow-list.
+     * @returns {FilterData[]} The validated entries.
      * @throws {Error} When the payload is oversized, not canonical base64, not valid JSON, not an array, or contains a malformed or disallowed entry.
      */
-    public static decode = (filters: string | null | undefined, options: InterfaceFilterDecodeOptions): InterfaceFilterData[] => {
+    public static decode = (filters: string | null | undefined, options: FilterDecodeOptions): FilterData[] => {
       if (filters === null || filters === undefined || filters === '') return [];
       if (typeof filters !== 'string') throw invalidPayload('payload is not a string');
       // Bound the input before spending work on it.
@@ -1344,10 +1344,10 @@ export namespace FilterHelper {
      * compile to a predicate, so `decode` would silently drop it and the payload would
      * shrink on the next round-trip.
      *
-     * @param {InterfaceFilterData[]} filters - The entries to serialize.
+     * @param {FilterData[]} filters - The entries to serialize.
      * @returns {Record<string, unknown>[]} The serialized entries.
      */
-    public static toJSON = (filters: InterfaceFilterData[]): Record<string, unknown>[] => (filters ?? [])
+    public static toJSON = (filters: FilterData[]): Record<string, unknown>[] => (filters ?? [])
       .filter((entry) => entry &&
         entry.value !== null && entry.value !== undefined &&
         entry.operator !== null && entry.operator !== undefined)
@@ -1371,10 +1371,10 @@ export namespace FilterHelper {
      * `FilterData._valueToJson` runtime conversions (`DateTime` to ISO 8601, enum
      * description), because those depend on Flutter-side types that never exist here.
      *
-     * @param {InterfaceFilterData[]} filters - The entries to encode.
+     * @param {FilterData[]} filters - The entries to encode.
      * @returns {string | null} The base64 payload, or `null` when no entry carries a value.
      */
-    public static encode = (filters: InterfaceFilterData[]): string | null => {
+    public static encode = (filters: FilterData[]): string | null => {
       const serialized = this.toJSON(filters);
       if (!serialized.length) return null;
       return Buffer.from(JSON.stringify(serialized), 'utf8').toString('base64');
@@ -1386,11 +1386,11 @@ export namespace FilterHelper {
      * Mirrors the Dart `FilterHelper.filterById`, which looks up in strict mode so
      * placeholder `any` entries do not masquerade as real values.
      *
-     * @param {InterfaceFilterData[]} filters - The entries to search.
+     * @param {FilterData[]} filters - The entries to search.
      * @param {string} id - The identifier to match.
-     * @returns {InterfaceFilterData | null} The matching entry, or `null` when there is none.
+     * @returns {FilterData | null} The matching entry, or `null` when there is none.
      */
-    public static filterById = (filters: InterfaceFilterData[], id: string): InterfaceFilterData | null => (filters ?? [])
+    public static filterById = (filters: FilterData[], id: string): FilterData | null => (filters ?? [])
       .find((entry) => entry && entry.id === id && entry.operator !== FilterOperator.any) ?? null;
 
     /**
@@ -1398,11 +1398,11 @@ export namespace FilterHelper {
      *
      * Mirrors the Dart `FilterHelper.valueFromId`.
      *
-     * @param {InterfaceFilterData[]} filters - The entries to search.
+     * @param {FilterData[]} filters - The entries to search.
      * @param {string} id - The identifier to match.
      * @returns {FilterValue | null} The value, or `null` when there is no active match.
      */
-    public static valueFromId = (filters: InterfaceFilterData[], id: string): FilterValue | null => this.filterById(filters, id)?.value ?? null;
+    public static valueFromId = (filters: FilterData[], id: string): FilterValue | null => this.filterById(filters, id)?.value ?? null;
 
     /**
      * Builds a parameterised query fragment from filter entries.
@@ -1416,12 +1416,12 @@ export namespace FilterHelper {
      * interpolated, and the fragment carries no table or dataset name — the caller
      * selects the target table from its own explicit parameter.
      *
-     * @param {InterfaceFilterData[]} filters - The entries to convert.
-     * @param {InterfaceFilterDecodeOptions} options - Decode options carrying the field allow-list.
-     * @returns {InterfaceFilterQueryFragment} The parameterised fragment.
+     * @param {FilterData[]} filters - The entries to convert.
+     * @param {FilterDecodeOptions} options - Decode options carrying the field allow-list.
+     * @returns {FilterQueryFragment} The parameterised fragment.
      * @throws {Error} When an entry is malformed, references a field that is not allow-listed, or a declared column fails BigQuery validation.
      */
-    public static toQueryFragment = (filters: InterfaceFilterData[], options: InterfaceFilterDecodeOptions): InterfaceFilterQueryFragment => {
+    public static toQueryFragment = (filters: FilterData[], options: FilterDecodeOptions): FilterQueryFragment => {
       const validated = this.fromJSON(filters ?? [], options);
       return buildFragment(validated, options);
     };
@@ -1430,14 +1430,14 @@ export namespace FilterHelper {
      * Decodes a base64 filter payload straight into a parameterised query fragment.
      *
      * @param {string | null | undefined} filters - The base64 payload.
-     * @param {InterfaceFilterDecodeOptions} options - Decode options carrying the field allow-list.
-     * @returns {InterfaceFilterQueryFragment} The parameterised fragment.
+     * @param {FilterDecodeOptions} options - Decode options carrying the field allow-list.
+     * @returns {FilterQueryFragment} The parameterised fragment.
      * @throws {Error} When the payload is invalid or a declared column fails BigQuery validation.
      */
     public static decodeToQueryFragment = (
       filters: string | null | undefined,
-      options: InterfaceFilterDecodeOptions,
-    ): InterfaceFilterQueryFragment => buildFragment(this.decode(filters, options), options);
+      options: FilterDecodeOptions,
+    ): FilterQueryFragment => buildFragment(this.decode(filters, options), options);
 
     /**
      * Formats a single raw value as literal SQL text for a declared `InputDataType`.
@@ -1486,18 +1486,18 @@ export namespace FilterHelper {
      * {@link formatLiteral}. See {@link buildLiteralFragment} for the last-sort-wins
      * `ORDER BY` deviation from the Dart source's broken multi-sort concatenation.
      *
-     * @param {InterfaceFilterData[]} filters - The entries to convert.
+     * @param {FilterData[]} filters - The entries to convert.
      * @param {string} table - A `table`, `dataset.table`, or `project.dataset.table` path.
-     * @param {InterfaceFilterDecodeOptions} options - Decode options carrying the field allow-list.
+     * @param {FilterDecodeOptions} options - Decode options carrying the field allow-list.
      * @param {number} [limit] - An optional non-negative row limit.
      * @param {SQLQueryType} [sqlQueryType] - The target SQL dialect. Defaults to `bigQuery`.
      * @returns {string} The generated `SELECT` statement.
      * @throws {Error} When an entry is malformed, `table` fails BigQuery validation, or `limit` is not a non-negative integer.
      */
     public static toSQL = (
-      filters: InterfaceFilterData[],
+      filters: FilterData[],
       table: string,
-      options: InterfaceFilterDecodeOptions,
+      options: FilterDecodeOptions,
       limit?: number,
       sqlQueryType: SQLQueryType = SQLQueryType.bigQuery,
     ): string => {
@@ -1521,18 +1521,18 @@ export namespace FilterHelper {
      * not a security boundary: the safety of the generated SQL text comes entirely
      * from {@link Helper.toSQL}'s validation and escaping.
      *
-     * @param {InterfaceFilterData[]} filters - The entries to convert.
+     * @param {FilterData[]} filters - The entries to convert.
      * @param {string} table - A `table`, `dataset.table`, or `project.dataset.table` path.
-     * @param {InterfaceFilterDecodeOptions} options - Decode options carrying the field allow-list.
+     * @param {FilterDecodeOptions} options - Decode options carrying the field allow-list.
      * @param {number} [limit] - An optional non-negative row limit.
      * @param {SQLQueryType} [sqlQueryType] - The target SQL dialect. Defaults to `bigQuery`.
      * @returns {string} The base64-encoded UTF-8 SQL text.
      * @throws {Error} Under the same conditions as {@link Helper.toSQL}.
      */
     public static toSQLEncoded = (
-      filters: InterfaceFilterData[],
+      filters: FilterData[],
       table: string,
-      options: InterfaceFilterDecodeOptions,
+      options: FilterDecodeOptions,
       limit?: number,
       sqlQueryType: SQLQueryType = SQLQueryType.bigQuery,
     ): string => Buffer.from(this.toSQL(filters, table, options, limit, sqlQueryType), 'utf8').toString('base64');
@@ -1545,10 +1545,10 @@ export namespace FilterHelper {
      * exclude `any`-operator entries), intended for callers that need a quick id →
      * value map for every entry present, regardless of operator.
      *
-     * @param {InterfaceFilterData[]} filters - The entries to index.
+     * @param {FilterData[]} filters - The entries to index.
      * @returns {Map<string, FilterValue>} A map of id to the first value seen for that id.
      */
-    public static filterIdsValue = (filters: InterfaceFilterData[]): Map<string, FilterValue> => {
+    public static filterIdsValue = (filters: FilterData[]): Map<string, FilterValue> => {
       const map = new Map<string, FilterValue>();
       for (const entry of filters ?? []) {
         if (entry && !map.has(entry.id)) map.set(entry.id, entry.value);
@@ -1564,11 +1564,11 @@ export namespace FilterHelper {
      * `strict: true` it additionally excludes `any`-operator entries, which
      * contribute no predicate.
      *
-     * @param {InterfaceFilterData[]} filters - The entries to filter.
+     * @param {FilterData[]} filters - The entries to filter.
      * @param {boolean} [strict] - When true, also excludes `any`-operator entries.
-     * @returns {InterfaceFilterData[]} The active entries.
+     * @returns {FilterData[]} The active entries.
      */
-    public static filter = (filters: InterfaceFilterData[], strict = false): InterfaceFilterData[] => (filters ?? [])
+    public static filter = (filters: FilterData[], strict = false): FilterData[] => (filters ?? [])
       .filter((entry) => entry && entry.operator !== null && entry.operator !== undefined
         && (!strict || entry.operator !== FilterOperator.any));
 
@@ -1576,18 +1576,18 @@ export namespace FilterHelper {
      * Applies a set of merge entries onto an existing filter list.
      *
      * Mirrors the Dart `FilterHelper.merge`, adapted for the non-nullable
-     * `InterfaceFilterData.operator` in this port: see {@link FilterMergeEntry}. An
+     * `FilterData.operator` in this port: see {@link FilterMergeEntry}. An
      * update whose id is not yet present is appended (assigned the next `index` when
      * none is supplied); an update matching an existing id overwrites that entry's
      * `operator`/`type`/`value`/`index` in place; an update with no `operator`
      * removes the matching entry instead of leaving an unrepresentable "cleared"
      * state.
      *
-     * @param {InterfaceFilterData[]} filters - The existing entries.
+     * @param {FilterData[]} filters - The existing entries.
      * @param {FilterMergeEntry[]} updates - The entries to merge in.
-     * @returns {InterfaceFilterData[]} A new array with the updates applied.
+     * @returns {FilterData[]} A new array with the updates applied.
      */
-    public static merge = (filters: InterfaceFilterData[], updates: FilterMergeEntry[]): InterfaceFilterData[] => {
+    public static merge = (filters: FilterData[], updates: FilterMergeEntry[]): FilterData[] => {
       const base = (filters ?? []).map((entry) => ({...entry}));
       let nextIndex = base.reduce((max, entry) => Math.max(max, entry.index ?? 0), 0) + 1;
       for (const update of updates ?? []) {
@@ -1628,12 +1628,12 @@ export namespace FilterHelper {
      * `filters` and as an own-enumerable key of a row are reformatted; every other row
      * key is passed through unchanged.
      *
-     * @param {InterfaceFilterData[]} filters - The entries declaring each id's `InputDataType`.
+     * @param {FilterData[]} filters - The entries declaring each id's `InputDataType`.
      * @param {Record<string, unknown>[]} data - The rows to reformat.
      * @returns {Record<string, unknown>[]} A new array of rows with declared fields reformatted.
      */
     public static formatJSON = (
-      filters: InterfaceFilterData[],
+      filters: FilterData[],
       data: Record<string, unknown>[],
     ): Record<string, unknown>[] => {
       const typeById = new Map<string, InputDataType>();
@@ -1671,12 +1671,12 @@ export namespace FilterHelper {
      * Rows are returned unchanged (not even copied) when there are no active
      * filters/sort entries, matching the Dart short-circuit.
      *
-     * @param {InterfaceFilterData[]} filters - The decoded entries to apply.
+     * @param {FilterData[]} filters - The decoded entries to apply.
      * @param {Record<string, unknown>[]} data - The rows to filter/sort.
      * @returns {Record<string, unknown>[]} The matching rows, sorted if a `sort` entry is present.
      */
     public static filterJSON = (
-      filters: InterfaceFilterData[],
+      filters: FilterData[],
       data: Record<string, unknown>[],
     ): Record<string, unknown>[] => {
       const active = (filters ?? []).filter((entry) => entry && entry.operator !== null && entry.operator !== undefined);
