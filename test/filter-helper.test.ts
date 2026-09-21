@@ -1257,6 +1257,60 @@ describe('Dart parity: Helper.toSQLEncoded', () => {
   });
 });
 
+describe('Dart parity: Helper.toSQL openSearch dialect', () => {
+  it('renders notEqual as <> instead of !=, unlike sql/bigQuery', () => {
+    const filters = Helper.decode(encodePayload([
+      {id: 'name', index: 0, operator: 'notEqual', type: 'string', value: 'ada'},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 't', sqlOptions, undefined, FilterHelper.SQLQueryType.openSearch))
+      .toBe("SELECT * FROM `t` WHERE `display_name` <> 'ada'");
+    expect(Helper.toSQL(filters, 't', sqlOptions, undefined, FilterHelper.SQLQueryType.sql))
+      .toBe("SELECT * FROM `t` WHERE `display_name` != 'ada'");
+  });
+
+  it('renders contains as a scored matchphrase/wildcard expression, not STRPOS', () => {
+    const filters = Helper.decode(encodePayload([
+      {id: 'name', index: 0, operator: 'contains', type: 'string', value: 'ada'},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 't', sqlOptions, undefined, FilterHelper.SQLQueryType.openSearch)).toBe(
+      'SELECT * FROM `t` WHERE '
+      + "(SCORE(matchphrasequery(`display_name`, 'ada'), 100) OR SCORE(WILDCARD_QUERY(`display_name`, '*ada*'), 0.5))",
+    );
+  });
+
+  it('escapes quotes/backslashes in the contains expression instead of interpolating them raw', () => {
+    // Dart splices `filter.value` directly into this expression with no escaping;
+    // this port must still produce one well-formed pair of quoted literals.
+    const filters = Helper.decode(encodePayload([
+      {id: 'name', index: 0, operator: 'contains', type: 'string', value: "O'Brien\\"},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 't', sqlOptions, undefined, FilterHelper.SQLQueryType.openSearch)).toBe(
+      'SELECT * FROM `t` WHERE '
+      + "(SCORE(matchphrasequery(`display_name`, 'O\\'Brien\\\\'), 100) "
+      + "OR SCORE(WILDCARD_QUERY(`display_name`, '*O\\'Brien\\\\*'), 0.5))",
+    );
+  });
+
+  it('leaves every dialect-agnostic operator unchanged for openSearch', () => {
+    const filters = Helper.decode(encodePayload([
+      {id: 'amount', index: 0, operator: 'between', type: 'double', value: [10, 20]},
+      {id: 'country', index: 1, operator: 'whereIn', type: 'string', value: ['US', 'MX']},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 't', sqlOptions, undefined, FilterHelper.SQLQueryType.openSearch)).toBe(
+      'SELECT * FROM `t` WHERE `amount_total` >= 10 AND `amount_total` <= 20 '
+      + "AND `country_code` IN ('US', 'MX')",
+    );
+  });
+
+  it('does not apply a typed BigQuery literal prefix, matching sql', () => {
+    const filters = Helper.decode(encodePayload([
+      {id: 'created', index: 0, operator: 'greaterThan', type: 'timestamp', value: '2024-01-01T00:00:00.000Z'},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 't', sqlOptions, undefined, FilterHelper.SQLQueryType.openSearch))
+      .toBe("SELECT * FROM `t` WHERE `created_at` > '2024-01-01T00:00:00.000Z'");
+  });
+});
+
 describe('Dart parity: Helper.valueFromType', () => {
   it('returns null for a null or undefined value', () => {
     expect(Helper.valueFromType(null, InputDataType.string)).toBeNull();

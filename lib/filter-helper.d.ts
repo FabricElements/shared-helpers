@@ -64,18 +64,23 @@ export declare namespace FilterHelper {
     }
     /**
      * Target SQL dialect for literal query generation, matching the Dart `SQLQueryType`
-     * enum for the members this module supports.
+     * enum in full.
      *
-     * The Dart enum also declares `openSearch`, which targets an entirely different
-     * query DSL (an OpenSearch match-phrase/score expression) with its own escaping
-     * rules that this module has not reviewed or implemented. It is intentionally
-     * omitted here; only the two SQL dialects this port can escape safely are exposed.
+     * `openSearch` targets the OpenSearch SQL plugin's query language: mostly the same
+     * syntax as `sql`, but `notEqual` renders as `<>` instead of `!=` and `contains`
+     * renders as a `SCORE(matchphrasequery(...), 100) OR SCORE(WILDCARD_QUERY(...),
+     * 0.5)` relevance expression instead of a substring check, matching the Dart
+     * source's dialect split. Unlike the Dart source, which interpolates the raw value
+     * into that expression unescaped, this port always escapes the value first (see
+     * {@link buildLiteralFragment}).
      */
     enum SQLQueryType {
         /** Generic SQL literal formatting (single-quoted strings, ISO date/time literals). */
         sql = "sql",
         /** BigQuery literal formatting (typed `DATE`/`DATETIME`/`TIMESTAMP` literals). */
-        bigQuery = "bigQuery"
+        bigQuery = "bigQuery",
+        /** OpenSearch SQL plugin literal formatting (`<>` for `notEqual`, scored match/wildcard `contains`). */
+        openSearch = "openSearch"
     }
     /**
      * Input editor types a filter entry may declare, matching the Dart `InputDataType`

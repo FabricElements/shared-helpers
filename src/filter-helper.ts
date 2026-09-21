@@ -124,18 +124,23 @@ export namespace FilterHelper {
 
   /**
    * Target SQL dialect for literal query generation, matching the Dart `SQLQueryType`
-   * enum for the members this module supports.
+   * enum in full.
    *
-   * The Dart enum also declares `openSearch`, which targets an entirely different
-   * query DSL (an OpenSearch match-phrase/score expression) with its own escaping
-   * rules that this module has not reviewed or implemented. It is intentionally
-   * omitted here; only the two SQL dialects this port can escape safely are exposed.
+   * `openSearch` targets the OpenSearch SQL plugin's query language: mostly the same
+   * syntax as `sql`, but `notEqual` renders as `<>` instead of `!=` and `contains`
+   * renders as a `SCORE(matchphrasequery(...), 100) OR SCORE(WILDCARD_QUERY(...),
+   * 0.5)` relevance expression instead of a substring check, matching the Dart
+   * source's dialect split. Unlike the Dart source, which interpolates the raw value
+   * into that expression unescaped, this port always escapes the value first (see
+   * {@link buildLiteralFragment}).
    */
   export enum SQLQueryType {
     /** Generic SQL literal formatting (single-quoted strings, ISO date/time literals). */
     sql = 'sql',
     /** BigQuery literal formatting (typed `DATE`/`DATETIME`/`TIMESTAMP` literals). */
     bigQuery = 'bigQuery',
+    /** OpenSearch SQL plugin literal formatting (`<>` for `notEqual`, scored match/wildcard `contains`). */
+    openSearch = 'openSearch',
   }
 
   /**
@@ -1035,6 +1040,41 @@ export namespace FilterHelper {
   };
 
   /**
+   * Resolves the SQL operator text for a binary comparison, applying the one
+   * dialect-specific override the Dart `_sqlOperator` table declares: `notEqual`
+   * renders as `<>` for `openSearch` and `!=` for every other dialect. Every other
+   * comparison operator this table covers is identical across dialects.
+   *
+   * @param {FilterOperator} operator - The already-validated comparison operator.
+   * @param {SQLQueryType} sqlQueryType - The target SQL dialect.
+   * @returns {string} The operator's SQL text for the given dialect.
+   */
+  const comparisonOperatorFor = (operator: FilterOperator, sqlQueryType: SQLQueryType): string => {
+    if (operator === FilterOperator.notEqual && sqlQueryType === SQLQueryType.openSearch) return '<>';
+    return comparisonOperators[operator];
+  };
+
+  /**
+   * Builds the OpenSearch SQL plugin relevance expression for a `contains` filter,
+   * matching the Dart `_sqlOperator` `contains`/`openSearch` fragment:
+   * `(SCORE(matchphrasequery(id, 'value'), 100) OR SCORE(WILDCARD_QUERY(id, '*value*'), 0.5))`.
+   *
+   * The Dart source interpolates `value` into this fragment with no escaping at all.
+   * This port never does that: `value` is escaped through {@link escapeSqlLiteral}
+   * exactly as every other literal in this file is, before it is embedded in either
+   * quoted segment. `column` is safe to interpolate directly because it is always a
+   * resolved, allow-listed field column, never raw payload text.
+   *
+   * @param {string} column - The resolved, allow-listed column identifier.
+   * @param {FilterValue} value - The raw filter value to match against.
+   * @returns {string} The complete `SCORE(...) OR SCORE(...)` predicate text.
+   */
+  const openSearchContainsFragment = (column: string, value: FilterValue): string => {
+    const escaped = escapeSqlLiteral(String(value));
+    return `(SCORE(matchphrasequery(${column}, '${escaped}'), 100) OR SCORE(WILDCARD_QUERY(${column}, '*${escaped}*'), 0.5))`;
+  };
+
+  /**
    * Builds the literal (non-parameterised) `WHERE`/`ORDER BY` text for {@link
    * Helper.toSQL}. Structurally parallel to {@link buildFragment} — same entry
    * ordering, column resolution, and per-operator dispatch — but emits an escaped,
@@ -1047,6 +1087,12 @@ export namespace FilterHelper {
    * SQL (`order by a ascorder by b desc`) the moment a payload carries more than one
    * sort entry; last-sort-wins is the closest well-formed equivalent given a single
    * `ORDER BY` clause can carry only one deterministic outcome from ambiguous input.
+   *
+   * `contains` and `notEqual` are the only operators whose rendered text depends on
+   * `sqlQueryType`, matching the Dart `_sqlOperator`/`toSQL` dialect split: `sql` and
+   * `bigQuery` both use the shared `STRPOS(...) > 0`/`!=` rendering, while
+   * `openSearch` uses {@link openSearchContainsFragment} and `<>` respectively (see
+   * {@link comparisonOperatorFor}).
    */
   const buildLiteralFragment = (
     entries: InterfaceFilterData[],
@@ -1088,10 +1134,12 @@ export namespace FilterHelper {
         continue;
       }
       if (entry.operator === FilterOperator.contains) {
-        predicates.push(`STRPOS(${column}, ${literal(entry.value)}) > 0`);
+        predicates.push(sqlQueryType === SQLQueryType.openSearch
+          ? openSearchContainsFragment(column, entry.value)
+          : `STRPOS(${column}, ${literal(entry.value)}) > 0`);
         continue;
       }
-      predicates.push(`${column} ${comparisonOperators[entry.operator]} ${literal(entry.value)}`);
+      predicates.push(`${column} ${comparisonOperatorFor(entry.operator, sqlQueryType)} ${literal(entry.value)}`);
     }
 
     return {orderBy, where: predicates.join(' AND ')};
