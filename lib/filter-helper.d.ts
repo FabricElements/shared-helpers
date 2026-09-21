@@ -63,6 +63,21 @@ export declare namespace FilterHelper {
         desc = "desc"
     }
     /**
+     * Target SQL dialect for literal query generation, matching the Dart `SQLQueryType`
+     * enum for the members this module supports.
+     *
+     * The Dart enum also declares `openSearch`, which targets an entirely different
+     * query DSL (an OpenSearch match-phrase/score expression) with its own escaping
+     * rules that this module has not reviewed or implemented. It is intentionally
+     * omitted here; only the two SQL dialects this port can escape safely are exposed.
+     */
+    enum SQLQueryType {
+        /** Generic SQL literal formatting (single-quoted strings, ISO date/time literals). */
+        sql = "sql",
+        /** BigQuery literal formatting (typed `DATE`/`DATETIME`/`TIMESTAMP` literals). */
+        bigQuery = "bigQuery"
+    }
+    /**
      * Input editor types a filter entry may declare, matching the Dart `InputDataType`
      * enum member for member.
      *
@@ -290,6 +305,19 @@ export declare namespace FilterHelper {
         where: string;
     }
     /**
+     * A partial filter entry used to update an existing filter list via {@link
+     * Helper.merge}.
+     *
+     * The Dart `FilterData.operator` is nullable, so a Dart merge entry with a `null`
+     * operator "clears" (removes) the matching filter. `InterfaceFilterData.operator` is
+     * required in this port, so the same intent is expressed by omitting `operator`
+     * entirely: an update with no `operator` removes the matching `id` from the result
+     * instead of leaving a filter entry that cannot represent "no constraint".
+     */
+    type FilterMergeEntry = Partial<InterfaceFilterData> & {
+        id: string;
+    };
+    /**
      * Decodes, validates, and converts the compact filter payload produced by the Dart
      * `FilterHelper`.
      */
@@ -406,5 +434,135 @@ export declare namespace FilterHelper {
          * @throws {Error} When the payload is invalid or a declared column fails BigQuery validation.
          */
         static decodeToQueryFragment: (filters: string | null | undefined, options: InterfaceFilterDecodeOptions) => InterfaceFilterQueryFragment;
+        /**
+         * Formats a single raw value as literal SQL text for a declared `InputDataType`.
+         *
+         * Mirrors the Dart `FilterHelper.valueFromType`, but never interpolates a string
+         * value unescaped: every string is quote/backslash-escaped by {@link
+         * formatLiteral} before being embedded, and temporal values are narrowed to a
+         * canonical BigQuery literal via the same ISO-8601 gate {@link
+         * Helper.toQueryFragment} uses, rather than being passed through raw.
+         *
+         * @param {FilterScalar | null | undefined} value - The raw value to format.
+         * @param {InputDataType} dataType - The declared editor type for the value.
+         * @param {SQLQueryType} [sqlQueryType] - The target SQL dialect. Defaults to `bigQuery`.
+         * @returns {string | null} The formatted SQL literal, or `null` when `value` is null/undefined.
+         * @throws {Error} When `dataType` is temporal and `value` is not an ISO 8601 string.
+         */
+        static valueFromType: (value: FilterScalar | null | undefined, dataType: InputDataType, sqlQueryType?: SQLQueryType) => string | null;
+        /**
+         * Builds literal (non-parameterised) SQL text selecting every column from a
+         * validated table.
+         *
+         * Mirrors the Dart `FilterHelper.toSQL`, but does not port its implementation: the
+         * Dart source concatenates `table` and every value directly into the returned
+         * string with no escaping at all. This port re-validates `filters` through {@link
+         * Helper.fromJSON} exactly as {@link Helper.toQueryFragment} does, validates
+         * `table` segment-by-segment against the canonical BigQuery identifier rules
+         * before it is interpolated, and escapes/types every emitted literal through
+         * {@link formatLiteral}. See {@link buildLiteralFragment} for the last-sort-wins
+         * `ORDER BY` deviation from the Dart source's broken multi-sort concatenation.
+         *
+         * @param {InterfaceFilterData[]} filters - The entries to convert.
+         * @param {string} table - A `table`, `dataset.table`, or `project.dataset.table` path.
+         * @param {InterfaceFilterDecodeOptions} options - Decode options carrying the field allow-list.
+         * @param {number} [limit] - An optional non-negative row limit.
+         * @param {SQLQueryType} [sqlQueryType] - The target SQL dialect. Defaults to `bigQuery`.
+         * @returns {string} The generated `SELECT` statement.
+         * @throws {Error} When an entry is malformed, `table` fails BigQuery validation, or `limit` is not a non-negative integer.
+         */
+        static toSQL: (filters: InterfaceFilterData[], table: string, options: InterfaceFilterDecodeOptions, limit?: number, sqlQueryType?: SQLQueryType) => string;
+        /**
+         * Encodes the output of {@link Helper.toSQL} as `base64(utf8(sql))`.
+         *
+         * Mirrors the Dart `FilterHelper.toSQLEncoded`. This is plain transport encoding,
+         * not a security boundary: the safety of the generated SQL text comes entirely
+         * from {@link Helper.toSQL}'s validation and escaping.
+         *
+         * @param {InterfaceFilterData[]} filters - The entries to convert.
+         * @param {string} table - A `table`, `dataset.table`, or `project.dataset.table` path.
+         * @param {InterfaceFilterDecodeOptions} options - Decode options carrying the field allow-list.
+         * @param {number} [limit] - An optional non-negative row limit.
+         * @param {SQLQueryType} [sqlQueryType] - The target SQL dialect. Defaults to `bigQuery`.
+         * @returns {string} The base64-encoded UTF-8 SQL text.
+         * @throws {Error} Under the same conditions as {@link Helper.toSQL}.
+         */
+        static toSQLEncoded: (filters: InterfaceFilterData[], table: string, options: InterfaceFilterDecodeOptions, limit?: number, sqlQueryType?: SQLQueryType) => string;
+        /**
+         * Builds a map of each entry's first-seen value keyed by id.
+         *
+         * Mirrors the Dart `FilterHelper.filterIdsValue`: it is a direct, unfiltered
+         * lookup (unlike {@link Helper.filterById}/{@link Helper.valueFromId}, it does not
+         * exclude `any`-operator entries), intended for callers that need a quick id →
+         * value map for every entry present, regardless of operator.
+         *
+         * @param {InterfaceFilterData[]} filters - The entries to index.
+         * @returns {Map<string, FilterValue>} A map of id to the first value seen for that id.
+         */
+        static filterIdsValue: (filters: InterfaceFilterData[]) => Map<string, FilterValue>;
+        /**
+         * Returns only the entries that represent an active constraint.
+         *
+         * Mirrors the Dart `FilterHelper.filter`. Every entry in this port already has a
+         * non-null `operator`, so without `strict` this returns entries unchanged; with
+         * `strict: true` it additionally excludes `any`-operator entries, which
+         * contribute no predicate.
+         *
+         * @param {InterfaceFilterData[]} filters - The entries to filter.
+         * @param {boolean} [strict] - When true, also excludes `any`-operator entries.
+         * @returns {InterfaceFilterData[]} The active entries.
+         */
+        static filter: (filters: InterfaceFilterData[], strict?: boolean) => InterfaceFilterData[];
+        /**
+         * Applies a set of merge entries onto an existing filter list.
+         *
+         * Mirrors the Dart `FilterHelper.merge`, adapted for the non-nullable
+         * `InterfaceFilterData.operator` in this port: see {@link FilterMergeEntry}. An
+         * update whose id is not yet present is appended (assigned the next `index` when
+         * none is supplied); an update matching an existing id overwrites that entry's
+         * `operator`/`type`/`value`/`index` in place; an update with no `operator`
+         * removes the matching entry instead of leaving an unrepresentable "cleared"
+         * state.
+         *
+         * @param {InterfaceFilterData[]} filters - The existing entries.
+         * @param {FilterMergeEntry[]} updates - The entries to merge in.
+         * @returns {InterfaceFilterData[]} A new array with the updates applied.
+         */
+        static merge: (filters: InterfaceFilterData[], updates: FilterMergeEntry[]) => InterfaceFilterData[];
+        /**
+         * Parses every declared filter field's value on every row per its `InputDataType`.
+         *
+         * Mirrors the Dart `FilterHelper.formatJSON`. Only ids that appear both in
+         * `filters` and as an own-enumerable key of a row are reformatted; every other row
+         * key is passed through unchanged.
+         *
+         * @param {InterfaceFilterData[]} filters - The entries declaring each id's `InputDataType`.
+         * @param {Record<string, unknown>[]} data - The rows to reformat.
+         * @returns {Record<string, unknown>[]} A new array of rows with declared fields reformatted.
+         */
+        static formatJSON: (filters: InterfaceFilterData[], data: Record<string, unknown>[]) => Record<string, unknown>[];
+        /**
+         * Filters and sorts in-memory row data against a set of decoded filter entries,
+         * without generating any SQL.
+         *
+         * Mirrors the Dart `FilterHelper.filterJSON`, fixing two bugs identified in the
+         * source rather than porting them:
+         *
+         * - Dart increments its match counter even on the branch where a null value makes
+         *   the entry non-matching, which can make an unrelated row spuriously "match"
+         *   once enough null-valued filters are present. This port only counts an entry
+         *   toward the required match total when it genuinely matched.
+         * - Dart's `whereIn` branch calls `value.toString().contains(filter.value)`, a
+         *   substring check, not membership — see {@link matchesFilterEntryValue} for the
+         *   membership-correct replacement.
+         *
+         * Rows are returned unchanged (not even copied) when there are no active
+         * filters/sort entries, matching the Dart short-circuit.
+         *
+         * @param {InterfaceFilterData[]} filters - The decoded entries to apply.
+         * @param {Record<string, unknown>[]} data - The rows to filter/sort.
+         * @returns {Record<string, unknown>[]} The matching rows, sorted if a `sort` entry is present.
+         */
+        static filterJSON: (filters: InterfaceFilterData[], data: Record<string, unknown>[]) => Record<string, unknown>[];
     }
 }

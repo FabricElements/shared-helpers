@@ -1129,3 +1129,293 @@ describe('FilterHelper refuses a sort entry payload-wide', () => {
     ]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Dart parity: literal SQL generation and in-memory JSON helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * These fields exercise every operator in {@link Helper.toSQL}. `amount` is numeric so
+ * `whereIn`/`between` literals stay bare; `name`/`country` are strings so escaping is
+ * observable; `created` is a BigQuery `TIMESTAMP` column.
+ */
+const sqlFields: Record<string, FilterHelper.InterfaceFilterField> = {
+  amount: {column: 'amount_total', paramType: 'FLOAT64', operators: allOperators},
+  country: {column: 'country_code', paramType: 'STRING', operators: allOperators},
+  created: {column: 'created_at', paramType: 'TIMESTAMP', operators: allOperators},
+  name: {column: 'display_name', paramType: 'STRING', operators: allOperators},
+};
+const sqlOptions: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: sqlFields};
+
+describe('Dart parity: Helper.toSQL', () => {
+  it('builds a bare SELECT when there are no active filters', () => {
+    expect(Helper.toSQL([], 'my_table', sqlOptions)).toBe('SELECT * FROM `my_table`');
+  });
+
+  it('accepts dataset.table and project.dataset.table paths', () => {
+    expect(Helper.toSQL([], 'my_dataset.my_table', sqlOptions)).toBe('SELECT * FROM `my_dataset.my_table`');
+    expect(Helper.toSQL([], 'my-project.my_dataset.my_table', sqlOptions))
+      .toBe('SELECT * FROM `my-project.my_dataset.my_table`');
+  });
+
+  it('rejects a table path with an invalid segment instead of interpolating it', () => {
+    // Dart's toSQL concatenates `table` into the returned string with no validation at
+    // all; this port refuses to do that.
+    expect(() => Helper.toSQL([], 'my_table`; DROP TABLE t; --', sqlOptions)).toThrow('Invalid filter field configuration');
+    expect(() => Helper.toSQL([], '', sqlOptions)).toThrow('Invalid filter field configuration');
+    expect(() => Helper.toSQL([], 'a.b.c.d', sqlOptions)).toThrow('Invalid filter field configuration');
+  });
+
+  it('emits a typed TIMESTAMP literal for a BigQuery timestamp column', () => {
+    const filters = Helper.decode(encodePayload([
+      {id: 'created', index: 0, operator: 'greaterThan', type: 'timestamp', value: '2024-01-01T00:00:00.000Z'},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 'events', sqlOptions))
+      .toBe("SELECT * FROM `events` WHERE `created_at` > TIMESTAMP '2024-01-01T00:00:00.000Z'");
+  });
+
+  it('escapes single quotes and backslashes instead of interpolating them raw', () => {
+    // Dart's toSQL would splice `O'Brien\` directly into the string, breaking out of
+    // the literal. This port must always produce a single well-formed literal.
+    const filters = Helper.decode(encodePayload([
+      {id: 'name', index: 0, operator: 'equal', type: 'string', value: "O'Brien\\"},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 'people', sqlOptions))
+      .toBe("SELECT * FROM `people` WHERE `display_name` = 'O\\'Brien\\\\'");
+  });
+
+  it('renders a between clause with closed bounds by default', () => {
+    const filters = Helper.decode(encodePayload([
+      {id: 'amount', index: 0, operator: 'between', type: 'double', value: [10, 20]},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 't', sqlOptions))
+      .toBe('SELECT * FROM `t` WHERE `amount_total` >= 10 AND `amount_total` <= 20');
+  });
+
+  it('renders a half-open upper bound when the field declares it', () => {
+    const halfOpenFields: Record<string, FilterHelper.InterfaceFilterField> = {
+      amount: {betweenBounds: 'halfOpen', column: 'amount_total', paramType: 'FLOAT64', operators: allOperators},
+    };
+    const halfOpenOptions: FilterHelper.InterfaceFilterDecodeOptions = {allowedFields: halfOpenFields};
+    const filters = Helper.decode(encodePayload([
+      {id: 'amount', index: 0, operator: 'between', type: 'double', value: [10, 20]},
+    ]), halfOpenOptions);
+    expect(Helper.toSQL(filters, 't', halfOpenOptions))
+      .toBe('SELECT * FROM `t` WHERE `amount_total` >= 10 AND `amount_total` < 20');
+  });
+
+  it('renders whereIn as a literal IN list, matching membership rather than concatenation', () => {
+    const filters = Helper.decode(encodePayload([
+      {id: 'country', index: 0, operator: 'whereIn', type: 'string', value: ['US', 'MX']},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 't', sqlOptions))
+      .toBe("SELECT * FROM `t` WHERE `country_code` IN ('US', 'MX')");
+  });
+
+  it('renders contains as STRPOS, not a raw LIKE with attacker-controlled wildcards', () => {
+    const filters = Helper.decode(encodePayload([
+      {id: 'name', index: 0, operator: 'contains', type: 'string', value: 'ada'},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 't', sqlOptions))
+      .toBe("SELECT * FROM `t` WHERE STRPOS(`display_name`, 'ada') > 0");
+  });
+
+  it('keeps only the most recently declared sort entry (last-sort-wins)', () => {
+    // Dart concatenates every sort entry's text with no separator, which produces
+    // malformed SQL once there is more than one. This port keeps a single well-formed
+    // ORDER BY by letting the later entry win.
+    const filters = Helper.decode(encodePayload([
+      {id: 'sort', index: 0, operator: 'sort', type: 'string', value: ['name', 'asc']},
+      {id: 'sort', index: 1, operator: 'sort', type: 'string', value: ['created', 'desc']},
+    ]), sqlOptions);
+    expect(Helper.toSQL(filters, 't', sqlOptions))
+      .toBe('SELECT * FROM `t` ORDER BY `created_at` DESC');
+  });
+
+  it('appends a validated LIMIT clause', () => {
+    expect(Helper.toSQL([], 't', sqlOptions, 25)).toBe('SELECT * FROM `t` LIMIT 25');
+  });
+
+  it('rejects a negative or non-integer limit', () => {
+    expect(() => Helper.toSQL([], 't', sqlOptions, -1)).toThrow('Invalid filter payload');
+    expect(() => Helper.toSQL([], 't', sqlOptions, 1.5)).toThrow('Invalid filter payload');
+  });
+
+  it('re-validates filters rather than trusting a hand-built entry list', () => {
+    const bogus = [{id: 'missing', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'x'}];
+    expect(() => Helper.toSQL(bogus, 't', sqlOptions)).toThrow('Invalid filter payload');
+  });
+});
+
+describe('Dart parity: Helper.toSQLEncoded', () => {
+  it('base64-encodes the exact text Helper.toSQL produces', () => {
+    const filters = Helper.decode(encodePayload([
+      {id: 'name', index: 0, operator: 'equal', type: 'string', value: 'ada'},
+    ]), sqlOptions);
+    const sql = Helper.toSQL(filters, 't', sqlOptions);
+    expect(Buffer.from(Helper.toSQLEncoded(filters, 't', sqlOptions), 'base64').toString('utf8')).toBe(sql);
+  });
+});
+
+describe('Dart parity: Helper.valueFromType', () => {
+  it('returns null for a null or undefined value', () => {
+    expect(Helper.valueFromType(null, InputDataType.string)).toBeNull();
+    expect(Helper.valueFromType(undefined, InputDataType.string)).toBeNull();
+  });
+
+  it('formats a date value as a typed BigQuery DATE literal', () => {
+    expect(Helper.valueFromType('2024-03-07T18:45:00.000Z', InputDataType.date)).toBe("DATE '2024-03-07'");
+  });
+
+  it('formats a boolean and a number without quoting', () => {
+    expect(Helper.valueFromType(true, InputDataType.string)).toBe('TRUE');
+    expect(Helper.valueFromType(42, InputDataType.int)).toBe('42');
+  });
+
+  it('escapes a plain string value', () => {
+    expect(Helper.valueFromType("it's", InputDataType.string)).toBe("'it\\'s'");
+  });
+
+  it('rejects a non-string temporal value', () => {
+    expect(() => Helper.valueFromType(42 as unknown as string, InputDataType.date)).toThrow('Invalid filter payload');
+  });
+});
+
+describe('Dart parity: Helper.filterIdsValue', () => {
+  it('maps each id to the first value seen for it, including inactive entries', () => {
+    const filters = [
+      {id: 'status', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'active'},
+      {id: 'status', index: 1, operator: FilterOperator.equal, type: InputDataType.string, value: 'closed'},
+      {id: 'region', index: 2, operator: FilterOperator.any, type: InputDataType.string, value: 'us'},
+    ] as unknown as FilterHelper.InterfaceFilterData[];
+    const map = Helper.filterIdsValue(filters);
+    expect(map.get('status')).toBe('active');
+    expect(map.get('region')).toBe('us');
+    expect(map.size).toBe(2);
+  });
+});
+
+describe('Dart parity: Helper.filter', () => {
+  const filters = [
+    {id: 'status', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'active'},
+    {id: 'region', index: 1, operator: FilterOperator.any, type: InputDataType.string, value: null},
+  ] as unknown as FilterHelper.InterfaceFilterData[];
+
+  it('keeps every entry, including any-operator placeholders, by default', () => {
+    expect(Helper.filter(filters).map((entry) => entry.id)).toEqual(['status', 'region']);
+  });
+
+  it('excludes any-operator entries in strict mode', () => {
+    expect(Helper.filter(filters, true).map((entry) => entry.id)).toEqual(['status']);
+  });
+});
+
+describe('Dart parity: Helper.merge', () => {
+  const base = [
+    {id: 'status', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'active'},
+  ] as unknown as FilterHelper.InterfaceFilterData[];
+
+  it('appends an update whose id is not yet present', () => {
+    const merged = Helper.merge(base, [
+      {id: 'region', operator: FilterOperator.equal, type: InputDataType.string, value: 'us'},
+    ]);
+    expect(merged.map((entry) => entry.id)).toEqual(['status', 'region']);
+    expect(merged[1].value).toBe('us');
+  });
+
+  it('overwrites an existing entry in place', () => {
+    const merged = Helper.merge(base, [
+      {id: 'status', operator: FilterOperator.equal, type: InputDataType.string, value: 'closed'},
+    ]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].value).toBe('closed');
+  });
+
+  it('removes the matching entry when the update has no operator', () => {
+    // Adapts Dart's nullable-operator "clear" semantics to this port's non-nullable
+    // `operator` field: omitting `operator` is the update-side signal to remove.
+    const merged = Helper.merge(base, [{id: 'status'}]);
+    expect(merged).toEqual([]);
+  });
+
+  it('leaves the original array untouched', () => {
+    Helper.merge(base, [{id: 'status'}]);
+    expect(base).toHaveLength(1);
+  });
+});
+
+describe('Dart parity: Helper.formatJSON', () => {
+  it('parses declared fields per their InputDataType and leaves other keys alone', () => {
+    const filters = [
+      {id: 'age', index: 0, operator: FilterOperator.equal, type: InputDataType.int, value: 1},
+    ] as unknown as FilterHelper.InterfaceFilterData[];
+    const rows = Helper.formatJSON(filters, [{age: '42', name: 'ada'}]);
+    expect(rows).toEqual([{age: 42, name: 'ada'}]);
+  });
+
+  it('formats each element of an array value element-wise', () => {
+    const filters = [
+      {id: 'scores', index: 0, operator: FilterOperator.whereIn, type: InputDataType.int, value: []},
+    ] as unknown as FilterHelper.InterfaceFilterData[];
+    expect(Helper.formatJSON(filters, [{scores: ['1', '2']}])).toEqual([{scores: [1, 2]}]);
+  });
+});
+
+describe('Dart parity: Helper.filterJSON', () => {
+  const rows = [
+    {country: 'US', name: 'ada', score: 10},
+    {country: 'MX', name: 'ida', score: 5},
+    {country: 'US', name: null, score: 7},
+  ];
+
+  it('returns rows unchanged when there are no active filters', () => {
+    expect(Helper.filterJSON([], rows)).toBe(rows);
+  });
+
+  it('keeps only rows matching every active non-sort entry', () => {
+    const filters = [
+      {id: 'country', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'US'},
+    ] as unknown as FilterHelper.InterfaceFilterData[];
+    expect(Helper.filterJSON(filters, rows).map((row) => row.name)).toEqual(['ada', null]);
+  });
+
+  it('does not count a null-valued filter as a spurious match (Dart bug fix)', () => {
+    // Dart's `filterJSON` increments its match counter even on the branch where
+    // `filter.value == null || value == null`, so a null-valued filter always
+    // "matches" every row without ever comparing anything — it becomes a silent
+    // no-op that still counts toward `totalMatches`. This port only counts an entry
+    // once it genuinely matched, so a null-valued filter can never be satisfied and
+    // correctly filters every row out instead of letting it slip through unchecked.
+    const filters = [
+      {id: 'country', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'US'},
+      {id: 'name', index: 1, operator: FilterOperator.equal, type: InputDataType.string, value: null},
+    ] as unknown as FilterHelper.InterfaceFilterData[];
+    expect(Helper.filterJSON(filters, rows)).toEqual([]);
+  });
+
+  it('treats whereIn as true membership, not a substring check (Dart bug fix)', () => {
+    // Dart's whereIn branch does `value.toString().contains(filter.value)`, a substring
+    // test, so a filter of `['1']` would spuriously match a row scored `21`. This port
+    // must not.
+    const scoreRows = [{score: 1}, {score: 21}, {score: 2}];
+    const filters = [
+      {id: 'score', index: 0, operator: FilterOperator.whereIn, type: InputDataType.int, value: [1]},
+    ] as unknown as FilterHelper.InterfaceFilterData[];
+    expect(Helper.filterJSON(filters, scoreRows).map((row) => row.score)).toEqual([1]);
+  });
+
+  it('sorts by the declared sort target and direction without requiring a matching non-sort entry', () => {
+    const filters = [
+      {id: 'sort', index: 0, operator: FilterOperator.sort, type: InputDataType.string, value: ['score', FilterOrder.desc]},
+    ] as unknown as FilterHelper.InterfaceFilterData[];
+    expect(Helper.filterJSON(filters, rows).map((row) => row.score)).toEqual([10, 7, 5]);
+  });
+
+  it('filters and sorts together', () => {
+    const filters = [
+      {id: 'country', index: 0, operator: FilterOperator.equal, type: InputDataType.string, value: 'US'},
+      {id: 'sort', index: 1, operator: FilterOperator.sort, type: InputDataType.string, value: ['score', FilterOrder.asc]},
+    ] as unknown as FilterHelper.InterfaceFilterData[];
+    expect(Helper.filterJSON(filters, rows).map((row) => row.score)).toEqual([7, 10]);
+  });
+});
