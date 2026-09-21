@@ -18,6 +18,8 @@
  *   max 1 024 UTF-8 bytes.  Hyphens are NOT allowed in an unquoted table name.
  * - Column/field: must start with a letter or underscore; letters, digits,
  *   underscores; max 300 characters.
+ * - Project: lowercase letters, digits, hyphens; must start with a lowercase
+ *   letter; must not end with a hyphen; 6-30 characters.
  *
  * All patterns are anchored (`^…$`) so no character outside the allow-list can
  * appear anywhere in the value, preventing SQL injection via template-literal
@@ -48,6 +50,26 @@ export declare const bigQueryTablePattern: RegExp;
  * letters, digits, and underscores only; max 300 characters.
  */
 export declare const bigQueryColumnPattern: RegExp;
+/**
+ * GCP project identifier pattern: lowercase letters, digits, and hyphens; must
+ * start with a lowercase letter; must not end with a hyphen; 6-30 characters.
+ * This is Google Cloud's own project ID grammar, distinct from the other
+ * BigQuery identifier kinds because hyphens are legitimate here and nowhere
+ * else in this module.
+ */
+export declare const bigQueryProjectPattern: RegExp;
+/**
+ * Validates a GCP project identifier.
+ *
+ * Project IDs must start with a lowercase letter, contain only lowercase
+ * letters, digits, and hyphens, must not end with a hyphen, and must be
+ * between 6 and 30 characters long.
+ *
+ * @param {string} value - The project id to validate.
+ * @param {string} label - Human-readable label used in the error message.
+ * @throws {Error} When the value is empty or does not match the project id rules.
+ */
+export declare const validateBigQueryProject: (value: string, label: string) => void;
 /**
  * Validates a BigQuery dataset identifier.
  *
