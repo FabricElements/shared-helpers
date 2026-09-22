@@ -25,6 +25,13 @@ export interface BigQueryStreamWriterOptions {
     /** BigQuery table identifier within `dataset`. */
     table: string;
     /**
+     * Optional project id used when constructing the BigQuery client. When
+     * omitted, the writer resolves the project id from the runtime environment
+     * (`GCLOUD_PROJECT`, `GOOGLE_CLOUD_PROJECT`, or `GCP_PROJECT`) and falls
+     * back to the SDK's own auto-detection only when none of those are set.
+     */
+    projectId?: string;
+    /**
      * Maximum number of buffered rows before an automatic flush is triggered.
      * Defaults to `500`. Rows are accumulated in memory and sent as a single
      * `appendRows` batch once this threshold is reached.
@@ -81,19 +88,22 @@ export interface BigQueryStreamWriterOptions {
  * unbounded growth are both treated as unacceptable; the bounded-drop policy is
  * the deliberate tradeoff between them.
  *
- * The destination project is taken from the resolved table metadata, which the
- * Cloud Run runtime provides automatically — callers only supply `dataset` and
- * `table` and never need to specify a project id.
+ * The destination stream path is taken from the resolved table metadata so the
+ * Storage Write API always targets the real project id, while the BigQuery
+ * client itself resolves an explicit project id from the caller or runtime
+ * environment when available.
  */
 export declare class BigQueryStreamWriter {
     /**
-     * Process-wide cache of singleton instances, keyed by `dataset.table`, used by
-     * {@link BigQueryStreamWriter.getInstance} to keep one warm gRPC channel per
-     * destination table.
+     * Process-wide cache of singleton instances, keyed by resolved
+     * `projectId:dataset.table`, used by {@link BigQueryStreamWriter.getInstance}
+     * to keep one warm gRPC channel per destination table.
      */
     private static instances;
     private readonly dataset;
     private readonly table;
+    private readonly projectId;
+    private readonly cacheKey;
     private readonly maxBatchSize;
     private readonly flushIntervalMs;
     private readonly fieldTypes;
@@ -121,9 +131,10 @@ export declare class BigQueryStreamWriter {
      * creating it on first use. Reusing the same instance keeps the long-lived
      * gRPC channel warm across invocations on the same Cloud Run container.
      *
-     * @param {BigQueryStreamWriterOptions} options - Destination and batching configuration.
-     *   The cache key is `dataset.table`; options supplied on the first call for a
-     *   given table define that singleton's behaviour.
+     * @param {BigQueryStreamWriterOptions} options - Destination and batching
+     *   configuration. The cache key is `projectId:dataset.table`; options
+     *   supplied on the first call for a given destination define that
+     *   singleton's behaviour.
      * @returns {BigQueryStreamWriter} The cached or newly-created singleton instance.
      */
     static getInstance(options: BigQueryStreamWriterOptions): BigQueryStreamWriter;

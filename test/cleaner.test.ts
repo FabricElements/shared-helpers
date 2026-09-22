@@ -5,17 +5,18 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 // ---------- BigQuery mock (vi.hoisted avoids TDZ with vi.mock hoisting) ----------
-const {mockGetQueryResults, mockCreateQueryJob} = vi.hoisted(() => {
+const {mockGetQueryResults, mockCreateQueryJob, mockBigQueryCtor} = vi.hoisted(() => {
   const mockGetQueryResults = vi.fn().mockResolvedValue([[]]);
   const mockJob = {getQueryResults: mockGetQueryResults};
   const mockCreateQueryJob = vi.fn().mockResolvedValue([mockJob]);
-  return {mockGetQueryResults, mockCreateQueryJob};
+  const mockBigQueryCtor = vi.fn(function() {
+    return {createQueryJob: mockCreateQueryJob};
+  });
+  return {mockGetQueryResults, mockCreateQueryJob, mockBigQueryCtor};
 });
 
 vi.mock('@google-cloud/bigquery', () => ({
-  BigQuery: vi.fn(function() {
-    return {createQueryJob: mockCreateQueryJob};
-  }),
+  BigQuery: mockBigQueryCtor,
 }));
 
 // ---------- Firebase Functions logger mock ----------
@@ -29,15 +30,29 @@ describe('cleaner', () => {
   describe('query builder (via exported default)', () => {
     beforeEach(() => {
       vi.clearAllMocks();
+      process.env.GCLOUD_PROJECT = 'env-project';
+      delete process.env.GOOGLE_CLOUD_PROJECT;
+      delete process.env.GCP_PROJECT;
       const mockJob = {getQueryResults: mockGetQueryResults};
       mockGetQueryResults.mockResolvedValue([[]]);
       mockCreateQueryJob.mockResolvedValue([mockJob]);
+    });
+
+    afterEach(() => {
+      delete process.env.GCLOUD_PROJECT;
+      delete process.env.GOOGLE_CLOUD_PROJECT;
+      delete process.env.GCP_PROJECT;
     });
 
     it('throws when dataset is missing', async () => {
       await expect(
         cleaner({dataset: '', table: 'tbl', timestamp: 'ts'}),
       ).rejects.toThrow('Dataset or Table not defined');
+    });
+
+    it('constructs the BigQuery client with the runtime project id', async () => {
+      await cleaner({dataset: 'myDataset', table: 'myTable', timestamp: 'updatedAt'});
+      expect(mockBigQueryCtor).toHaveBeenCalledWith({projectId: 'env-project'});
     });
 
     it('submits a query job to BigQuery', async () => {
