@@ -6,7 +6,7 @@ import {BigQuery} from '@google-cloud/bigquery';
 import {logger} from 'firebase-functions/v2';
 import {validateBigQueryColumn, validateBigQueryDataset, validateBigQueryTable} from './bigquery-identifier.js';
 
-const bigquery = new BigQuery();
+let bigquery: BigQuery | undefined;
 
 /**
  * Constructs a BigQuery DML statement that removes duplicate rows from a table.
@@ -82,7 +82,7 @@ export default async (filter: {
 }): Promise<void> => {
   const sqlQuery = query(filter);
   try {
-    const [job] = await bigquery.createQueryJob({
+    const [job] = await getBigQueryClient().createQueryJob({
       query: sqlQuery,
     });
     const [list] = await job.getQueryResults();
@@ -91,3 +91,30 @@ export default async (filter: {
     logger.warn(`Fail delete duplicates. Dataset: ${filter.dataset}, table: ${filter.table}`, error);
   }
 };
+
+/**
+ * Returns a lazily initialised BigQuery client configured with an explicit
+ * project id when one is available from the runtime environment.
+ *
+ * @returns {BigQuery} The shared BigQuery client instance.
+ */
+function getBigQueryClient(): BigQuery {
+  if (!bigquery) {
+    const projectId = normalizeProjectId(process.env.GCLOUD_PROJECT) ??
+      normalizeProjectId(process.env.GOOGLE_CLOUD_PROJECT) ??
+      normalizeProjectId(process.env.GCP_PROJECT);
+    bigquery = projectId ? new BigQuery({projectId}) : new BigQuery();
+  }
+  return bigquery;
+}
+
+/**
+ * Normalizes a project id string and filters blank values.
+ *
+ * @param {string | undefined} projectId - Candidate project id value.
+ * @returns {string | undefined} The trimmed project id, or `undefined` when blank.
+ */
+function normalizeProjectId(projectId?: string): string | undefined {
+  const trimmed = projectId?.trim();
+  return trimmed ? trimmed : undefined;
+}

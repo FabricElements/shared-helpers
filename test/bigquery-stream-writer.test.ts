@@ -16,6 +16,7 @@ const {
   mockConvertStorageSchema,
   mockWriterClientCtor,
   mockJSONWriterCtor,
+  mockBigQueryCtor,
   mockLoggerError,
 } = vi.hoisted(() => {
   const mockGetResult = vi.fn().mockResolvedValue({});
@@ -26,6 +27,9 @@ const {
   const mockWriterClientClose = vi.fn();
   const mockConvertBigQuerySchema = vi.fn((s: unknown) => s);
   const mockConvertStorageSchema = vi.fn(() => ({name: 'root', field: []}));
+  const mockBigQueryCtor = vi.fn(function() {
+    return {dataset: mockDataset};
+  });
   const mockWriterClientCtor = vi.fn(function() {
     return {
       createStreamConnection: mockCreateStreamConnection,
@@ -49,6 +53,7 @@ const {
     mockWriterClientClose,
     mockConvertBigQuerySchema,
     mockConvertStorageSchema,
+    mockBigQueryCtor,
     mockWriterClientCtor,
     mockJSONWriterCtor,
     mockLoggerError,
@@ -73,9 +78,7 @@ const mockTable = vi.fn(() => ({getMetadata: mockGetMetadata}));
 const mockDataset = vi.fn(() => ({table: mockTable}));
 
 vi.mock('@google-cloud/bigquery', () => ({
-  BigQuery: vi.fn(function() {
-    return {dataset: mockDataset};
-  }),
+  BigQuery: mockBigQueryCtor,
 }));
 
 // ---------- Firebase Functions logger mock ----------
@@ -88,6 +91,9 @@ import {BigQueryStreamWriter} from '../src/bigquery-stream-writer.js';
 describe('BigQueryStreamWriter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.GCLOUD_PROJECT = 'env-project';
+    delete process.env.GOOGLE_CLOUD_PROJECT;
+    delete process.env.GCP_PROJECT;
     mockGetMetadata.mockResolvedValue([{
       schema: {fields: [{name: 'id', type: 'STRING'}]},
       tableReference: {projectId: 'test-project', datasetId: 'ds', tableId: 'tbl'},
@@ -97,6 +103,9 @@ describe('BigQueryStreamWriter', () => {
   });
 
   afterEach(() => {
+    delete process.env.GCLOUD_PROJECT;
+    delete process.env.GOOGLE_CLOUD_PROJECT;
+    delete process.env.GCP_PROJECT;
     vi.restoreAllMocks();
   });
 
@@ -155,6 +164,12 @@ describe('BigQueryStreamWriter', () => {
   });
 
   describe('default stream path', () => {
+    it('constructs the BigQuery client with the runtime project id', async () => {
+      const writer = new BigQueryStreamWriter({dataset: 'ds', table: 'tbl', maxBatchSize: 1});
+      await writer.add({id: 'a'});
+      expect(mockBigQueryCtor).toHaveBeenCalledWith({projectId: 'env-project'});
+    });
+
     it('targets the default stream using the project from table metadata', async () => {
       const writer = new BigQueryStreamWriter({dataset: 'ds', table: 'tbl', maxBatchSize: 1});
       await writer.add({id: 'a'});
@@ -164,6 +179,44 @@ describe('BigQueryStreamWriter', () => {
         }),
       );
       expect(mockSetDefaultMissing).toHaveBeenCalledWith('DEFAULT_VALUE');
+    });
+
+    it('retries metadata reads when the table is not yet visible', async () => {
+      vi.useFakeTimers();
+      try {
+        const notFound = Object.assign(new Error('Table not found'), {code: 404});
+        mockGetMetadata.mockRejectedValueOnce(notFound).mockResolvedValueOnce([{
+          schema: {fields: [{name: 'id', type: 'STRING'}]},
+          tableReference: {projectId: 'test-project', datasetId: 'ds', tableId: 'tbl'},
+        }]);
+        const writer = new BigQueryStreamWriter({dataset: 'ds', table: 'tbl', maxBatchSize: 1});
+        const promise = writer.add({id: 'a'});
+        const assertion = expect(promise).resolves.toBeUndefined();
+        await Promise.resolve();
+        await vi.runAllTimersAsync();
+        await assertion;
+        expect(mockGetMetadata).toHaveBeenCalledTimes(2);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('surfaces a clear error when metadata retries are exhausted', async () => {
+      vi.useFakeTimers();
+      try {
+        const notFound = Object.assign(new Error('Table not found'), {code: 404});
+        mockGetMetadata.mockRejectedValue(notFound);
+        const writer = new BigQueryStreamWriter({dataset: 'ds', table: 'tbl', maxBatchSize: 1});
+        const promise = writer.add({id: 'a'});
+        const assertion = expect(promise).rejects.toThrow(
+          'BigQuery table metadata for "ds.tbl" could not be read after 4 attempts: Table not found',
+        );
+        await Promise.resolve();
+        await vi.runAllTimersAsync();
+        await assertion;
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
