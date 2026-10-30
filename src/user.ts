@@ -94,6 +94,22 @@ export namespace User {
   }
 
   /**
+   * Billing subscription status for a user account.
+   *
+   * - `ok`: subscription is active and in good standing.
+   * - `grace`: subscription is past due but within the grace period.
+   * - `hold`: subscription is suspended or on hold.
+   */
+  export enum BillingStatus {
+    /** Subscription is active and in good standing. */
+    ok = 'ok',
+    /** Subscription is past due but within the grace period. */
+    grace = 'grace',
+    /** Subscription is suspended or on hold. */
+    hold = 'hold',
+  }
+
+  /**
    * User interface
    */
   export interface Interface {
@@ -153,6 +169,14 @@ export namespace User {
      * Billing usage quantity
      */
     buq?: number;
+    /**
+     * Billing Subscription Status
+     */
+    bss?: BillingStatus;
+    /**
+     * Billing Grace Until
+     */
+    bgu?: Date | FieldValue | string;
 
     /**
      * Accept other keys
@@ -169,8 +193,8 @@ export namespace User {
    * - **Authorization state** — `role`, `group`, `groups`. A caller choosing these
    *   chooses their own privileges, and `groups` is copied into Firebase Auth custom
    *   claims by a later role update.
-   * - **Billing/provider identity and metering** — `bcId`, `bsId`, `bsiId`, `bst`,
-   *   `but`, `buq`. These identify records inside a payment provider and are produced
+   * - **Billing/provider identity and metering** — `bcId`, `bsId`, `bsiId`, `bss`,
+   *   `bst`, `but`, `buq`, `bgu`. These identify records inside a payment provider and are produced
    *   by a server-side call to it.  A caller supplying one is either mistaken or is
    *   pointing their account at somebody else's customer or subscription record.
    * - **Credentials and server bookkeeping** — `password`, `id`, `created`, `updated`,
@@ -190,6 +214,8 @@ export namespace User {
     'bcId',
     'bsId',
     'bsiId',
+    'bss',
+    'bgu',
     'bst',
     'buq',
     'but',

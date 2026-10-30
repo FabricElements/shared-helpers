@@ -176,6 +176,14 @@ describe('User.Helper.sanitizeProfile', () => {
   });
 });
 
+describe('User.BillingStatus', () => {
+  it('has the expected values', () => {
+    expect(User.BillingStatus.ok).toBe('ok');
+    expect(User.BillingStatus.grace).toBe('grace');
+    expect(User.BillingStatus.hold).toBe('hold');
+  });
+});
+
 describe('User.Helper.create — caller-supplied authorization fields', () => {
   beforeEach(() => {
     vi.clearAllMocks();
