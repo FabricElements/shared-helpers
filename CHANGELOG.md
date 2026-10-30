@@ -8,6 +8,13 @@ Prior releases are tracked through Git history and GitHub Releases.
 
 ## [Unreleased]
 
+### Added
+
+- **`User.BillingStatus` enum** — `ok`, `grace`, `hold` values for billing subscription
+  status tracking.
+- **`User.Interface.bss` / `User.Interface.bgu`** — Billing Subscription Status and
+  Billing Grace Until fields, server-written only.
+
 ### ⚠ Breaking Changes
 
 - **`User.Helper.updateRole` / `User.Helper.remove` — refresh tokens are now
