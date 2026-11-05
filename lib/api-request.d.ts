@@ -3,6 +3,7 @@
  * Copyright FabricElements. All Rights Reserved.
  */
 import type { InterfaceAPIRequest } from './interfaces.js';
+export default _default;
 /**
  * Executes an outbound HTTP request against an external or Firebase project API.
  *
@@ -21,5 +22,4 @@ import type { InterfaceAPIRequest } from './interfaces.js';
  * @throws {Error} If `options.path` is falsy, if the HTTP response is not
  *   `ok`, or if the server returns a JSON error body with a `message` field.
  */
-declare const _default: (options: InterfaceAPIRequest) => Promise<any>;
-export default _default;
+declare function _default(options: InterfaceAPIRequest): Promise<any>;

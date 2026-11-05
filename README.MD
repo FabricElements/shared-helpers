@@ -40,7 +40,8 @@ triggers, controllers, and media handlers (including the `media-open` HTTPS
 function wired into Hosting rewrites in `firebase.json`).
 
 - **Target runtime:** Node.js `>=22` (see `engines` in `package.json`).
-- **Language:** TypeScript `^6`, emitted as ES2020 ESM.
+- **Language:** TypeScript, emitted as ES2020 ESM (TS 7 native compiler; TS 6 API for
+  `typescript-eslint` — see [the two TypeScript installs](#the-two-typescript-installs-tsc-vs-typescript-eslint)).
 - **Default Firebase project alias:** `fabricelements` (see `.firebaserc`).
 
 ### Public API surface
@@ -243,15 +244,15 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
 
 | Area                       | Details                                                                                                                                                                                                                                          |
 |----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Language                   | **TypeScript** `^6.0.3`, compiled to **ES2020** ESM (`"type": "module"`, `module`/`moduleResolution`: `Node16`, `strict: true`, `declaration: true`).                                                                                            |
+| Language                   | **TypeScript** — `tsc` **7.0.2** (native compiler) emits the library, while `typescript-eslint` consumes the **TS 6.0** API through the npm aliases documented below. Output is **ES2020** ESM (`"type": "module"`, `module`/`moduleResolution`: `Node16`, `strict: true`, `declaration: true`). |
 | Runtime                    | **Node.js `>=22`** (see `engines` in `package.json`).                                                                                                                                                                                            |
-| Firebase                   | `firebase-admin` `^13.10.0`, `firebase-functions` `^7.2.5`.                                                                                                                                                                                      |
-| Google Cloud               | `@google-cloud/bigquery` `^8.3.1`, `@google-cloud/bigquery-storage` `^5.1.1`, `@google-cloud/pubsub` `^5.3.0`.                                                                                                                                   |
-| Media                      | `sharp` `^0.34.5` for image resizing/transformation.                                                                                                                                                                                             |
-| Utilities                  | `libphonenumber-js` `^1.13.5`, `lodash` `^4.18.1`, native `fetch` (Node.js `>=22`).                                                                                                                                                              |
+| Firebase                   | `firebase-admin` `^14.5.0`, `firebase-functions` `7.4.0`.                                                                                                                                                                                        |
+| Google Cloud               | `@google-cloud/bigquery` `^9.5.0`, `@google-cloud/bigquery-storage` `^6.3.0`, `@google-cloud/pubsub` `^6.3.2`.                                                                                                                                   |
+| Media                      | `sharp` `^0.35.5` for image resizing/transformation.                                                                                                                                                                                             |
+| Utilities                  | `libphonenumber-js` `^1.13.15`, `lodash` `^4.18.1`, native `fetch` (Node.js `>=22`).                                                                                                                                                             |
 | Database / storage engines | **Cloud Firestore**, **Cloud Storage**, and **Realtime Database** (rules in `firestore.rules`, `storage.rules`, `database.rules.json`); analytics/queue via **BigQuery** and **Pub/Sub**.                                                        |
-| Linting                    | **ESLint `^10.4.1`** via flat config (`eslint.config.js`) using `typescript-eslint` `recommended` + `stylistic` presets.                                                                                                                         |
-| Testing                    | **Vitest `^4.1.8`** (`globals` enabled, `node` environment).                                                                                                                                                                                     |
+| Linting                    | **ESLint `^10.13.0`** via flat config (`eslint.config.js`) using `typescript-eslint` `^8.72.1` `recommended` + `stylistic` presets.                                                                                                             |
+| Testing                    | **Vitest `^5.0.5`** (`globals` enabled, `node` environment).                                                                                                                                                                                     |
 | Configuration patterns     | Compiler settings in `tsconfig.json` (`rootDir: src`, `outDir: lib`, declarations + source maps); test compiler config in `tsconfig.test.json`; Firebase services and emulator ports in `firebase.json`; default project alias in `.firebaserc`. |
 
 ### Active source directory map
@@ -333,6 +334,26 @@ npm run compile     # tsc -p ./tsconfig.json
 
 > The build is required because consumers — and the sample `functions/` app,
 > which imports the package via `file:..` — load the compiled output from `lib/`.
+
+#### The two TypeScript installs (`tsc` vs. `typescript-eslint`)
+
+TypeScript 7 is the native compiler port and ships **no JavaScript compiler API**,
+which `typescript-eslint` needs. Until `typescript-eslint` supports it, both majors
+are installed side by side using the officially documented npm-alias pattern:
+
+| Alias | Resolves to | Provides |
+| --- | --- | --- |
+| `typescript` | `npm:@typescript/typescript6@^6.0.2` | The TS 6 compiler API that `typescript-eslint` and its `>=4.8.4 <6.1.0` peer range require. Exposes the `tsc6` binary. |
+| `@typescript/native` | `npm:typescript@^7.0.2` | The `tsc` binary — **this is what `npm run compile` and `npm run build` use**. |
+
+So the alias named `typescript` is the API-only TS 6 install, and the compiler that
+emits `lib/` is the TS 7 binary from `@typescript/native`. A bare `npx tsc` runs
+TS 7; `npx tsc6` runs TS 6 if you need to compare output. `lib/` is committed as
+TS 7 output, and CI re-runs `npm run build` and asserts `lib/` is byte-identical.
+
+> Aliasing `typescript` away from the TS 7 package is what keeps the
+> `typescript-eslint` peer dependency satisfied, so `npm ci` and `npm install`
+> need no `--force` or `--legacy-peer-deps` flag.
 
 ### 3. Start the local Firebase environment
 
@@ -471,13 +492,13 @@ npm i github:FabricElements/shared-helpers --save
 dependencies. Your project must declare them itself:
 
 ```shell
-npm i firebase-admin@^13.10.0 firebase-functions@^7.3.2 --save
+npm i firebase-admin@^14.5.0 firebase-functions@^7.4.0 --save
 ```
 
 | Peer dependency | Supported range |
 | --- | --- |
-| `firebase-admin` | `^13.10.0 \|\| ^14.0.0` |
-| `firebase-functions` | `^7.3.2` |
+| `firebase-admin` | `^14.0.0` |
+| `firebase-functions` | `7.4.0` |
 
 Both are singletons and **must resolve to exactly one copy** in the consuming
 project. `firebase-admin` keeps a module-global app registry: when the consumer

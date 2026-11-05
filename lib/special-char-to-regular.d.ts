@@ -2,6 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
+export default _default;
 /**
  * Normalises non-GSM characters in a string by replacing them with their
  * closest ASCII or GSM-7 equivalents.
@@ -18,5 +19,4 @@
  * @returns {string} The normalised string with all recognised special characters
  *   replaced by their GSM-7 counterparts.
  */
-declare const _default: (text: string | null) => string;
-export default _default;
+declare function _default(text: string | null): string;

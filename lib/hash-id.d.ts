@@ -1,3 +1,4 @@
+export default _default;
 /**
  * Generates a cryptographically random alphanumeric and symbol hash string of
  * at least `length + 1` characters.
@@ -12,5 +13,4 @@
  * @returns {string} A randomly generated string of `length + 1` characters drawn from
  *   the alphanumeric-and-symbol character pool.
  */
-declare const _default: (length?: number) => string;
-export default _default;
+declare function _default(length?: number): string;

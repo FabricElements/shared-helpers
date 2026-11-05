@@ -9,12 +9,12 @@ export declare namespace FilterHelper {
      * same version and commit.  When the Dart side changes, update both together.
      */
     const dartSource: {
-        readonly commit: "e03ff636333f157e485bff022582c8a267240b9e";
-        readonly helper: "lib/helper/filter_helper.dart";
-        readonly model: "lib/serialized/filter_data.dart";
-        readonly package: "fabric_flutter";
-        readonly repository: "https://github.com/FabricElements/fabric_flutter";
-        readonly version: "3.0.1";
+        readonly commit: 'e03ff636333f157e485bff022582c8a267240b9e';
+        readonly helper: 'lib/helper/filter_helper.dart';
+        readonly model: 'lib/serialized/filter_data.dart';
+        readonly package: 'fabric_flutter';
+        readonly repository: 'https://github.com/FabricElements/fabric_flutter';
+        readonly version: '3.0.1';
     };
     /**
      * Comparison and sorting operations supported by a filter entry.

@@ -4,6 +4,7 @@
  */
 import { PubSub } from '@google-cloud/pubsub';
 import { Attributes, PublishOptions } from '@google-cloud/pubsub/build/src/publisher/index.js';
+export default _default;
 /**
  * Publishes a JSON-serialised message to a Google Cloud Pub/Sub topic.
  *
@@ -24,5 +25,4 @@ import { Attributes, PublishOptions } from '@google-cloud/pubsub/build/src/publi
  * @returns {Promise<void>} A Promise that resolves when the publish call completes or when the
  *   error has been logged.
  */
-declare const _default: (ps: PubSub, topic: string, data?: object, attributes?: Attributes, options?: PublishOptions) => Promise<void>;
-export default _default;
+declare function _default(ps: PubSub, topic: string, data?: object, attributes?: Attributes, options?: PublishOptions): Promise<void>;
