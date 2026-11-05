@@ -1,3 +1,4 @@
+export default _default;
 /**
  * Replaces `{placeholder}` tokens in a template string with values from a data map.
  *
@@ -17,10 +18,9 @@
  * @param {string} options.text - The template string containing `{placeholder}` tokens.
  * @returns {string} The rendered string with all tokens replaced and excess whitespace removed.
  */
-declare const _default: (options: {
+declare function _default(options: {
     data?: object;
     domains?: string[];
     language?: string;
     text: string;
-}) => string;
-export default _default;
+}): string;

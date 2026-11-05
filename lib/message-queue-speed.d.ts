@@ -2,6 +2,7 @@
  * @license
  * Copyright FabricElements. All Rights Reserved.
  */
+export default _default;
 /**
  * Calculates the recommended message dispatch throughput for a Twilio account.
  *
@@ -25,11 +26,11 @@
  *   - `speed` — per-`second`, `minute`, `hour`, and `day` throughput values
  *     scaled by `instances`.
  */
-declare const _default: (options?: {
+declare function _default(options?: {
     instances?: number;
     sleep?: number;
     time?: number;
-}) => {
+}): {
     instances: number;
     limit: number;
     sleep: number;
@@ -40,4 +41,3 @@ declare const _default: (options?: {
         day: number;
     };
 };
-export default _default;
