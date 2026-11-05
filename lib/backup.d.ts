@@ -1,3 +1,4 @@
+export default _default;
 /**
  * Streams Firestore documents into a BigQuery table using the
  * {@link BigQueryStreamWriter} (BigQuery Storage Write API) and optionally
@@ -38,12 +39,11 @@
  *   `cause` so detail stays available to logs without being re-serialised into the
  *   message a caller sees.
  */
-declare const _default: (data: {
+declare function _default(data: {
     collection: string;
     dataset: string;
     delete?: boolean;
     items: any[];
     table: string;
     update?: boolean;
-}) => Promise<void>;
-export default _default;
+}): Promise<void>;

@@ -1,3 +1,4 @@
+export default _default;
 /**
  * Validates and normalises a phone number to E.164 format.
  *
@@ -10,5 +11,4 @@
  * @returns {string|null} The E.164-formatted phone number string (e.g., `'+15551234567'`),
  *   or `null` if the input cannot be parsed or is not a valid mobile number.
  */
-declare const _default: (phoneNumber: string | number) => string | null;
-export default _default;
+declare function _default(phoneNumber: string | number): string | null;

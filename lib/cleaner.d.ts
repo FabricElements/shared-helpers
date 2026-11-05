@@ -1,3 +1,4 @@
+export default _default;
 /**
  * Submits the de-duplication query to BigQuery as an asynchronous job and
  * waits for results, logging a warning on failure without re-throwing.
@@ -13,10 +14,9 @@
  * @returns {Promise<void>} A Promise that resolves when the BigQuery job finishes, or
  *   resolves silently after logging a warning if the job fails.
  */
-declare const _default: (filter: {
+declare function _default(filter: {
     column?: string;
     dataset: string;
     table: string;
     timestamp: string;
-}) => Promise<void>;
-export default _default;
+}): Promise<void>;
