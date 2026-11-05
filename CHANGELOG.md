@@ -225,49 +225,45 @@ Prior releases are tracked through Git history and GitHub Releases.
 ### Changed
 
 - **All dependencies upgraded to their latest 7-day-cooldown-eligible releases**
-  (`npx npm-check-updates -c 7d -u` + `npm install`).
+  (`npx npm-check-updates -c 7d -u` + `npm install`): `@google-cloud/bigquery`
+  `^9.0.3` → `^9.5.0`, `@google-cloud/bigquery-storage` `^6.0.1` → `^6.3.0`,
+  `@google-cloud/pubsub` `^6.0.1` → `^6.3.2`, `libphonenumber-js` `^1.13.13` →
+  `^1.13.15`, `sharp` `^0.35.4` → `^0.35.5`, `@types/lodash` `^4.17.25` →
+  `^4.17.27`, `@types/node` `^25.9.2` → `^26.6.6`, `eslint` `^10.8.1` → `^10.13.0`,
+  `firebase-admin` `^14.4.0` → `^14.5.0`, `typescript-eslint` `^8.70.0` → `^8.72.1`,
+  `vitest` `^5.0.1` → `^5.0.5`.
 
-  Runtime dependencies: `@google-cloud/bigquery` `^9.5.0` (`8` → `9`),
-  `@google-cloud/bigquery-storage` `^6.3.0` (`5` → `6`), `@google-cloud/pubsub`
-  `^6.3.2` (`5` → `6`), `libphonenumber-js` `^1.13.15`, `sharp` `^0.35.5`
-  (`0.34` → `0.35`).
+  **No source changes, no public API changes and no runtime behaviour changes.** The
+  upgrades required no edits under `src/` at all.
 
-  Development dependencies: `@eslint/js` `^10.0.1`, `@types/express` `^5.0.6`,
-  `@types/lodash` `^4.17.27`, `@types/node` `^26.6.6`, `eslint` `^10.13.0`,
-  `firebase-admin` `^14.5.0`, `firebase-functions` `7.4.0`, `typescript-eslint`
-  `^8.72.1`, `vitest` `^5.0.5` (`4` → `5`).
+- **TypeScript 7 now emits `lib/` via the `@typescript/native` npm alias, while the
+  `typescript` name stays on the TS 6 API for `typescript-eslint`.**
 
-  The peer ranges are tightened to match: `firebase-admin` `^14.0.0` (the
-  previously supported `^13.10.0` line is dropped) and `firebase-functions`
-  `7.4.0` exactly, as before.
+  TypeScript 7 is the native compiler port and ships **no JavaScript compiler API**,
+  which `typescript-eslint` requires (its peer range is `>=4.8.4 <6.1.0`). The two
+  majors are therefore installed side by side using the documented npm-alias pattern:
 
-  **No public API or runtime behaviour changes.** The upgrades required no source
-  changes under `src/`; the only non-documentation diff outside the manifests and
-  `lib/` is none at all.
-
-- **TypeScript 7 is now the compiler that emits `lib/`, with TypeScript 6 kept only
-  for `typescript-eslint` (side-by-side npm aliases).**
-
-  TypeScript 7 is the native compiler port and ships **no JavaScript compiler
-  API**, which `typescript-eslint` requires; its peer range is still
-  `>=4.8.4 <6.1.0`. The two majors are therefore installed side by side using
-  Microsoft's documented npm-alias pattern:
-
-  - `"typescript": "npm:@typescript/typescript6@^6.0.2"` — the TS 6 API package that
-    `typescript-eslint` consumes, exposing the `tsc6` binary.
+  - `"typescript": "npm:@typescript/typescript6@^6.0.2"` — the TS 6 API package
+    `typescript-eslint` consumes; also exposes the `tsc6` binary.
   - `"@typescript/native": "npm:typescript@^7.0.2"` — the real TypeScript 7 package,
     whose `tsc` binary is the one `npm run compile` / `npm run build` invoke.
 
   Because the alias keeps the `typescript-eslint` peer range satisfied, neither
   `npm ci` nor `npm install` needs `--force` or `--legacy-peer-deps`.
 
-  The committed `lib/` output is TS 7 output. The emitter diff against the previous
-  TS 6 output is benign and confined to declaration shape and source-map mappings:
-  `.d.ts` default exports are hoisted into a `declare function` plus
-  `export default`, one type-literal uses single-quoted strings, `lib/media.js` drops
-  the `_a` / `_b` temp-var aliasing around the `Helper` / `Image` namespaces
-  (semantically identical), and six `*.js.map` files have different but
-  path- and locale-independent `mappings`. No runtime behaviour changes.
+  The committed `lib/` is TS 7 output. Its diff against the previous TS 6 output is
+  compiler-emitter only — no exported identifier, name or signature changes:
+
+  - `.d.ts` default exports are hoisted into `declare function _default(...)` plus a
+    leading `export default _default;` (10 files). The parameter and return types are
+    unchanged.
+  - `lib/filter-helper.d.ts` renders one type-literal's string members with single
+    quotes instead of double.
+  - `lib/media.js` — the only changed runtime `.js` — no longer emits the `_a` / `_b`
+    temp-var aliases for the `Helper` / `Image` namespaces (`_b.bufferImage(...)`
+    becomes `Image.bufferImage(...)`). Semantically identical.
+  - Six `*.js.map` files have different `mappings`; these are path- and
+    locale-independent (byte-identical rebuild under `LC_ALL=C`, relative `sources`).
 
 ## [2.0.0] - 2026-08-22
 

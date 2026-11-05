@@ -40,8 +40,8 @@ triggers, controllers, and media handlers (including the `media-open` HTTPS
 function wired into Hosting rewrites in `firebase.json`).
 
 - **Target runtime:** Node.js `>=22` (see `engines` in `package.json`).
-- **Language:** TypeScript, emitted as ES2020 ESM (TS 7 native compiler; TS 6 API for
-  `typescript-eslint` — see [the two TypeScript installs](#the-two-typescript-installs-tsc-vs-typescript-eslint)).
+- **Language:** TypeScript `^6`, emitted as ES2020 ESM (see
+  [the two TypeScript installs](#the-two-typescript-installs-tsc-vs-typescript-eslint)).
 - **Default Firebase project alias:** `fabricelements` (see `.firebaserc`).
 
 ### Public API surface
@@ -244,7 +244,7 @@ These contracts are deliberate; relying on the opposite behaviour is unsafe.
 
 | Area                       | Details                                                                                                                                                                                                                                          |
 |----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Language                   | **TypeScript** — `tsc` **7.0.2** (native compiler) emits the library, while `typescript-eslint` consumes the **TS 6.0** API through the npm aliases documented below. Output is **ES2020** ESM (`"type": "module"`, `module`/`moduleResolution`: `Node16`, `strict: true`, `declaration: true`). |
+| Language                   | **TypeScript** `6.0`, compiled to **ES2020** ESM (`"type": "module"`, `module`/`moduleResolution`: `Node16`, `strict: true`, `declaration: true`). See [the two TypeScript installs](#the-two-typescript-installs-tsc-vs-typescript-eslint). |
 | Runtime                    | **Node.js `>=22`** (see `engines` in `package.json`).                                                                                                                                                                                            |
 | Firebase                   | `firebase-admin` `^14.5.0`, `firebase-functions` `7.4.0`.                                                                                                                                                                                        |
 | Google Cloud               | `@google-cloud/bigquery` `^9.5.0`, `@google-cloud/bigquery-storage` `^6.3.0`, `@google-cloud/pubsub` `^6.3.2`.                                                                                                                                   |
@@ -492,7 +492,7 @@ npm i github:FabricElements/shared-helpers --save
 dependencies. Your project must declare them itself:
 
 ```shell
-npm i firebase-admin@^14.5.0 firebase-functions@^7.4.0 --save
+npm i firebase-admin@^14.0.0 firebase-functions@7.4.0 --save
 ```
 
 | Peer dependency | Supported range |
@@ -511,8 +511,7 @@ downgraded to a generic `INTERNAL` error.
 
 Because a `github:` install copies a tarball rather than symlinking, a duplicate
 would otherwise be installed whenever the ranges diverge. Declaring these as
-peers makes that structurally impossible, and the deliberately wide
-`firebase-admin` range lets consumers adopt v14 on their own schedule.
+peers makes that structurally impossible.
 
 ## Usage
 
